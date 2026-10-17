@@ -1,0 +1,22 @@
+{
+  "lineWidth": 100,
+  "indentWidth": 2,
+  "useTabs": false,
+  "newLineKind": "lf",
+  "typescript": {
+    "quoteStyle": "preferSingle",
+    "jsx.quoteStyle": "preferDouble"
+  },
+  "json": {
+    "trailingCommas": "never"
+  },
+  "excludes": [
+    "**/node_modules",
+    "**/*.md",
+    "pnpm-lock.yaml"
+  ],
+  "plugins": [
+    "./node_modules/@dprint/typescript/plugin.wasm",
+    "./node_modules/@dprint/json/plugin.wasm"
+  ]
+}

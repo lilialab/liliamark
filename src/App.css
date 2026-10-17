@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply m-0 h-full w-full;
+  }
+
+  body {
+    @apply bg-neutral-100 text-neutral-900 antialiased;
+    font-family: 'Segoe UI', 'PingFang SC', 'Noto Sans SC', sans-serif;
+  }
+}
+
+/* CodeMirror fills its pane; utilities cannot target .cm-* from JSX. */
+.markdown-editor .cm-editor {
+  height: 100%;
+}
+
+.markdown-editor .cm-scroller {
+  font-family: 'Cascadia Code', 'Sarasa Mono SC', Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Generated markdown HTML has no classNames. */
+.markdown-preview > :first-child {
+  margin-top: 0;
+}
+
+.markdown-preview > :last-child {
+  margin-bottom: 0;
+}
