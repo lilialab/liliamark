@@ -1,5 +1,6 @@
 import { cn } from '../utils/cn';
 import { renderMarkdown } from './renderMarkdown';
+import './markdownPreview.css';
 
 type MarkdownPreviewProps = {
   source: string;
@@ -11,7 +12,7 @@ export function MarkdownPreview({ source, className }: MarkdownPreviewProps) {
 
   return (
     <div
-      className={cn('markdown-preview px-6 py-5 leading-relaxed', className)}
+      className={cn('markdown-preview', className)}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
