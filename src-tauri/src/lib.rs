@@ -1,10 +1,12 @@
 mod commands;
+mod file_watch;
 mod open_file;
 
 use tauri::Manager;
 
 use commands::fs::{read_text_file, write_text_file};
 use commands::launch::take_pending_open_path;
+use file_watch::{sync_watched_files, FileWatchState};
 use open_file::{PendingOpenPath, open_path_in_running_app, paths_from_args, remember_open_path};
 
 /// 启动 Tauri：单实例、文件关联打开、注册读写命令。
@@ -30,6 +32,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(PendingOpenPath::new())
+        .manage(FileWatchState::new())
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {
@@ -42,7 +45,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             take_pending_open_path,
             read_text_file,
-            write_text_file
+            write_text_file,
+            sync_watched_files
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

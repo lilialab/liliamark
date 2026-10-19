@@ -5,14 +5,17 @@ import { MarkdownEditor } from '../editor/MarkdownEditor';
 import {
   confirmDiscardChanges,
   confirmDiscardUnsavedTabs,
+  onDiskFileChanged,
   onOpenFilePath,
   onWindowCloseRequested,
   openMarkdownFile,
   openMarkdownPath,
+  syncWatchedFiles,
   takePendingOpenPath,
   writeTextFile,
 } from '../lib/tauri/fs';
 import { MarkdownPreview } from '../preview/MarkdownPreview';
+import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
 import { sameFilePath } from '../utils/sameFilePath';
@@ -29,6 +32,40 @@ function errorMessage(error: unknown): string {
 function createTabId(): string {
   return crypto.randomUUID();
 }
+
+function updateTab(
+  tabs: EditorTab[],
+  id: string,
+  update: (tab: EditorTab) => EditorTab,
+): EditorTab[] {
+  return tabs.map((tab) => (tab.id === id ? update(tab) : tab));
+}
+
+function withSavedSource(tab: EditorTab): EditorTab {
+  return { ...tab, savedSource: tab.source };
+}
+
+function withDiskContent(tab: EditorTab, content: string): EditorTab {
+  return {
+    ...tab,
+    source: content,
+    savedSource: content,
+    diskChange: null,
+    docEpoch: tab.docEpoch + 1,
+  };
+}
+
+function withoutDiskChange(tab: EditorTab): EditorTab {
+  return { ...tab, diskChange: null };
+}
+
+function withDiskChange(tabs: EditorTab[], path: string, kind: DiskChangeKind): EditorTab[] {
+  return tabs.map((tab) => (sameFilePath(tab.path, path) ? { ...tab, diskChange: kind } : tab));
+}
+
+const diskBannerClass = cn(
+  'flex shrink-0 items-center gap-3 border-b border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950',
+);
 
 const toolbarButtonClass = cn(
   'rounded border border-neutral-300 bg-neutral-50 px-3 py-1 text-sm',
@@ -65,6 +102,8 @@ export function EditorScreen() {
       path,
       source: content,
       savedSource: content,
+      diskChange: null,
+      docEpoch: 0,
     };
     setTabs((prev) => [...prev, tab]);
     setActiveId(tab.id);
@@ -105,9 +144,7 @@ export function EditorScreen() {
 
     try {
       await writeTextFile(activeTab.path, activeTab.source);
-      setTabs((prev) =>
-        prev.map((tab) => tab.id === activeTab.id ? { ...tab, savedSource: tab.source } : tab)
-      );
+      setTabs((prev) => updateTab(prev, activeTab.id, withSavedSource));
       toast.success('已保存');
     } catch (error) {
       toast.error('保存失败', { description: errorMessage(error) });
@@ -115,7 +152,25 @@ export function EditorScreen() {
   }
 
   function handleSourceChange(tabId: string, next: string) {
-    setTabs((prev) => prev.map((tab) => (tab.id === tabId ? { ...tab, source: next } : tab)));
+    setTabs((prev) => updateTab(prev, tabId, (tab) => ({ ...tab, source: next })));
+  }
+
+  function handleKeepEdits(id: string) {
+    setTabs((prev) => updateTab(prev, id, withoutDiskChange));
+  }
+
+  async function handleReloadFromDisk(id: string) {
+    const tab = tabsRef.current.find((item) => item.id === id);
+    if (!tab || tab.diskChange !== 'modify') {
+      return;
+    }
+
+    try {
+      const file = await openMarkdownPath(tab.path);
+      setTabs((prev) => updateTab(prev, id, (tab) => withDiskContent(tab, file.content)));
+    } catch (error) {
+      toast.error('重载失败', { description: errorMessage(error) });
+    }
   }
 
   async function handleCloseTab(id: string) {
@@ -205,6 +260,31 @@ export function EditorScreen() {
     };
   }, []);
 
+  const watchedPathsKey = tabs.map((tab) => tab.path).join('\0');
+
+  useEffect(() => {
+    const paths = watchedPathsKey.length === 0 ? [] : watchedPathsKey.split('\0');
+    void syncWatchedFiles(paths).catch(() => {
+      // Browser / non-tauri preview has no watch command.
+    });
+  }, [watchedPathsKey]);
+
+  useEffect(() => {
+    const ready = (async () => {
+      try {
+        return await onDiskFileChanged((payload) => {
+          setTabs((prev) => withDiskChange(prev, payload.path, payload.kind));
+        });
+      } catch {
+        return undefined;
+      }
+    })();
+
+    return () => {
+      void ready.then((unlisten) => unlisten?.());
+    };
+  }, []);
+
   useEffect(() => {
     const ready = (async () => {
       try {
@@ -267,6 +347,7 @@ export function EditorScreen() {
             id: tab.id,
             title: fileName(tab.path),
             dirty: tab.source !== tab.savedSource,
+            diskChange: tab.diskChange !== null,
           }))}
           activeId={activeId}
           onSelect={setActiveId}
@@ -275,6 +356,49 @@ export function EditorScreen() {
           }}
         />
       </header>
+
+      {activeTab?.diskChange === 'modify' && !dirty && (
+        <div className={diskBannerClass}>
+          <p className={cn('min-w-0 flex-1')}>磁盘上的文件已更新</p>
+          <button
+            type="button"
+            className={toolbarButtonClass}
+            onClick={() => {
+              void handleReloadFromDisk(activeTab.id);
+            }}
+          >
+            重载
+          </button>
+        </div>
+      )}
+      {activeTab?.diskChange === 'remove' && (
+        <div className={diskBannerClass}>
+          <p className={cn('min-w-0 flex-1')}>文件已删除或移走</p>
+        </div>
+      )}
+      {activeTab?.diskChange === 'modify' && dirty && (
+        <div className={diskBannerClass}>
+          <p className={cn('min-w-0 flex-1')}>磁盘上的文件已更新，与当前未保存的修改冲突</p>
+          <button
+            type="button"
+            className={toolbarButtonClass}
+            onClick={() => {
+              handleKeepEdits(activeTab.id);
+            }}
+          >
+            保留编辑
+          </button>
+          <button
+            type="button"
+            className={toolbarButtonClass}
+            onClick={() => {
+              void handleReloadFromDisk(activeTab.id);
+            }}
+          >
+            用磁盘版本
+          </button>
+        </div>
+      )}
 
       <div className={cn('grid min-h-0 flex-1 grid-cols-2')}>
         <section
@@ -301,6 +425,7 @@ export function EditorScreen() {
                   aria-hidden={!active}
                 >
                   <MarkdownEditor
+                    key={tab.docEpoch}
                     value={tab.source}
                     onChange={(next) => {
                       handleSourceChange(tab.id, next);

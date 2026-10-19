@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { ask, open } from '@tauri-apps/plugin-dialog';
+import type { DiskFileChanged } from '../../types/diskFileChanged';
 import type { OpenedMarkdownFile } from '../../types/markdownFile';
 
 const markdownFilters = [{ name: 'Markdown', extensions: ['md', 'markdown'] }];
@@ -73,6 +74,18 @@ export async function takePendingOpenPath(): Promise<string | null> {
 /** 监听运行中由「打开方式」传入的文件路径 */
 export function onOpenFilePath(handler: (path: string) => void) {
   return listen<string>('open-file', (event) => {
+    handler(event.payload);
+  });
+}
+
+/** 同步 Rust 侧应监听的已打开文件路径 */
+export async function syncWatchedFiles(paths: string[]): Promise<void> {
+  await invoke('sync_watched_files', { paths });
+}
+
+/** 监听已打开文件的磁盘变更 */
+export function onDiskFileChanged(handler: (payload: DiskFileChanged) => void) {
+  return listen<DiskFileChanged>('disk-file-changed', (event) => {
     handler(event.payload);
   });
 }
