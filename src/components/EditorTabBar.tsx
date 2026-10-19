@@ -1,0 +1,69 @@
+import { cn } from '../utils/cn';
+
+export type EditorTabBarItem = {
+  id: string;
+  title: string;
+  dirty: boolean;
+};
+
+type EditorTabBarProps = {
+  tabs: EditorTabBarItem[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  onClose: (id: string) => void;
+};
+
+export function EditorTabBar({ tabs, activeId, onSelect, onClose }: EditorTabBarProps) {
+  if (tabs.length === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      className={cn('flex min-w-0 flex-1 items-center gap-1 overflow-x-auto')}
+      role="tablist"
+      aria-label="已打开文件"
+    >
+      {tabs.map((tab) => {
+        const active = tab.id === activeId;
+        return (
+          <div
+            key={tab.id}
+            role="tab"
+            aria-selected={active}
+            className={cn(
+              'flex max-w-48 shrink-0 items-center gap-1 rounded border px-2 py-1 text-sm',
+              active
+                ? 'border-neutral-400 bg-white text-neutral-900'
+                : 'border-transparent bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+            )}
+          >
+            <button
+              type="button"
+              className={cn('min-w-0 truncate text-left')}
+              onClick={() => {
+                onSelect(tab.id);
+              }}
+            >
+              {tab.title}
+              {tab.dirty ? ' •' : ''}
+            </button>
+            <button
+              type="button"
+              className={cn(
+                'rounded px-1 text-neutral-500 hover:bg-neutral-300 hover:text-neutral-800',
+              )}
+              aria-label={`关闭 ${tab.title}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onClose(tab.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

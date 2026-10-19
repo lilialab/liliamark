@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { ask, open } from '@tauri-apps/plugin-dialog';
 import type { OpenedMarkdownFile } from '../../types/markdownFile';
 
@@ -47,6 +48,21 @@ export async function confirmDiscardChanges(): Promise<boolean> {
     title: 'LiliaMark',
     kind: 'warning',
   });
+}
+
+/** 退出前确认：丢弃全部未保存文件 */
+export async function confirmDiscardUnsavedTabs(count: number): Promise<boolean> {
+  return await ask(`有 ${count} 个未保存的文件，确定退出吗？`, {
+    title: 'LiliaMark',
+    kind: 'warning',
+  });
+}
+
+/** 监听窗口关闭请求；取消时在 handler 内 preventDefault */
+export function onWindowCloseRequested(
+  handler: (event: { preventDefault: () => void }) => void | Promise<void>,
+) {
+  return getCurrentWindow().onCloseRequested(handler);
 }
 
 /** 取出启动时由系统传入的待打开路径（一次性） */
