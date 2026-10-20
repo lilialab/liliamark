@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { supportsMarkdownPreview } from '../editor/editorLanguageKind';
 import { MarkdownEditor } from '../editor/MarkdownEditor';
 import {
   confirmDiscardChanges,
@@ -263,6 +264,7 @@ export function EditorScreen() {
                 >
                   <MarkdownEditor
                     key={tab.docEpoch}
+                    path={tab.path}
                     value={tab.source}
                     onChange={(next) => {
                       handleSourceChange(tab.id, next);
@@ -276,7 +278,12 @@ export function EditorScreen() {
           className={cn('min-h-0 min-w-0 overflow-auto bg-neutral-50')}
           aria-label="预览"
         >
-          {activeTab && <MarkdownPreview source={source} />}
+          {activeTab && supportsMarkdownPreview(activeTab.path) && (
+            <MarkdownPreview source={source} />
+          )}
+          {activeTab && !supportsMarkdownPreview(activeTab.path) && (
+            <p className={cn('p-4 text-sm text-neutral-500')}>不支持预览</p>
+          )}
         </section>
       </div>
     </div>

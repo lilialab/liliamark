@@ -12,7 +12,12 @@ export type DropPathsClassification = {
   hadDirectory: boolean;
 };
 
-const markdownFilters = [{ name: 'Markdown', extensions: ['md', 'markdown'] }];
+const openFileFilters = [
+  { name: '文本', extensions: ['md', 'markdown', 'txt', 'json'] },
+  { name: 'Markdown', extensions: ['md', 'markdown'] },
+  { name: 'JSON', extensions: ['json'] },
+  { name: '纯文本', extensions: ['txt'] },
+];
 
 /** 读取本地文本文件内容 */
 export async function readTextFile(path: string): Promise<string> {
@@ -24,18 +29,18 @@ export async function writeTextFile(path: string, content: string): Promise<void
   await invoke('write_text_file', { path, content });
 }
 
-/** 按路径打开 Markdown 文件 */
+/** 按路径打开文本文件 */
 export async function openMarkdownPath(path: string): Promise<OpenedMarkdownFile> {
   const content = await readTextFile(path);
   return { path, content };
 }
 
-/** 选择并打开本地 Markdown；取消选择时返回 null */
+/** 选择并打开本地文本（md / txt / json 等）；取消选择时返回 null */
 export async function openMarkdownFile(): Promise<OpenedMarkdownFile | null> {
   const selected = await open({
     multiple: false,
     directory: false,
-    filters: markdownFilters,
+    filters: openFileFilters,
   });
 
   if (selected === null) {

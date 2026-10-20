@@ -1,7 +1,6 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { markdown } from '@codemirror/lang-markdown';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { EditorState } from '@codemirror/state';
+import { Compartment, EditorState } from '@codemirror/state';
 import {
   drawSelection,
   EditorView,
@@ -13,14 +12,17 @@ import {
 } from '@codemirror/view';
 import { useEffect, useRef } from 'react';
 import { cn } from '../utils/cn';
+import { editorLanguageKind } from './editorLanguageKind';
+import { loadLanguageExtension } from './loadLanguageExtension';
 
 type MarkdownEditorProps = {
+  path: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
 };
 
-const editorExtensions = [
+const baseExtensions = [
   lineNumbers(),
   highlightActiveLineGutter(),
   highlightSpecialChars(),
@@ -29,26 +31,33 @@ const editorExtensions = [
   EditorState.allowMultipleSelections.of(true),
   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
   highlightActiveLine(),
-  markdown(),
   keymap.of([...defaultKeymap, ...historyKeymap]),
 ];
 
-export function MarkdownEditor({ value, onChange, className }: MarkdownEditorProps) {
+export function MarkdownEditor({ path, value, onChange, className }: MarkdownEditorProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const languageCompartmentRef = useRef<Compartment | null>(null);
+  const languageLoadSeqRef = useRef(0);
   const onChangeRef = useRef(onChange);
   const initialValueRef = useRef(value);
   onChangeRef.current = onChange;
+
+  const languageKind = editorLanguageKind(path);
 
   useEffect(() => {
     if (!parentRef.current) {
       return;
     }
 
+    const languageCompartment = new Compartment();
+    languageCompartmentRef.current = languageCompartment;
+
     const view = new EditorView({
       doc: initialValueRef.current,
       extensions: [
-        ...editorExtensions,
+        ...baseExtensions,
+        languageCompartment.of([]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChangeRef.current(update.state.doc.toString());
@@ -62,8 +71,33 @@ export function MarkdownEditor({ value, onChange, className }: MarkdownEditorPro
     return () => {
       view.destroy();
       viewRef.current = null;
+      languageCompartmentRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    const languageCompartment = languageCompartmentRef.current;
+    if (!view || !languageCompartment) {
+      return;
+    }
+
+    const seq = ++languageLoadSeqRef.current;
+    let cancelled = false;
+
+    void loadLanguageExtension(languageKind).then((extension) => {
+      if (cancelled || seq !== languageLoadSeqRef.current || !viewRef.current) {
+        return;
+      }
+      viewRef.current.dispatch({
+        effects: languageCompartment.reconfigure(extension),
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [languageKind]);
 
   useEffect(() => {
     const view = viewRef.current;
