@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { editorLanguageKind, supportsMarkdownPreview } from '../../src/editor/editorLanguageKind';
+import { editorLanguageKind, supportsMarkdownPreview } from '../../src/editor/languageRegistry';
 
 describe('editorLanguageKind', () => {
   it('maps markdown extensions', () => {
@@ -9,6 +9,18 @@ describe('editorLanguageKind', () => {
 
   it('maps json extension', () => {
     expect(editorLanguageKind('C:\\data\\config.json')).toBe('json');
+  });
+
+  it('maps script and typed languages', () => {
+    expect(editorLanguageKind('a.js')).toBe('javascript');
+    expect(editorLanguageKind('a.ts')).toBe('typescript');
+    expect(editorLanguageKind('a.jsx')).toBe('jsx');
+    expect(editorLanguageKind('a.tsx')).toBe('tsx');
+    expect(editorLanguageKind('a.py')).toBe('python');
+    expect(editorLanguageKind('a.rs')).toBe('rust');
+    expect(editorLanguageKind('A.java')).toBe('java');
+    expect(editorLanguageKind('setup.sh')).toBe('shell');
+    expect(editorLanguageKind('rc.zsh')).toBe('shell');
   });
 
   it('treats other paths as plaintext', () => {

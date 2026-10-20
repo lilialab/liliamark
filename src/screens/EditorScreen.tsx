@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { supportsMarkdownPreview } from '../editor/editorLanguageKind';
+import { supportsMarkdownPreview } from '../editor/languageRegistry';
 import { MarkdownEditor } from '../editor/MarkdownEditor';
 import {
   confirmDiscardChanges,

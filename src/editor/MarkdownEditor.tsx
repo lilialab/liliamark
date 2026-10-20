@@ -12,8 +12,7 @@ import {
 } from '@codemirror/view';
 import { useEffect, useRef } from 'react';
 import { cn } from '../utils/cn';
-import { editorLanguageKind } from './editorLanguageKind';
-import { loadLanguageExtension } from './loadLanguageExtension';
+import { editorLanguageKind, loadLanguageExtension } from './languageRegistry';
 
 type MarkdownEditorProps = {
   path: string;
