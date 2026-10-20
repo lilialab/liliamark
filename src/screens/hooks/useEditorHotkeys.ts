@@ -6,7 +6,7 @@ type EditorHotkeys = {
   onCloseTab: () => void | Promise<void>;
 };
 
-/** Ctrl/Cmd+S 保存；Ctrl/Cmd+E 切换预览；Ctrl/Cmd+W 关闭当前标签 */
+/** Ctrl/Cmd+S 保存；Ctrl/Cmd+E 切换预览；Ctrl/Cmd+W 关闭当前标签；屏蔽刷新 */
 export function useEditorHotkeys({
   onSave,
   onTogglePreview,
@@ -24,6 +24,11 @@ export function useEditorHotkeys({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'F5') {
+        event.preventDefault();
+        return;
+      }
+
       if (!(event.ctrlKey || event.metaKey)) {
         return;
       }
@@ -42,6 +47,10 @@ export function useEditorHotkeys({
       if (key === 'w') {
         event.preventDefault();
         closeTab();
+        return;
+      }
+      if (key === 'r') {
+        event.preventDefault();
       }
     }
 

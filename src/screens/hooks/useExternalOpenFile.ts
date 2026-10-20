@@ -3,6 +3,7 @@ import { onOpenFilePath, openMarkdownPath, takePendingOpenPath } from '../../lib
 import { loadEditorSession } from '../../lib/tauri/session';
 import type { EditorTab } from '../../types/editorTab';
 import { createTabId } from '../../utils/editorTab';
+import { reportStartupTiming, startupMark } from '../../utils/startupTiming';
 
 type ApplyRestoredTabs = (tabs: EditorTab[], activePath: string | null) => void;
 
@@ -41,10 +42,14 @@ export function useExternalOpenFile(
         });
       } catch {
         // Browser / non-tauri preview has no open-file event.
+        startupMark('session-start');
+        startupMark('session-done');
+        reportStartupTiming();
         return undefined;
       }
 
       try {
+        startupMark('session-start');
         const session = await loadEditorSession();
         if (cancelled) {
           return unlisten;
@@ -77,6 +82,11 @@ export function useExternalOpenFile(
         }
       } catch {
         // Browser / non-tauri preview has no session / launch commands.
+      } finally {
+        if (!cancelled) {
+          startupMark('session-done');
+          reportStartupTiming();
+        }
       }
 
       return unlisten;

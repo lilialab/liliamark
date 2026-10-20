@@ -2,6 +2,8 @@ mod commands;
 mod file_watch;
 mod open_file;
 
+use std::time::Instant;
+
 use tauri::Manager;
 
 use commands::fs::{classify_drop_paths, read_text_file, write_text_file};
@@ -13,6 +15,7 @@ use open_file::{PendingOpenPath, open_path_in_running_app, paths_from_args, reme
 /// 启动 Tauri：单实例、文件关联打开、注册读写命令。
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let rust_started = Instant::now();
     let mut builder = tauri::Builder::default();
 
     #[cfg(desktop)]
@@ -34,7 +37,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(PendingOpenPath::new())
         .manage(FileWatchState::new())
-        .setup(|app| {
+        .setup(move |app| {
+            eprintln!("[startup] rust→setup {:?}", rust_started.elapsed());
             #[cfg(any(windows, target_os = "linux"))]
             {
                 if let Some(path) = paths_from_args(std::env::args()).into_iter().next() {

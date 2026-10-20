@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { supportsMarkdownPreview } from '../editor/languageRegistry';
 import { MarkdownEditor } from '../editor/MarkdownEditor';
@@ -21,6 +21,7 @@ import {
   withSavedSource,
 } from '../utils/editorTab';
 import { fileName, sameFilePath } from '../utils/path';
+import { markStartupUiReady } from '../utils/startupTiming';
 import { DiskChangeBanner } from './components/DiskChangeBanner';
 import { EditorTabBar } from './components/EditorTabBar';
 import { FileDragOverlay } from './components/FileDragOverlay';
@@ -173,6 +174,10 @@ export function EditorScreen() {
   /* -------------------------------------------------------------------------- */
   /* Effects */
   /* -------------------------------------------------------------------------- */
+
+  useEffect(() => {
+    markStartupUiReady();
+  }, []);
 
   const fileDragActive = useFileDragOpen(loadFile);
   useExternalOpenFile((restored, activePath) => {
