@@ -1,9 +1,16 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import type { DragDropEvent } from '@tauri-apps/api/webview';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { ask, open } from '@tauri-apps/plugin-dialog';
 import type { DiskFileChanged } from '../../types/diskFileChanged';
 import type { OpenedMarkdownFile } from '../../types/markdownFile';
+
+export type DropPathsClassification = {
+  files: string[];
+  hadDirectory: boolean;
+};
 
 const markdownFilters = [{ name: 'Markdown', extensions: ['md', 'markdown'] }];
 
@@ -88,4 +95,16 @@ export function onDiskFileChanged(handler: (payload: DiskFileChanged) => void) {
   return listen<DiskFileChanged>('disk-file-changed', (event) => {
     handler(event.payload);
   });
+}
+
+/** 监听窗口文件拖放（enter / over / drop / leave） */
+export function onDragDrop(handler: (event: DragDropEvent) => void) {
+  return getCurrentWebview().onDragDropEvent((event) => {
+    handler(event.payload);
+  });
+}
+
+/** 把拖入路径分成普通文件；若含目录则标记 */
+export async function classifyDropPaths(paths: string[]): Promise<DropPathsClassification> {
+  return invoke<DropPathsClassification>('classify_drop_paths', { paths });
 }

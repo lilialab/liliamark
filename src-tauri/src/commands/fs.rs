@@ -1,9 +1,38 @@
 use std::fs;
 use std::path::PathBuf;
 
+use serde::Serialize;
 use tauri::State;
 
 use crate::file_watch::FileWatchState;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DropPathsClassification {
+    pub files: Vec<String>,
+    pub had_directory: bool,
+}
+
+/// 把拖入路径分成普通文件；若含目录则标记。
+#[tauri::command]
+pub(crate) fn classify_drop_paths(paths: Vec<String>) -> DropPathsClassification {
+    let mut files = Vec::new();
+    let mut had_directory = false;
+
+    for path in paths {
+        let path_buf = PathBuf::from(&path);
+        if path_buf.is_dir() {
+            had_directory = true;
+        } else if path_buf.is_file() {
+            files.push(path);
+        }
+    }
+
+    DropPathsClassification {
+        files,
+        had_directory,
+    }
+}
 
 /// 按路径读取文本文件。
 #[tauri::command]

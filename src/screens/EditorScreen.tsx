@@ -3,9 +3,11 @@ import { toast } from 'sonner';
 import { EditorTabBar } from '../components/EditorTabBar';
 import { MarkdownEditor } from '../editor/MarkdownEditor';
 import {
+  classifyDropPaths,
   confirmDiscardChanges,
   confirmDiscardUnsavedTabs,
   onDiskFileChanged,
+  onDragDrop,
   onOpenFilePath,
   onWindowCloseRequested,
   openMarkdownFile,
@@ -79,6 +81,7 @@ export function EditorScreen() {
 
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [fileDragActive, setFileDragActive] = useState(false);
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
 
@@ -286,6 +289,65 @@ export function EditorScreen() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const ready = (async () => {
+      try {
+        return await onDragDrop((event) => {
+          if (cancelled) {
+            return;
+          }
+
+          if (event.type === 'enter') {
+            setFileDragActive(true);
+            return;
+          }
+
+          if (event.type === 'leave') {
+            setFileDragActive(false);
+            return;
+          }
+
+          if (event.type !== 'drop') {
+            return;
+          }
+
+          setFileDragActive(false);
+
+          void (async () => {
+            try {
+              const { files, hadDirectory } = await classifyDropPaths(event.paths);
+              if (cancelled) {
+                return;
+              }
+              if (hadDirectory) {
+                toast.message('请拖入文件');
+              }
+              for (const path of files) {
+                if (cancelled) {
+                  return;
+                }
+                await loadFileRef.current(path);
+              }
+            } catch (error) {
+              if (!cancelled) {
+                toast.error('打开失败', { description: errorMessage(error) });
+              }
+            }
+          })();
+        });
+      } catch {
+        return undefined;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      void ready.then((unlisten) => unlisten?.());
+    };
+  }, []);
+
+  useEffect(() => {
     const ready = (async () => {
       try {
         return await onWindowCloseRequested(async (event) => {
@@ -317,7 +379,24 @@ export function EditorScreen() {
   /* -------------------------------------------------------------------------- */
 
   return (
-    <div className={cn('flex h-full min-h-0 w-full flex-col')}>
+    <div className={cn('relative flex h-full min-h-0 w-full flex-col')}>
+      {fileDragActive && (
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-0 z-50 flex items-center justify-center',
+            'bg-neutral-900/25',
+          )}
+          aria-live="polite"
+        >
+          <p
+            className={cn(
+              'rounded-md bg-white/95 px-5 py-2.5 text-sm text-neutral-900',
+            )}
+          >
+            松开以打开
+          </p>
+        </div>
+      )}
       <header
         className={cn(
           'flex shrink-0 items-center gap-3 border-b border-neutral-300 bg-white px-3 py-2',
