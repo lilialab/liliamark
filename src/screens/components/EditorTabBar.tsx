@@ -36,8 +36,8 @@ export function EditorTabBar({ tabs, activeId, onSelect, onClose }: EditorTabBar
             className={cn(
               'flex max-w-48 shrink-0 items-center gap-1 rounded border px-2 py-1 text-sm',
               active
-                ? 'border-neutral-400 bg-white text-neutral-900'
-                : 'border-transparent bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+                ? 'border-(--app-border) bg-(--app-surface) text-(--app-fg)'
+                : 'border-transparent bg-(--app-bg) text-(--app-muted) hover:bg-(--app-surface-hover)',
             )}
           >
             <button
@@ -54,7 +54,7 @@ export function EditorTabBar({ tabs, activeId, onSelect, onClose }: EditorTabBar
             <button
               type="button"
               className={cn(
-                'rounded px-1 text-neutral-500 hover:bg-neutral-300 hover:text-neutral-800',
+                'rounded px-1 text-(--app-muted) hover:bg-(--app-surface-hover) hover:text-(--app-fg)',
               )}
               aria-label={`关闭 ${tab.title}`}
               onClick={(event) => {

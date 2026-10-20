@@ -1,5 +1,7 @@
+import { catppuccinMacchiato } from '@catppuccin/codemirror';
+import { flavors } from '@catppuccin/palette';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { Compartment, EditorState } from '@codemirror/state';
 import {
   drawSelection,
@@ -10,6 +12,7 @@ import {
   keymap,
   lineNumbers,
 } from '@codemirror/view';
+import { tags } from '@lezer/highlight';
 import { useEffect, useRef } from 'react';
 import { cn } from '../utils/cn';
 import { editorLanguageKind, loadLanguageExtension } from './languageRegistry';
@@ -21,6 +24,19 @@ type MarkdownEditorProps = {
   className?: string;
 };
 
+const macchiatoRed = flavors.macchiato.colors.red.hex;
+
+/** 加粗 → 红色高亮（盖过主题默认仅 bold） */
+const strongHighlight = syntaxHighlighting(
+  HighlightStyle.define([
+    {
+      tag: tags.strong,
+      color: macchiatoRed,
+      fontWeight: 'bold',
+    },
+  ]),
+);
+
 const baseExtensions = [
   lineNumbers(),
   highlightActiveLineGutter(),
@@ -28,7 +44,8 @@ const baseExtensions = [
   history(),
   drawSelection(),
   EditorState.allowMultipleSelections.of(true),
-  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  catppuccinMacchiato,
+  strongHighlight,
   highlightActiveLine(),
   keymap.of([...defaultKeymap, ...historyKeymap]),
 ];

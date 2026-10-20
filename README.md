@@ -17,7 +17,7 @@
 - 打开、保存本地文本文件（Markdown / 其它文本）
 - 源码高亮；Ctrl/Cmd+E 切换预览覆盖层（预览按需加载）；Ctrl/Cmd+W 关闭当前标签（无标签时退出）
 - 记住上次打开的文件，启动时恢复（打不开的跳过）；「打开方式」会在恢复后再打开并聚焦该文件
-- 修改后预览跟着更新
+- 修改后预览跟着更新；界面 / 编辑器 / 预览统一 Catppuccin Macchiato（`src/theme/` + `@catppuccin/codemirror`；围栏 highlight.js）
 - 相对路径的图片能在预览里显示（经 Tauri 的资源协议，不把裸文件路径写进 `<img>`）
 
 先不做：
@@ -37,6 +37,7 @@ src/screens/EditorScreen.tsx    主界面
 src/components/                 可复用的小块 UI（有需要再加）
 src/editor/                     CodeMirror 装配
 src/preview/                    markdown-it 渲染（纯函数）和预览区
+src/theme/                      Catppuccin 变量与应用语义色
 src/lib/tauri/                  打开、读取、保存、监听的 invoke 封装（有 IO 再加）
 src/utils/                      与 Markdown 无关的纯函数（有需要再加）
 src/types/

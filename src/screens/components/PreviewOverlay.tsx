@@ -29,7 +29,7 @@ export function PreviewOverlay({
   return (
     <div
       className={cn(
-        'absolute inset-0 z-20 overflow-auto bg-neutral-50',
+        'absolute inset-0 z-20 overflow-auto bg-(--app-bg)',
         open ? 'z-20' : 'pointer-events-none invisible z-0',
       )}
       aria-hidden={!open}
@@ -38,12 +38,12 @@ export function PreviewOverlay({
       {supportsPreview
         ? (
           <Suspense
-            fallback={<p className={cn('p-4 text-sm text-neutral-500')}>加载预览…</p>}
+            fallback={<p className={cn('p-4 text-sm text-(--app-muted)')}>加载预览…</p>}
           >
             <MarkdownPreview source={source} />
           </Suspense>
         )
-        : <p className={cn('p-4 text-sm text-neutral-500')}>不支持预览</p>}
+        : <p className={cn('p-4 text-sm text-(--app-muted)')}>不支持预览</p>}
     </div>
   );
 }

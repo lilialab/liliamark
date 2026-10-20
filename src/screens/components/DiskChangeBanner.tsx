@@ -9,12 +9,12 @@ type DiskChangeBannerProps = {
 };
 
 const bannerClass = cn(
-  'flex shrink-0 items-center gap-3 border-b border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950',
+  'flex shrink-0 items-center gap-3 border-b border-(--app-warn-border) bg-(--app-warn-bg) px-3 py-2 text-sm text-(--app-warn-fg)',
 );
 
 const actionButtonClass = cn(
-  'rounded border border-neutral-300 bg-neutral-50 px-3 py-1 text-sm',
-  'hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50',
+  'rounded border border-(--app-border) bg-(--app-surface) px-3 py-1 text-sm text-(--app-fg)',
+  'hover:bg-(--app-surface-hover) disabled:cursor-not-allowed disabled:opacity-50',
 );
 
 export function DiskChangeBanner({

@@ -8,8 +8,10 @@
   }
 
   body {
-    @apply bg-neutral-100 text-neutral-900 antialiased;
+    background: var(--app-bg);
+    color: var(--app-fg);
     font-family: 'Segoe UI', 'PingFang SC', 'Noto Sans SC', sans-serif;
+    @apply antialiased;
   }
 }
 

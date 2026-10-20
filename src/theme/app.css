@@ -1,0 +1,38 @@
+@import './catppuccin.css';
+
+/* 应用语义；壳 / 预览读这里，不直接写 hex */
+:root {
+  --app-bg: var(--ctp-base);
+  --app-bg-raised: var(--ctp-mantle);
+  --app-fg: var(--ctp-text);
+  --app-muted: var(--ctp-subtext0);
+  --app-border: var(--ctp-surface1);
+  --app-surface: var(--ctp-surface0);
+  --app-surface-hover: var(--ctp-surface1);
+  --app-link: var(--ctp-blue);
+  --app-link-hover: var(--ctp-sky);
+  --app-warn-bg: color-mix(in srgb, var(--ctp-yellow) 18%, var(--ctp-mantle));
+  --app-warn-fg: var(--ctp-yellow);
+  --app-warn-border: color-mix(in srgb, var(--ctp-yellow) 45%, var(--ctp-surface1));
+  --app-overlay-scrim: color-mix(in srgb, var(--ctp-crust) 55%, transparent);
+  --app-overlay-card: color-mix(in srgb, var(--ctp-base) 95%, transparent);
+
+  /* 预览（style-guide 角色） */
+  --md-bg: var(--ctp-base);
+  --md-fg: var(--ctp-text);
+  --md-fg-muted: var(--ctp-subtext0);
+  --md-bg-code: var(--ctp-surface0);
+  --md-border: var(--ctp-surface1);
+  --md-link: var(--ctp-blue);
+  --md-link-hover: var(--ctp-sky);
+  --md-blockquote-border: var(--ctp-lavender);
+  --md-blockquote-fg: var(--ctp-subtext1);
+  --md-strong: var(--ctp-red);
+  --md-table-stripe: var(--ctp-mantle);
+  --md-h1: var(--ctp-red);
+  --md-h2: var(--ctp-peach);
+  --md-h3: var(--ctp-yellow);
+  --md-h4: var(--ctp-green);
+  --md-h5: var(--ctp-sapphire);
+  --md-h6: var(--ctp-lavender);
+}

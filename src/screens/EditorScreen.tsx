@@ -38,8 +38,8 @@ function errorMessage(error: unknown): string {
 }
 
 const toolbarButtonClass = cn(
-  'rounded border border-neutral-300 bg-neutral-50 px-3 py-1 text-sm',
-  'hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50',
+  'rounded border border-(--app-border) bg-(--app-surface) px-3 py-1 text-sm text-(--app-fg)',
+  'hover:bg-(--app-surface-hover) disabled:cursor-not-allowed disabled:opacity-50',
 );
 
 export function EditorScreen() {
@@ -216,7 +216,7 @@ export function EditorScreen() {
       <FileDragOverlay active={fileDragActive} />
       <header
         className={cn(
-          'flex shrink-0 items-center gap-3 border-b border-neutral-300 bg-white px-3 py-2',
+          'flex shrink-0 items-center gap-3 border-b border-(--app-border) bg-(--app-bg-raised) px-3 py-2',
         )}
       >
         <button
@@ -267,12 +267,12 @@ export function EditorScreen() {
       )}
 
       <section
-        className={cn('relative min-h-0 min-w-0 flex-1 overflow-hidden bg-white')}
+        className={cn('relative min-h-0 min-w-0 flex-1 overflow-hidden bg-(--app-bg)')}
         aria-label="源码"
       >
         {tabs.length === 0
           ? (
-            <p className={cn('p-4 text-sm text-neutral-500')}>
+            <p className={cn('p-4 text-sm text-(--app-muted)')}>
               打开一个文件开始编辑（Ctrl+E 切换预览）
             </p>
           )

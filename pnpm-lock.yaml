@@ -8,6 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@catppuccin/codemirror':
+        specifier: ^1.0.3
+        version: 1.0.3
+      '@catppuccin/highlightjs':
+        specifier: ^1.0.1
+        version: 1.0.1
+      '@catppuccin/palette':
+        specifier: ^1.8.0
+        version: 1.8.0
       '@codemirror/commands':
         specifier: ^6.11.1
         version: 6.11.1
@@ -41,6 +50,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.38.2
         version: 6.43.14
+      '@lezer/highlight':
+        specifier: ^1.2.5
+        version: 1.2.5
       '@tauri-apps/api':
         specifier: ^2
         version: 2.12.4
@@ -53,6 +65,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      highlight.js:
+        specifier: ^11.12.0
+        version: 11.12.0
       markdown-it:
         specifier: ^14.1.0
         version: 14.3.3
@@ -198,6 +213,15 @@ packages:
   '@babel/types@7.29.8':
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
+
+  '@catppuccin/codemirror@1.0.3':
+    resolution: {integrity: sha512-P1ZCj4DZVLqr/TNz28m3aaF2Elrikpb8OOnzN0Vyf95Un4pTWTkCSvhbskbnJbnNJ87Rfvt3fXoaUj4o55X30Q==}
+
+  '@catppuccin/highlightjs@1.0.1':
+    resolution: {integrity: sha512-wnagsNQbJroHQMalkprwRoapfGV1hHRx46d7GXp4kf6rlShImBlgpqPCt9OD471Gq4qpHdfFH/GJFIvY1CLqHA==}
+
+  '@catppuccin/palette@1.8.0':
+    resolution: {integrity: sha512-qXhwKiLzQomUygUJYB36YAFgs+dET5bIocfkiaFIatQF5Pwc7L112TlF9P8J5Oqs3x3XTjYSucG0ncHXSCuk7Q==}
 
   '@codemirror/autocomplete@6.20.3':
     resolution: {integrity: sha512-tlosUqb+3BbxCxZdu4tKeRghPFC+QM7q4X5YhKV2eCmPG+1r2F3f4AaSz5sCrFqUtX4Jh20VFTKecl16MgiV9g==}
@@ -1495,6 +1519,10 @@ packages:
   hermes-parser@0.25.1:
     resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
+  highlight.js@11.12.0:
+    resolution: {integrity: sha512-nbfWpyRMcMrPMmDwJB+dhX/eiaPKtc2RB+0QZskqJ3WjRA/FDS0e9hZrx8EC/lbEv8gXy98FcDbNa/dspAaJMg==}
+    engines: {node: '>=12.0.0'}
+
   identifier-regex@1.1.0:
     resolution: {integrity: sha512-SLX4H/vtcYlYnL7XqnuJKHU7Z8517TgsW9nmQiGOgMCjQ8V/deLYu6bEmbGoXe7WMMhc9+EUGyFFneHja8KabA==}
     engines: {node: '>=18'}
@@ -2541,6 +2569,18 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
+
+  '@catppuccin/codemirror@1.0.3':
+    dependencies:
+      '@catppuccin/palette': 1.8.0
+      '@codemirror/language': 6.13.1
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.14
+      '@lezer/highlight': 1.2.5
+
+  '@catppuccin/highlightjs@1.0.1': {}
+
+  '@catppuccin/palette@1.8.0': {}
 
   '@codemirror/autocomplete@6.20.3':
     dependencies:
@@ -3920,6 +3960,8 @@ snapshots:
   hermes-parser@0.25.1:
     dependencies:
       hermes-estree: 0.25.1
+
+  highlight.js@11.12.0: {}
 
   identifier-regex@1.1.0:
     dependencies:

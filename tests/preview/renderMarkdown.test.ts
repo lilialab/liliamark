@@ -9,4 +9,10 @@ describe('renderMarkdown', () => {
   it('does not pass through raw HTML', () => {
     expect(renderMarkdown('<script>alert(1)</script>')).not.toContain('<script>');
   });
+
+  it('highlights fenced code with hljs classes', () => {
+    const html = renderMarkdown('```js\nconst x = 1;\n```');
+    expect(html).toContain('hljs');
+    expect(html).toContain('hljs-keyword');
+  });
 });

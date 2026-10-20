@@ -1,3 +1,4 @@
+import '@catppuccin/highlightjs/css/catppuccin-variables.css';
 import { cn } from '../utils/cn';
 import { renderMarkdown } from './renderMarkdown';
 import './markdownPreview.css';

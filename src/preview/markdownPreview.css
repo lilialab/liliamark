@@ -1,23 +1,17 @@
-/* Preview typography. Theme later by overriding --md-* on .markdown-preview. */
+/* 颜色来自 src/theme/app.css 的 --md-*；围栏 token 见 @catppuccin/highlightjs variables */
 .markdown-preview {
-  --md-fg: #1a1a1a;
-  --md-fg-muted: #5c5c5c;
-  --md-bg-code: #f0f0f0;
-  --md-border: #d8d8d8;
-  --md-link: #0b57d0;
-  --md-blockquote-border: #c4c4c4;
-  --md-blockquote-fg: #4a4a4a;
-  --md-table-stripe: #f5f5f5;
   --md-font: 'Segoe UI', 'PingFang SC', 'Noto Sans SC', sans-serif;
   --md-font-mono: 'Cascadia Code', 'Sarasa Mono SC', Consolas, monospace;
   --md-text: 15px;
   --md-line: 1.65;
   --md-space: 1em;
 
+  background: var(--md-bg);
   color: var(--md-fg);
   font-family: var(--md-font);
   font-size: var(--md-text);
   line-height: var(--md-line);
+  min-height: 100%;
   padding: 1.25rem 1.5rem;
   word-wrap: break-word;
   overflow-wrap: anywhere;
@@ -44,28 +38,36 @@
 
 .markdown-preview h1 {
   font-size: 1.75em;
+  color: var(--md-h1);
   border-bottom: 1px solid var(--md-border);
   padding-bottom: 0.3em;
 }
 
 .markdown-preview h2 {
   font-size: 1.4em;
+  color: var(--md-h2);
   border-bottom: 1px solid var(--md-border);
   padding-bottom: 0.25em;
 }
 
 .markdown-preview h3 {
   font-size: 1.2em;
+  color: var(--md-h3);
 }
 
 .markdown-preview h4 {
   font-size: 1.05em;
+  color: var(--md-h4);
 }
 
-.markdown-preview h5,
+.markdown-preview h5 {
+  font-size: 1em;
+  color: var(--md-h5);
+}
+
 .markdown-preview h6 {
   font-size: 1em;
-  color: var(--md-fg-muted);
+  color: var(--md-h6);
 }
 
 .markdown-preview p {
@@ -79,11 +81,13 @@
 }
 
 .markdown-preview a:hover {
+  color: var(--md-link-hover);
   text-decoration-thickness: 2px;
 }
 
 .markdown-preview strong {
   font-weight: 700;
+  color: var(--md-strong);
 }
 
 .markdown-preview em {
@@ -130,7 +134,7 @@
   border-top: 1px solid var(--md-border);
 }
 
-.markdown-preview code {
+.markdown-preview :not(pre) > code {
   font-family: var(--md-font-mono);
   font-size: 0.9em;
   background: var(--md-bg-code);
@@ -148,9 +152,10 @@
   line-height: 1.5;
 }
 
-.markdown-preview pre code {
+.markdown-preview pre code.hljs {
   padding: 0;
   background: transparent;
+  font-family: var(--md-font-mono);
   font-size: 0.875em;
   border-radius: 0;
 }
