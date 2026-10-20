@@ -1,18 +1,35 @@
 import { useEffect, useEffectEvent } from 'react';
 
-/** Ctrl/Cmd+S 保存 */
-export function useEditorHotkeys(onSave: () => void | Promise<void>) {
+type EditorHotkeys = {
+  onSave: () => void | Promise<void>;
+  onTogglePreview: () => void;
+};
+
+/** Ctrl/Cmd+S 保存；Ctrl/Cmd+E 切换预览 */
+export function useEditorHotkeys({ onSave, onTogglePreview }: EditorHotkeys) {
   const save = useEffectEvent(() => {
     void onSave();
+  });
+  const togglePreview = useEffectEvent(() => {
+    onTogglePreview();
   });
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') {
+      if (!(event.ctrlKey || event.metaKey)) {
         return;
       }
-      event.preventDefault();
-      save();
+
+      const key = event.key.toLowerCase();
+      if (key === 's') {
+        event.preventDefault();
+        save();
+        return;
+      }
+      if (key === 'e') {
+        event.preventDefault();
+        togglePreview();
+      }
     }
 
     window.addEventListener('keydown', onKeyDown);

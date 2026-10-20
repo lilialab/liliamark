@@ -8,7 +8,6 @@ import {
   openMarkdownPath,
   writeTextFile,
 } from '../lib/tauri/fs';
-import { MarkdownPreview } from '../preview/MarkdownPreview';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
 import {
@@ -23,6 +22,7 @@ import { fileName, sameFilePath } from '../utils/path';
 import { DiskChangeBanner } from './components/DiskChangeBanner';
 import { EditorTabBar } from './components/EditorTabBar';
 import { FileDragOverlay } from './components/FileDragOverlay';
+import { PreviewOverlay } from './components/PreviewOverlay';
 import { useDiskWatch } from './hooks/useDiskWatch';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
 import { useExternalOpenFile } from './hooks/useExternalOpenFile';
@@ -45,6 +45,7 @@ export function EditorScreen() {
 
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
 
@@ -162,6 +163,10 @@ export function EditorScreen() {
     });
   }
 
+  function handleTogglePreview() {
+    setPreviewOpen((open) => !open);
+  }
+
   /* -------------------------------------------------------------------------- */
   /* Effects */
   /* -------------------------------------------------------------------------- */
@@ -177,7 +182,10 @@ export function EditorScreen() {
   useUnsavedCloseGuard(
     () => tabs.filter((tab) => tab.source !== tab.savedSource).length,
   );
-  useEditorHotkeys(handleSave);
+  useEditorHotkeys({
+    onSave: handleSave,
+    onTogglePreview: handleTogglePreview,
+  });
 
   /* -------------------------------------------------------------------------- */
   /* Render */
@@ -238,54 +246,44 @@ export function EditorScreen() {
         />
       )}
 
-      <div className={cn('grid min-h-0 flex-1 grid-cols-2')}>
-        <section
-          className={cn(
-            'relative min-h-0 min-w-0 overflow-hidden border-r border-neutral-300 bg-white',
-          )}
-          aria-label="源码"
-        >
-          {tabs.length === 0
-            ? (
-              <p className={cn('p-4 text-sm text-neutral-500')}>
-                打开一个 Markdown 文件开始编辑
-              </p>
-            )
-            : tabs.map((tab) => {
-              const active = tab.id === activeId;
-              return (
-                <div
-                  key={tab.id}
-                  className={cn(
-                    'absolute inset-0 min-h-0 overflow-auto',
-                    active ? 'z-10' : 'pointer-events-none invisible z-0',
-                  )}
-                  aria-hidden={!active}
-                >
-                  <MarkdownEditor
-                    key={tab.docEpoch}
-                    path={tab.path}
-                    value={tab.source}
-                    onChange={(next) => {
-                      handleSourceChange(tab.id, next);
-                    }}
-                  />
-                </div>
-              );
-            })}
-        </section>
-        <section
-          className={cn('min-h-0 min-w-0 overflow-auto bg-neutral-50')}
-          aria-label="预览"
-        >
-          {activeTab && supportsMarkdownPreview(activeTab.path) && (
-            <MarkdownPreview source={source} />
-          )}
-          {activeTab && !supportsMarkdownPreview(activeTab.path) && (
-            <p className={cn('p-4 text-sm text-neutral-500')}>不支持预览</p>
-          )}
-        </section>
-      </div>
+      <section
+        className={cn('relative min-h-0 min-w-0 flex-1 overflow-hidden bg-white')}
+        aria-label="源码"
+      >
+        {tabs.length === 0
+          ? (
+            <p className={cn('p-4 text-sm text-neutral-500')}>
+              打开一个文件开始编辑（Ctrl+E 切换预览）
+            </p>
+          )
+          : tabs.map((tab) => {
+            const active = tab.id === activeId;
+            return (
+              <div
+                key={tab.id}
+                className={cn(
+                  'absolute inset-0 min-h-0 overflow-auto',
+                  active ? 'z-10' : 'pointer-events-none invisible z-0',
+                )}
+                aria-hidden={!active}
+              >
+                <MarkdownEditor
+                  key={tab.docEpoch}
+                  path={tab.path}
+                  value={tab.source}
+                  onChange={(next) => {
+                    handleSourceChange(tab.id, next);
+                  }}
+                />
+              </div>
+            );
+          })}
+        <PreviewOverlay
+          open={previewOpen}
+          supportsPreview={activeTab !== null && supportsMarkdownPreview(activeTab.path)}
+          source={source}
+        />
+      </section>
     </div>
   );
 }

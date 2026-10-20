@@ -40,7 +40,7 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 | 任务 | 先读 |
 |------|------|
 | 产品范围 / 第一版做什么 | `README.md` |
-| 主界面、分栏、脏状态 | `src/screens/EditorScreen.tsx` |
+| 主界面、预览覆盖、脏状态 | `src/screens/EditorScreen.tsx` |
 | 源码高亮 | `src/editor/` |
 | Markdown 渲染、图片路径 | `src/preview/` |
 | 打开 / 保存 / 监听 | `src/lib/tauri/`，再进 `src-tauri/src/` |
