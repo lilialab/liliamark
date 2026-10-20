@@ -1,8 +1,17 @@
 import { useEffect, useEffectEvent } from 'react';
-import { onOpenFilePath, takePendingOpenPath } from '../../lib/tauri/fs';
+import { onOpenFilePath, openMarkdownPath, takePendingOpenPath } from '../../lib/tauri/fs';
+import { loadEditorSession } from '../../lib/tauri/session';
+import type { EditorTab } from '../../types/editorTab';
+import { createTabId } from '../../utils/editorTab';
 
-/** 冷启动待打开路径 + 运行中「打开方式」 */
-export function useExternalOpenFile(loadFile: (path: string) => Promise<void>) {
+type ApplyRestoredTabs = (tabs: EditorTab[], activePath: string | null) => void;
+
+/** 启动：先恢复会话，再处理冷启动 / 运行中「打开方式」 */
+export function useExternalOpenFile(
+  applyRestoredTabs: ApplyRestoredTabs,
+  loadFile: (path: string) => Promise<void>,
+) {
+  const applyRestored = useEffectEvent(applyRestoredTabs);
   const openPath = useEffectEvent(async (filePath: string) => {
     await loadFile(filePath);
   });
@@ -25,17 +34,49 @@ export function useExternalOpenFile(loadFile: (path: string) => Promise<void>) {
     }
 
     const ready = (async () => {
-      const unlisten = await onOpenFilePath((filePath) => {
-        void openExternalPath(filePath);
-      });
+      let unlisten: (() => void) | undefined;
+      try {
+        unlisten = await onOpenFilePath((filePath) => {
+          void openExternalPath(filePath);
+        });
+      } catch {
+        // Browser / non-tauri preview has no open-file event.
+        return undefined;
+      }
 
       try {
+        const session = await loadEditorSession();
+        if (cancelled) {
+          return unlisten;
+        }
+
+        const restored: EditorTab[] = [];
+        for (const path of session.paths) {
+          try {
+            const file = await openMarkdownPath(path);
+            restored.push({
+              id: createTabId(),
+              path: file.path,
+              source: file.content,
+              savedSource: file.content,
+              diskChange: null,
+              docEpoch: 0,
+            });
+          } catch {
+            // 打不开的路径跳过
+          }
+        }
+
+        if (!cancelled) {
+          applyRestored(restored, session.activePath);
+        }
+
         const pending = await takePendingOpenPath();
         if (pending && !cancelled) {
           await openExternalPath(pending);
         }
       } catch {
-        // Browser / non-tauri preview has no launch path command.
+        // Browser / non-tauri preview has no session / launch commands.
       }
 
       return unlisten;
@@ -43,7 +84,7 @@ export function useExternalOpenFile(loadFile: (path: string) => Promise<void>) {
 
     return () => {
       cancelled = true;
-      void ready.then((unlisten) => unlisten());
+      void ready.then((unlisten) => unlisten?.());
     };
   }, []);
 }

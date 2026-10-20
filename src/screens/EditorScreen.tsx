@@ -11,6 +11,7 @@ import {
 } from '../lib/tauri/fs';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
+import { resolveActiveTabId } from '../utils/editorSession';
 import {
   createTabId,
   updateTab,
@@ -28,6 +29,7 @@ import { useDiskWatch } from './hooks/useDiskWatch';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
 import { useExternalOpenFile } from './hooks/useExternalOpenFile';
 import { useFileDragOpen } from './hooks/useFileDragOpen';
+import { usePersistEditorSession } from './hooks/usePersistEditorSession';
 import { useUnsavedCloseGuard } from './hooks/useUnsavedCloseGuard';
 
 function errorMessage(error: unknown): string {
@@ -173,7 +175,12 @@ export function EditorScreen() {
   /* -------------------------------------------------------------------------- */
 
   const fileDragActive = useFileDragOpen(loadFile);
-  useExternalOpenFile(loadFile);
+  useExternalOpenFile((restored, activePath) => {
+    tabsRef.current = restored;
+    setTabs(restored);
+    setActiveId(resolveActiveTabId(restored, activePath));
+  }, loadFile);
+  usePersistEditorSession(tabs, activeId);
   useDiskWatch(
     tabs.map((tab) => tab.path),
     (path, kind) => {
