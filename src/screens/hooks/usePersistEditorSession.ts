@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { saveEditorSession } from '../../lib/tauri/session';
+import { saveEditorSession } from '../../lib/tauri/storage';
 import type { EditorTab } from '../../types/editorTab';
 
 /** 标签增删或切换激活时写入会话；跳过首次挂载以免冲掉待恢复数据 */

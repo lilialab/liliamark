@@ -1,7 +1,7 @@
 /* 颜色来自 src/theme/app.css 的 --md-*；围栏 token 见 @catppuccin/highlightjs variables */
 .markdown-preview {
-  --md-font: 'Segoe UI', 'PingFang SC', 'Noto Sans SC', sans-serif;
-  --md-font-mono: 'Cascadia Code', 'Sarasa Mono SC', Consolas, monospace;
+  --md-font: var(--app-font);
+  --md-font-mono: var(--app-font);
   --md-text: 15px;
   --md-line: 1.65;
   --md-space: 1em;

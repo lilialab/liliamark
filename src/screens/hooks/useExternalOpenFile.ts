@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from 'react';
 import { onOpenFilePath, openMarkdownPath, takePendingOpenPath } from '../../lib/tauri/fs';
-import { loadEditorSession } from '../../lib/tauri/session';
+import { loadEditorSession } from '../../lib/tauri/storage';
 import type { EditorTab } from '../../types/editorTab';
 import { createTabId } from '../../utils/editorTab';
 import { reportStartupTiming, startupMark } from '../../utils/startupTiming';

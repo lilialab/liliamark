@@ -9,6 +9,8 @@ import {
   openMarkdownPath,
   writeTextFile,
 } from '../lib/tauri/fs';
+import { loadAppSettings } from '../lib/tauri/storage';
+import { applyAppFonts } from '../theme/fonts';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
 import { resolveActiveTabId } from '../utils/editorSession';
@@ -26,6 +28,7 @@ import { DiskChangeBanner } from './components/DiskChangeBanner';
 import { EditorTabBar } from './components/EditorTabBar';
 import { FileDragOverlay } from './components/FileDragOverlay';
 import { PreviewOverlay } from './components/PreviewOverlay';
+import { SettingsOverlay } from './components/SettingsOverlay';
 import { useDiskWatch } from './hooks/useDiskWatch';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
 import { useExternalOpenFile } from './hooks/useExternalOpenFile';
@@ -50,8 +53,17 @@ export function EditorScreen() {
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
+
+  useEffect(() => {
+    void loadAppSettings()
+      .then(applyAppFonts)
+      .catch(() => {
+        // Browser / non-tauri：沿用 :root 默认字体
+      });
+  }, []);
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? null;
   const source = activeTab?.source ?? '';
@@ -238,6 +250,15 @@ export function EditorScreen() {
         >
           保存
         </button>
+        <button
+          type="button"
+          className={toolbarButtonClass}
+          onClick={() => {
+            setSettingsOpen(true);
+          }}
+        >
+          设置
+        </button>
         <EditorTabBar
           tabs={tabs.map((tab) => ({
             id: tab.id,
@@ -302,6 +323,12 @@ export function EditorScreen() {
           open={previewOpen}
           supportsPreview={activeTab !== null && supportsMarkdownPreview(activeTab.path)}
           source={source}
+        />
+        <SettingsOverlay
+          open={settingsOpen}
+          onClose={() => {
+            setSettingsOpen(false);
+          }}
         />
       </section>
     </div>

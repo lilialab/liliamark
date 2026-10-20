@@ -9,6 +9,7 @@ use tauri::Manager;
 use commands::fs::{classify_drop_paths, read_text_file, write_text_file};
 use commands::launch::take_pending_open_path;
 use commands::session::{load_editor_session, save_editor_session};
+use commands::settings::{load_app_settings, save_app_settings};
 use file_watch::{sync_watched_files, FileWatchState};
 use open_file::{PendingOpenPath, open_path_in_running_app, paths_from_args, remember_open_path};
 
@@ -54,7 +55,9 @@ pub fn run() {
             write_text_file,
             sync_watched_files,
             load_editor_session,
-            save_editor_session
+            save_editor_session,
+            load_app_settings,
+            save_app_settings
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

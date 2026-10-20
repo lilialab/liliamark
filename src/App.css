@@ -21,7 +21,7 @@
 }
 
 .code-editor .cm-scroller {
-  font-family: 'Cascadia Code', 'Sarasa Mono SC', Consolas, monospace;
+  font-family: var(--app-font);
   font-size: 14px;
   line-height: 1.5;
 }

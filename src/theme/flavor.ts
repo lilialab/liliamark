@@ -4,10 +4,9 @@ import {
   catppuccinMacchiato,
   catppuccinMocha,
 } from '@catppuccin/codemirror';
-import { flavors } from '@catppuccin/palette';
 import type { Extension } from '@codemirror/state';
 
-export type AppFlavor = keyof typeof flavors;
+export type AppFlavor = 'latte' | 'frappe' | 'macchiato' | 'mocha';
 
 /** 改这一处即可切换整站 Catppuccin flavor（CSS / 编辑器 / 标题栏 / Toast） */
 export const APP_FLAVOR: AppFlavor = 'macchiato';

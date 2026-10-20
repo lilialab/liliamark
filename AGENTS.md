@@ -44,7 +44,7 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 | 主界面、预览覆盖、脏状态 | `src/screens/EditorScreen.tsx` |
 | 源码高亮 | `src/editor/` |
 | Markdown 渲染、图片路径 | `src/preview/` |
-| 打开 / 保存 / 监听 | `src/lib/tauri/`，再进 `src-tauri/src/` |
+| 打开 / 保存 / 监听 / 设置 | `src/lib/tauri/`，再进 `src-tauri/src/` |
 | 纯函数单测 | `tests/` 里与源文件对应的用例 |
 
 ## 命令与环境
