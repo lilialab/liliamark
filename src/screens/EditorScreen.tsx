@@ -1,73 +1,36 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { EditorTabBar } from '../components/EditorTabBar';
 import { MarkdownEditor } from '../editor/MarkdownEditor';
 import {
-  classifyDropPaths,
   confirmDiscardChanges,
-  confirmDiscardUnsavedTabs,
-  onDiskFileChanged,
-  onDragDrop,
-  onOpenFilePath,
-  onWindowCloseRequested,
   openMarkdownFile,
   openMarkdownPath,
-  syncWatchedFiles,
-  takePendingOpenPath,
   writeTextFile,
 } from '../lib/tauri/fs';
 import { MarkdownPreview } from '../preview/MarkdownPreview';
-import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
-import { sameFilePath } from '../utils/sameFilePath';
-
-function fileName(path: string): string {
-  const parts = path.split(/[/\\]/);
-  return parts.at(-1) || path;
-}
+import {
+  createTabId,
+  updateTab,
+  withDiskChange,
+  withDiskContent,
+  withoutDiskChange,
+  withSavedSource,
+} from '../utils/editorTab';
+import { fileName, sameFilePath } from '../utils/path';
+import { DiskChangeBanner } from './components/DiskChangeBanner';
+import { EditorTabBar } from './components/EditorTabBar';
+import { FileDragOverlay } from './components/FileDragOverlay';
+import { useDiskWatch } from './hooks/useDiskWatch';
+import { useEditorHotkeys } from './hooks/useEditorHotkeys';
+import { useExternalOpenFile } from './hooks/useExternalOpenFile';
+import { useFileDragOpen } from './hooks/useFileDragOpen';
+import { useUnsavedCloseGuard } from './hooks/useUnsavedCloseGuard';
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
-
-function createTabId(): string {
-  return crypto.randomUUID();
-}
-
-function updateTab(
-  tabs: EditorTab[],
-  id: string,
-  update: (tab: EditorTab) => EditorTab,
-): EditorTab[] {
-  return tabs.map((tab) => (tab.id === id ? update(tab) : tab));
-}
-
-function withSavedSource(tab: EditorTab): EditorTab {
-  return { ...tab, savedSource: tab.source };
-}
-
-function withDiskContent(tab: EditorTab, content: string): EditorTab {
-  return {
-    ...tab,
-    source: content,
-    savedSource: content,
-    diskChange: null,
-    docEpoch: tab.docEpoch + 1,
-  };
-}
-
-function withoutDiskChange(tab: EditorTab): EditorTab {
-  return { ...tab, diskChange: null };
-}
-
-function withDiskChange(tabs: EditorTab[], path: string, kind: DiskChangeKind): EditorTab[] {
-  return tabs.map((tab) => (sameFilePath(tab.path, path) ? { ...tab, diskChange: kind } : tab));
-}
-
-const diskBannerClass = cn(
-  'flex shrink-0 items-center gap-3 border-b border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950',
-);
 
 const toolbarButtonClass = cn(
   'rounded border border-neutral-300 bg-neutral-50 px-3 py-1 text-sm',
@@ -81,7 +44,6 @@ export function EditorScreen() {
 
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [fileDragActive, setFileDragActive] = useState(false);
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
 
@@ -170,7 +132,7 @@ export function EditorScreen() {
 
     try {
       const file = await openMarkdownPath(tab.path);
-      setTabs((prev) => updateTab(prev, id, (tab) => withDiskContent(tab, file.content)));
+      setTabs((prev) => updateTab(prev, id, (item) => withDiskContent(item, file.content)));
     } catch (error) {
       toast.error('重载失败', { description: errorMessage(error) });
     }
@@ -199,180 +161,22 @@ export function EditorScreen() {
     });
   }
 
-  const handleSaveRef = useRef(handleSave);
-  handleSaveRef.current = handleSave;
-  const loadFileRef = useRef(loadFile);
-  loadFileRef.current = loadFile;
-
   /* -------------------------------------------------------------------------- */
   /* Effects */
   /* -------------------------------------------------------------------------- */
 
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') {
-        return;
-      }
-      event.preventDefault();
-      void handleSaveRef.current();
-    }
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    let lastPath: string | null = null;
-    let lastAt = 0;
-
-    async function openExternalPath(filePath: string) {
-      const now = Date.now();
-      if (lastPath === filePath && now - lastAt < 500) {
-        return;
-      }
-      lastPath = filePath;
-      lastAt = now;
-      if (!cancelled) {
-        await loadFileRef.current(filePath);
-      }
-    }
-
-    const ready = (async () => {
-      const unlisten = await onOpenFilePath((filePath) => {
-        void openExternalPath(filePath);
-      });
-
-      try {
-        const pending = await takePendingOpenPath();
-        if (pending && !cancelled) {
-          await openExternalPath(pending);
-        }
-      } catch {
-        // Browser / non-tauri preview has no launch path command.
-      }
-
-      return unlisten;
-    })();
-
-    return () => {
-      cancelled = true;
-      void ready.then((unlisten) => unlisten());
-    };
-  }, []);
-
-  const watchedPathsKey = tabs.map((tab) => tab.path).join('\0');
-
-  useEffect(() => {
-    const paths = watchedPathsKey.length === 0 ? [] : watchedPathsKey.split('\0');
-    void syncWatchedFiles(paths).catch(() => {
-      // Browser / non-tauri preview has no watch command.
-    });
-  }, [watchedPathsKey]);
-
-  useEffect(() => {
-    const ready = (async () => {
-      try {
-        return await onDiskFileChanged((payload) => {
-          setTabs((prev) => withDiskChange(prev, payload.path, payload.kind));
-        });
-      } catch {
-        return undefined;
-      }
-    })();
-
-    return () => {
-      void ready.then((unlisten) => unlisten?.());
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const ready = (async () => {
-      try {
-        return await onDragDrop((event) => {
-          if (cancelled) {
-            return;
-          }
-
-          if (event.type === 'enter') {
-            setFileDragActive(true);
-            return;
-          }
-
-          if (event.type === 'leave') {
-            setFileDragActive(false);
-            return;
-          }
-
-          if (event.type !== 'drop') {
-            return;
-          }
-
-          setFileDragActive(false);
-
-          void (async () => {
-            try {
-              const { files, hadDirectory } = await classifyDropPaths(event.paths);
-              if (cancelled) {
-                return;
-              }
-              if (hadDirectory) {
-                toast.message('请拖入文件');
-              }
-              for (const path of files) {
-                if (cancelled) {
-                  return;
-                }
-                await loadFileRef.current(path);
-              }
-            } catch (error) {
-              if (!cancelled) {
-                toast.error('打开失败', { description: errorMessage(error) });
-              }
-            }
-          })();
-        });
-      } catch {
-        return undefined;
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      void ready.then((unlisten) => unlisten?.());
-    };
-  }, []);
-
-  useEffect(() => {
-    const ready = (async () => {
-      try {
-        return await onWindowCloseRequested(async (event) => {
-          const dirtyCount = tabsRef.current.filter(
-            (tab) => tab.source !== tab.savedSource,
-          ).length;
-          if (dirtyCount === 0) {
-            return;
-          }
-
-          const discard = await confirmDiscardUnsavedTabs(dirtyCount);
-          if (!discard) {
-            event.preventDefault();
-          }
-        });
-      } catch {
-        // Browser / non-tauri preview has no window close hook.
-        return undefined;
-      }
-    })();
-
-    return () => {
-      void ready.then((unlisten) => unlisten?.());
-    };
-  }, []);
+  const fileDragActive = useFileDragOpen(loadFile);
+  useExternalOpenFile(loadFile);
+  useDiskWatch(
+    tabs.map((tab) => tab.path),
+    (path, kind) => {
+      setTabs((prev) => withDiskChange(prev, path, kind));
+    },
+  );
+  useUnsavedCloseGuard(
+    () => tabs.filter((tab) => tab.source !== tab.savedSource).length,
+  );
+  useEditorHotkeys(handleSave);
 
   /* -------------------------------------------------------------------------- */
   /* Render */
@@ -380,23 +184,7 @@ export function EditorScreen() {
 
   return (
     <div className={cn('relative flex h-full min-h-0 w-full flex-col')}>
-      {fileDragActive && (
-        <div
-          className={cn(
-            'pointer-events-none absolute inset-0 z-50 flex items-center justify-center',
-            'bg-neutral-900/25',
-          )}
-          aria-live="polite"
-        >
-          <p
-            className={cn(
-              'rounded-md bg-white/95 px-5 py-2.5 text-sm text-neutral-900',
-            )}
-          >
-            松开以打开
-          </p>
-        </div>
-      )}
+      <FileDragOverlay active={fileDragActive} />
       <header
         className={cn(
           'flex shrink-0 items-center gap-3 border-b border-neutral-300 bg-white px-3 py-2',
@@ -436,47 +224,17 @@ export function EditorScreen() {
         />
       </header>
 
-      {activeTab?.diskChange === 'modify' && !dirty && (
-        <div className={diskBannerClass}>
-          <p className={cn('min-w-0 flex-1')}>磁盘上的文件已更新</p>
-          <button
-            type="button"
-            className={toolbarButtonClass}
-            onClick={() => {
-              void handleReloadFromDisk(activeTab.id);
-            }}
-          >
-            重载
-          </button>
-        </div>
-      )}
-      {activeTab?.diskChange === 'remove' && (
-        <div className={diskBannerClass}>
-          <p className={cn('min-w-0 flex-1')}>文件已删除或移走</p>
-        </div>
-      )}
-      {activeTab?.diskChange === 'modify' && dirty && (
-        <div className={diskBannerClass}>
-          <p className={cn('min-w-0 flex-1')}>磁盘上的文件已更新，与当前未保存的修改冲突</p>
-          <button
-            type="button"
-            className={toolbarButtonClass}
-            onClick={() => {
-              handleKeepEdits(activeTab.id);
-            }}
-          >
-            保留编辑
-          </button>
-          <button
-            type="button"
-            className={toolbarButtonClass}
-            onClick={() => {
-              void handleReloadFromDisk(activeTab.id);
-            }}
-          >
-            用磁盘版本
-          </button>
-        </div>
+      {activeTab && (
+        <DiskChangeBanner
+          diskChange={activeTab.diskChange}
+          dirty={dirty}
+          onReload={() => {
+            void handleReloadFromDisk(activeTab.id);
+          }}
+          onKeepEdits={() => {
+            handleKeepEdits(activeTab.id);
+          }}
+        />
       )}
 
       <div className={cn('grid min-h-0 flex-1 grid-cols-2')}>

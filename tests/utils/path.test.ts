@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sameFilePath } from '../../src/utils/sameFilePath';
+import { fileName, sameFilePath } from '../../src/utils/path';
 
 describe('sameFilePath', () => {
   it('treats Windows paths as case-insensitive and separator-insensitive', () => {
@@ -9,5 +9,16 @@ describe('sameFilePath', () => {
   it('keeps POSIX paths case-sensitive', () => {
     expect(sameFilePath('/Users/me/Note.md', '/Users/me/note.md')).toBe(false);
     expect(sameFilePath('/Users/me/note.md', '/Users/me/note.md')).toBe(true);
+  });
+});
+
+describe('fileName', () => {
+  it('takes the last segment for Windows and POSIX paths', () => {
+    expect(fileName('C:\\Docs\\note.md')).toBe('note.md');
+    expect(fileName('/Users/me/note.md')).toBe('note.md');
+  });
+
+  it('returns the input when there is no separator', () => {
+    expect(fileName('note.md')).toBe('note.md');
   });
 });

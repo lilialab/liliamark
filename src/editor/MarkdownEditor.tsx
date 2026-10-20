@@ -1,6 +1,16 @@
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
-import { EditorView } from '@codemirror/view';
-import { basicSetup } from 'codemirror';
+import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { EditorState } from '@codemirror/state';
+import {
+  drawSelection,
+  EditorView,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+  highlightSpecialChars,
+  keymap,
+  lineNumbers,
+} from '@codemirror/view';
 import { useEffect, useRef } from 'react';
 import { cn } from '../utils/cn';
 
@@ -9,6 +19,19 @@ type MarkdownEditorProps = {
   onChange: (value: string) => void;
   className?: string;
 };
+
+const editorExtensions = [
+  lineNumbers(),
+  highlightActiveLineGutter(),
+  highlightSpecialChars(),
+  history(),
+  drawSelection(),
+  EditorState.allowMultipleSelections.of(true),
+  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  highlightActiveLine(),
+  markdown(),
+  keymap.of([...defaultKeymap, ...historyKeymap]),
+];
 
 export function MarkdownEditor({ value, onChange, className }: MarkdownEditorProps) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -25,8 +48,7 @@ export function MarkdownEditor({ value, onChange, className }: MarkdownEditorPro
     const view = new EditorView({
       doc: initialValueRef.current,
       extensions: [
-        basicSetup,
-        markdown(),
+        ...editorExtensions,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChangeRef.current(update.state.doc.toString());

@@ -64,7 +64,7 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 | Rust 命令 | 文件 IO | 解析 Markdown、碰 UI |
 
 - 编辑是源码高亮，不是富文本。不要加格式化工具栏、选区装饰、ProseMirror / TipTap
-- CodeMirror 只用 `basicSetup`、`@codemirror/lang-markdown` 和一套主题。不要换 Monaco，也不要自己写高亮层
+- CodeMirror 自拼精简 extensions（见 `src/editor/MarkdownEditor.tsx`）+ `@codemirror/lang-markdown` 和一套主题；不要用整包 `basicSetup`，不要换 Monaco，也不要自己写高亮层
 - 预览用 markdown-it。第一版不上 KaTeX、Mermaid、目录树、滚动同步
 - 相对路径图片经 Tauri 资源协议交给 WebView，不把裸文件路径写进 `<img>`
 - 要超出 README「第一版」时，先跟用户确认

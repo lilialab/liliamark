@@ -27,7 +27,7 @@
 - KaTeX、Mermaid、插件
 - 账号、同步、服务器
 
-编辑区只装 CodeMirror 的 `basicSetup`、`@codemirror/lang-markdown` 和一套主题。补全、折叠、lint、查找面板不在第一版里。
+编辑区用自拼的精简 CodeMirror extensions（行号、历史、选区、高亮等）和 `@codemirror/lang-markdown`。补全、折叠、lint、查找面板不在第一版里。
 
 ## 目录
 

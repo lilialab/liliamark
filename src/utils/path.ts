@@ -15,3 +15,9 @@ export function sameFilePath(a: string, b: string): boolean {
   }
   return left === right;
 }
+
+/** 从本地路径取出文件名 */
+export function fileName(path: string): string {
+  const parts = path.split(/[/\\]/);
+  return parts.at(-1) || path;
+}
