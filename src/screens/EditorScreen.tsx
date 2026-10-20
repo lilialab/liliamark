@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supportsMarkdownPreview } from '../editor/languageRegistry';
 import { MarkdownEditor } from '../editor/MarkdownEditor';
 import {
+  closeCurrentWindow,
   confirmDiscardChanges,
   openMarkdownFile,
   openMarkdownPath,
@@ -185,6 +186,13 @@ export function EditorScreen() {
   useEditorHotkeys({
     onSave: handleSave,
     onTogglePreview: handleTogglePreview,
+    onCloseTab: () => {
+      if (activeId !== null) {
+        void handleCloseTab(activeId);
+        return;
+      }
+      void closeCurrentWindow();
+    },
   });
 
   /* -------------------------------------------------------------------------- */

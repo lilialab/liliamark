@@ -77,6 +77,11 @@ export function onWindowCloseRequested(
   return getCurrentWindow().onCloseRequested(handler);
 }
 
+/** 关闭当前窗口（会走 onCloseRequested / 未保存确认） */
+export async function closeCurrentWindow(): Promise<void> {
+  await getCurrentWindow().close();
+}
+
 /** 取出启动时由系统传入的待打开路径（一次性） */
 export async function takePendingOpenPath(): Promise<string | null> {
   return invoke<string | null>('take_pending_open_path');

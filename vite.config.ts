@@ -10,6 +10,11 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(() => ({
   plugins: [react(), tailwindcss()],
 
+  // React + CodeMirror core sit in the main chunk; 500 kB warning is noisy for a desktop shell.
+  build: {
+    chunkSizeWarningLimit: 1024,
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors
