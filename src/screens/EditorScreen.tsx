@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { CodeEditor } from '../editor/CodeEditor';
 import { supportsMarkdownPreview } from '../editor/languageRegistry';
-import { MarkdownEditor } from '../editor/MarkdownEditor';
 import {
   closeCurrentWindow,
   confirmDiscardChanges,
@@ -287,7 +287,7 @@ export function EditorScreen() {
                 )}
                 aria-hidden={!active}
               >
-                <MarkdownEditor
+                <CodeEditor
                   key={tab.docEpoch}
                   path={tab.path}
                   value={tab.source}

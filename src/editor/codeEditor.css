@@ -1,0 +1,43 @@
+/* 与预览 --md-* 对齐；双 class 压过 Catppuccin StyleModule */
+.code-editor .cm-md-h1 {
+  color: var(--md-h1);
+  font-weight: bold;
+}
+.code-editor .cm-md-h2 {
+  color: var(--md-h2);
+  font-weight: bold;
+}
+.code-editor .cm-md-h3 {
+  color: var(--md-h3);
+  font-weight: bold;
+}
+.code-editor .cm-md-h4 {
+  color: var(--md-h4);
+  font-weight: bold;
+}
+.code-editor .cm-md-h5 {
+  color: var(--md-h5);
+  font-weight: bold;
+}
+.code-editor .cm-md-h6 {
+  color: var(--md-h6);
+  font-weight: bold;
+}
+
+/* 加粗：与预览 --md-strong 同红 */
+.code-editor .cm-md-strong {
+  color: var(--md-strong);
+  font-weight: bold;
+}
+
+/* (url) / 自动链接：与预览 --md-link 同蓝 */
+.code-editor .cm-md-url {
+  color: var(--md-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* 行内代码：源码区用绿色即可（预览仍是底色块） */
+.code-editor .cm-md-code {
+  color: var(--ctp-green);
+}

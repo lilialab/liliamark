@@ -16,11 +16,11 @@
 }
 
 /* CodeMirror fills its pane; utilities cannot target .cm-* from JSX. */
-.markdown-editor .cm-editor {
+.code-editor .cm-editor {
   height: 100%;
 }
 
-.markdown-editor .cm-scroller {
+.code-editor .cm-scroller {
   font-family: 'Cascadia Code', 'Sarasa Mono SC', Consolas, monospace;
   font-size: 14px;
   line-height: 1.5;

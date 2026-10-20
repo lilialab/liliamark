@@ -31,10 +31,6 @@ export function catppuccinEditorTheme(flavor: AppFlavor = APP_FLAVOR): Extension
   return codemirrorThemes[flavor];
 }
 
-export function strongAccentColor(flavor: AppFlavor = APP_FLAVOR): string {
-  return flavors[flavor].colors.red.hex;
-}
-
 /** 同步挂上 html[data-flavor]，供 CSS 变量别名 */
 export function applyDocumentFlavor(flavor: AppFlavor = APP_FLAVOR): void {
   document.documentElement.dataset.flavor = flavor;
