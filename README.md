@@ -37,7 +37,7 @@ src/screens/EditorScreen.tsx    主界面
 src/components/                 可复用的小块 UI（有需要再加）
 src/editor/                     CodeMirror 装配
 src/preview/                    markdown-it 渲染（纯函数）和预览区
-src/theme/                      Catppuccin 变量与应用语义色
+src/theme/                      Catppuccin（改 flavor.ts 的 APP_FLAVOR 可切换）
 src/lib/tauri/                  打开、读取、保存、监听的 invoke 封装（有 IO 再加）
 src/utils/                      与 Markdown 无关的纯函数（有需要再加）
 src/types/

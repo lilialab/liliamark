@@ -24,7 +24,7 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 | 可复用 UI | `src/components/` |
 | 编辑器装配 | `src/editor/`（CodeMirror；只做源码高亮） |
 | 预览 | `src/preview/`（markdown-it → HTML 的纯函数，以及预览区） |
-| 主题色 | `src/theme/`（Catppuccin `--ctp-*` 与 `--app-*` / `--md-*`） |
+| 主题色 | `src/theme/`（`flavor.ts` 的 `APP_FLAVOR`；`--ctp-*` 与 `--app-*` / `--md-*`） |
 | 桌面 IO 封装 | `src/lib/tauri/`（invoke；组件不直接调用） |
 | 共享类型 | `src/types/` |
 | 纯函数 | `src/utils/`（无 I/O，不依赖 Tauri / DOM） |
