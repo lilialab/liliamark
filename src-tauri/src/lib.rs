@@ -2,8 +2,7 @@ mod commands;
 mod file_watch;
 mod navigation_guard;
 mod open_file;
-
-use std::time::Instant;
+mod startup_timing;
 
 use tauri::Manager;
 
@@ -13,11 +12,12 @@ use commands::session::{load_editor_session, save_editor_session};
 use commands::settings::{load_app_settings, save_app_settings};
 use file_watch::{sync_watched_files, FileWatchState};
 use open_file::{PendingOpenPath, open_path_in_running_app, paths_from_args, remember_open_path};
+use startup_timing::{get_native_startup_timing, mark_window_visible, StartupTiming};
 
 /// 启动 Tauri：单实例、文件关联打开、注册读写命令。
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let rust_started = Instant::now();
+    let startup = StartupTiming::new();
     let mut builder = tauri::Builder::default();
 
     #[cfg(desktop)]
@@ -38,10 +38,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(navigation_guard::init())
+        .manage(startup)
         .manage(PendingOpenPath::new())
         .manage(FileWatchState::new())
-        .setup(move |app| {
-            eprintln!("[startup] rust→setup {:?}", rust_started.elapsed());
+        .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {
                 if let Some(path) = paths_from_args(std::env::args()).into_iter().next() {
@@ -59,23 +59,25 @@ pub fn run() {
             load_editor_session,
             save_editor_session,
             load_app_settings,
-            save_app_settings
+            save_app_settings,
+            get_native_startup_timing
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(
-            #[allow(unused_variables)]
-            |app, event| {
-                #[cfg(any(target_os = "macos", target_os = "ios"))]
-                if let tauri::RunEvent::Opened { urls } = event {
-                    if let Some(path) = urls
-                        .into_iter()
-                        .filter_map(|url| url.to_file_path().ok())
-                        .next()
-                    {
-                        open_path_in_running_app(app, path);
-                    }
+        .run(|app, event| {
+            if let tauri::RunEvent::Ready = &event {
+                mark_window_visible(app);
+            }
+
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
+            if let tauri::RunEvent::Opened { urls } = event {
+                if let Some(path) = urls
+                    .into_iter()
+                    .filter_map(|url| url.to_file_path().ok())
+                    .next()
+                {
+                    open_path_in_running_app(app, path);
                 }
-            },
-        );
+            }
+        });
 }

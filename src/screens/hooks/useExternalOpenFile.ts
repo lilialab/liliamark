@@ -42,14 +42,12 @@ export function useExternalOpenFile(
         });
       } catch {
         // Browser / non-tauri preview has no open-file event.
-        startupMark('session-start');
         startupMark('session-done');
-        reportStartupTiming();
+        void reportStartupTiming();
         return undefined;
       }
 
       try {
-        startupMark('session-start');
         const session = await loadEditorSession();
         if (cancelled) {
           return unlisten;
@@ -85,7 +83,7 @@ export function useExternalOpenFile(
       } finally {
         if (!cancelled) {
           startupMark('session-done');
-          reportStartupTiming();
+          void reportStartupTiming();
         }
       }
 

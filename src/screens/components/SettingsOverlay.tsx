@@ -10,6 +10,7 @@ import {
 } from '../../theme/fonts';
 import type { AppSettings } from '../../types/appSettings';
 import { cn } from '../../utils/cn';
+import { getLastStartupTiming } from '../../utils/startupTiming';
 
 type SettingsOverlayProps = {
   open: boolean;
@@ -92,6 +93,8 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
     return null;
   }
 
+  const startupTiming = getLastStartupTiming();
+
   return (
     <div
       className={cn(
@@ -149,6 +152,21 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
             }}
           />
         </label>
+
+        <div className={cn('mb-4 border-t border-(--app-border) pt-3')}>
+          <h3 className={cn('mb-2 text-sm font-medium text-(--app-fg)')}>启动耗时</h3>
+          <dl className={cn('space-y-2 text-xs')}>
+            {startupTiming.map((row) => (
+              <div key={row.label} className={cn('flex justify-between gap-4')}>
+                <dt>
+                  <div className={cn('font-mono text-(--app-fg)')}>{row.label}</div>
+                  <div className={cn('text-(--app-muted)')}>{row.meaning}</div>
+                </dt>
+                <dd className={cn('shrink-0 font-mono text-(--app-fg)')}>{row.durationMs}ms</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
 
         <div className={cn('flex justify-end gap-2')}>
           <button
