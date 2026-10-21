@@ -1,16 +1,10 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { EditorState, type Extension } from '@codemirror/state';
-import {
-  drawSelection,
-  highlightActiveLine,
-  highlightActiveLineGutter,
-  highlightSpecialChars,
-  keymap,
-  lineNumbers,
-} from '@codemirror/view';
+import { drawSelection, highlightSpecialChars, keymap, lineNumbers } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { catppuccinEditorTheme } from '../theme/flavor';
+import { highlightActiveLineExclusive } from './activeLineHighlight';
 
 /**
  * Markdown 语义挂稳定 class，样式走 CSS（特异性高于主题 StyleModule，
@@ -33,13 +27,12 @@ const markdownHighlight = syntaxHighlighting(
 /** 编辑器静态装配：行号 / 主题 / Markdown 语义色 / keymap（不含语言） */
 export const baseExtensions: Extension[] = [
   lineNumbers(),
-  highlightActiveLineGutter(),
   highlightSpecialChars(),
   history(),
   drawSelection(),
   EditorState.allowMultipleSelections.of(true),
   catppuccinEditorTheme(),
   markdownHighlight,
-  highlightActiveLine(),
+  highlightActiveLineExclusive(),
   keymap.of([...defaultKeymap, ...historyKeymap]),
 ];

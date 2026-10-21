@@ -1,5 +1,6 @@
 mod commands;
 mod file_watch;
+mod navigation_guard;
 mod open_file;
 
 use std::time::Instant;
@@ -36,6 +37,7 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(navigation_guard::init())
         .manage(PendingOpenPath::new())
         .manage(FileWatchState::new())
         .setup(move |app| {

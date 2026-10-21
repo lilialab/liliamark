@@ -11,10 +11,18 @@
   font-family: var(--md-font);
   font-size: var(--md-text);
   line-height: var(--md-line);
+  box-sizing: border-box;
+  /* 不软换行；由内容撑宽，横滑在 PreviewOverlay */
+  width: max-content;
+  min-width: 100%;
   min-height: 100%;
   padding: 1.25rem 1.5rem;
-  word-wrap: break-word;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+
+/* 与编辑器 Catppuccin 选区一致：overlay2 @ ~25% */
+.markdown-preview ::selection {
+  background-color: color-mix(in srgb, var(--ctp-overlay2) 25%, transparent);
 }
 
 .markdown-preview > :first-child {
@@ -145,11 +153,12 @@
 .markdown-preview pre {
   margin: 0 0 var(--md-space);
   padding: 0.85em 1em;
-  overflow: auto;
+  overflow: visible;
   background: var(--md-bg-code);
   border: 1px solid var(--md-border);
   border-radius: 6px;
   line-height: 1.5;
+  white-space: pre;
 }
 
 .markdown-preview pre code.hljs {
@@ -161,7 +170,7 @@
 }
 
 .markdown-preview table {
-  width: 100%;
+  width: auto;
   margin: 0 0 var(--md-space);
   border-collapse: collapse;
   font-size: 0.95em;
@@ -184,7 +193,7 @@
 }
 
 .markdown-preview img {
-  max-width: 100%;
+  max-width: none;
   height: auto;
 }
 
