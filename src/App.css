@@ -13,6 +13,38 @@
     font-family: 'Segoe UI', 'PingFang SC', 'Noto Sans SC', sans-serif;
     @apply antialiased;
   }
+
+  /* Catppuccin 滚动条：轨道 mantle，滑块 surface2 → overlay0 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ctp-surface2) var(--ctp-mantle);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--ctp-mantle);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--ctp-surface2);
+    border-radius: 6px;
+    border: 2px solid var(--ctp-mantle);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--ctp-overlay0);
+    border: 2px solid var(--ctp-mantle);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--ctp-mantle);
+  }
 }
 
 /* CodeMirror fills its pane; utilities cannot target .cm-* from JSX. */
@@ -22,6 +54,6 @@
 
 .code-editor .cm-scroller {
   font-family: var(--app-font);
-  font-size: 14px;
+  font-size: var(--app-font-size);
   line-height: 1.5;
 }

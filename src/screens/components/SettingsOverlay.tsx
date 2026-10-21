@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { loadAppSettings, saveAppSettings } from '../../lib/tauri/storage';
-import { applyAppFonts } from '../../theme/fonts';
+import {
+  applyAppFonts,
+  DEFAULT_FONT_SIZE,
+  MAX_FONT_SIZE,
+  MIN_FONT_SIZE,
+  parseFontSizeInput,
+} from '../../theme/fonts';
 import type { AppSettings } from '../../types/appSettings';
 import { cn } from '../../utils/cn';
 
@@ -27,6 +33,7 @@ function errorMessage(error: unknown): string {
 
 export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
   const [fontFamily, setFontFamily] = useState('');
+  const [fontSize, setFontSize] = useState(String(DEFAULT_FONT_SIZE));
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -42,6 +49,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
           return;
         }
         setFontFamily(settings.fontFamily);
+        setFontSize(String(settings.fontSize));
         setLoaded(true);
       })
       .catch(() => {
@@ -50,6 +58,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
         }
         // Browser / non-tauri：空串 → 沿用 :root 默认
         setFontFamily('');
+        setFontSize(String(DEFAULT_FONT_SIZE));
         setLoaded(true);
       });
 
@@ -59,7 +68,13 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
   }, [open]);
 
   async function handleSave() {
-    const settings: AppSettings = { fontFamily };
+    const parsedSize = parseFontSizeInput(fontSize);
+    if (parsedSize === null) {
+      toast.error(`字号须为 ${MIN_FONT_SIZE}–${MAX_FONT_SIZE} 的整数`);
+      return;
+    }
+
+    const settings: AppSettings = { fontFamily, fontSize: parsedSize };
     setSaving(true);
     try {
       await saveAppSettings(settings);
@@ -99,7 +114,8 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
       >
         <h2 className={cn('mb-3 text-base font-medium text-(--app-fg)')}>字体</h2>
         <p className={cn('mb-4 text-xs text-(--app-muted)')}>
-          编辑器与预览共用。填写 CSS font-family 栈；留空则用默认。保存后生效。
+          编辑器与预览共用。font-family 留空则用默认；字号{' '}
+          {MIN_FONT_SIZE}–{MAX_FONT_SIZE}（px）。保存后生效。
         </p>
 
         <label className={cn('mb-4 block')}>
@@ -112,6 +128,24 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
             disabled={!loaded || saving}
             onChange={(event) => {
               setFontFamily(event.target.value);
+            }}
+          />
+        </label>
+
+        <label className={cn('mb-4 block')}>
+          <span className={cn('mb-1 block text-sm text-(--app-fg)')}>字号（px）</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={MIN_FONT_SIZE}
+            max={MAX_FONT_SIZE}
+            step={1}
+            className={fieldClass}
+            value={fontSize}
+            placeholder={String(DEFAULT_FONT_SIZE)}
+            disabled={!loaded || saving}
+            onChange={(event) => {
+              setFontSize(event.target.value);
             }}
           />
         </label>

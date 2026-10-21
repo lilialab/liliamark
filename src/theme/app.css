@@ -18,6 +18,7 @@
   --app-overlay-card: color-mix(in srgb, var(--ctp-base) 95%, transparent);
   /* 编辑器 / 预览共用（设置可覆盖；壳 UI 不用） */
   --app-font: 'Cascadia Code', 'Sarasa Mono SC', Consolas, monospace;
+  --app-font-size: 16px;
 
   /* 预览（style-guide 角色） */
   --md-bg: var(--ctp-base);

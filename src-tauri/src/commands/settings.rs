@@ -5,12 +5,19 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 const SETTINGS_FILE: &str = "settings.json";
+const DEFAULT_FONT_SIZE: u32 = 16;
+
+fn default_font_size() -> u32 {
+    DEFAULT_FONT_SIZE
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     #[serde(default)]
     pub font_family: String,
+    #[serde(default = "default_font_size")]
+    pub font_size: u32,
 }
 
 /// 旧版双字段；仅用于读入迁移。
@@ -23,11 +30,14 @@ struct LegacyAppSettings {
     prose_font: String,
     #[serde(default)]
     mono_font: String,
+    #[serde(default = "default_font_size")]
+    font_size: u32,
 }
 
 fn empty_settings() -> AppSettings {
     AppSettings {
         font_family: String::new(),
+        font_size: DEFAULT_FONT_SIZE,
     }
 }
 
@@ -36,7 +46,15 @@ fn settings_from_legacy(legacy: LegacyAppSettings) -> AppSettings {
         .into_iter()
         .find(|value| !value.trim().is_empty())
         .unwrap_or_default();
-    AppSettings { font_family }
+    let font_size = if legacy.font_size == 0 {
+        DEFAULT_FONT_SIZE
+    } else {
+        legacy.font_size
+    };
+    AppSettings {
+        font_family,
+        font_size,
+    }
 }
 
 fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -82,15 +100,28 @@ pub(crate) fn save_app_settings(app: AppHandle, settings: AppSettings) -> Result
 
 #[cfg(test)]
 mod tests {
-    use super::{empty_settings, parse_settings_json, AppSettings};
+    use super::{empty_settings, parse_settings_json, AppSettings, DEFAULT_FONT_SIZE};
 
     #[test]
     fn parse_valid_settings() {
+        let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18}"#;
+        assert_eq!(
+            parse_settings_json(json),
+            AppSettings {
+                font_family: "Consolas, monospace".into(),
+                font_size: 18,
+            }
+        );
+    }
+
+    #[test]
+    fn parse_missing_font_size_defaults() {
         let json = r#"{"fontFamily":"Consolas, monospace"}"#;
         assert_eq!(
             parse_settings_json(json),
             AppSettings {
                 font_family: "Consolas, monospace".into(),
+                font_size: DEFAULT_FONT_SIZE,
             }
         );
     }
@@ -102,6 +133,7 @@ mod tests {
             parse_settings_json(json),
             AppSettings {
                 font_family: "Cascadia Code, monospace".into(),
+                font_size: DEFAULT_FONT_SIZE,
             }
         );
     }

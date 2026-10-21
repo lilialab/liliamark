@@ -2,7 +2,7 @@
 .markdown-preview {
   --md-font: var(--app-font);
   --md-font-mono: var(--app-font);
-  --md-text: 15px;
+  --md-text: var(--app-font-size);
   --md-line: 1.65;
   --md-space: 1em;
 
