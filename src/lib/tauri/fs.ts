@@ -12,12 +12,6 @@ export type DropPathsClassification = {
   hadDirectory: boolean;
 };
 
-/** 高亮由 languageRegistry 按扩展名决定；对话框不维护语言清单 */
-const openFileFilters = [
-  { name: '所有文件', extensions: ['*'] },
-  { name: 'Markdown', extensions: ['md', 'markdown'] },
-];
-
 /** 读取本地文本文件内容 */
 export async function readTextFile(path: string): Promise<string> {
   return invoke<string>('read_text_file', { path });
@@ -34,12 +28,11 @@ export async function openMarkdownPath(path: string): Promise<OpenedMarkdownFile
   return { path, content };
 }
 
-/** 选择并打开本地文件；取消选择时返回 null */
+/** 选择并打开本地文件；取消选择时返回 null（不按扩展名过滤） */
 export async function openMarkdownFile(): Promise<OpenedMarkdownFile | null> {
   const selected = await open({
     multiple: false,
     directory: false,
-    filters: openFileFilters,
   });
 
   if (selected === null) {

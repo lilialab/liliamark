@@ -47,6 +47,86 @@
         "mimeType": "text/markdown",
         "role": "Editor",
         "rank": "Default"
+      },
+      {
+        "ext": ["txt"],
+        "name": "LiliaMark.Text",
+        "description": "Plain Text Document",
+        "mimeType": "text/plain",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["json"],
+        "name": "LiliaMark.JSON",
+        "description": "JSON Source",
+        "mimeType": "application/json",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["js", "mjs", "cjs"],
+        "name": "LiliaMark.JavaScript",
+        "description": "JavaScript Source",
+        "mimeType": "text/javascript",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["ts", "mts", "cts"],
+        "name": "LiliaMark.TypeScript",
+        "description": "TypeScript Source",
+        "mimeType": "text/typescript",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["jsx"],
+        "name": "LiliaMark.JSX",
+        "description": "JSX Source",
+        "mimeType": "text/javascript",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["tsx"],
+        "name": "LiliaMark.TSX",
+        "description": "TSX Source",
+        "mimeType": "text/typescript",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["py", "pyw"],
+        "name": "LiliaMark.Python",
+        "description": "Python Source",
+        "mimeType": "text/x-python",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["rs"],
+        "name": "LiliaMark.Rust",
+        "description": "Rust Source",
+        "mimeType": "text/rust",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["java"],
+        "name": "LiliaMark.Java",
+        "description": "Java Source",
+        "mimeType": "text/x-java-source",
+        "role": "Editor",
+        "rank": "Alternate"
+      },
+      {
+        "ext": ["sh", "bash", "zsh", "ksh"],
+        "name": "LiliaMark.Shell",
+        "description": "Shell Script",
+        "mimeType": "text/x-shellscript",
+        "role": "Editor",
+        "rank": "Alternate"
       }
     ]
   }
