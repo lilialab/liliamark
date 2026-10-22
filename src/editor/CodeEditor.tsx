@@ -1,8 +1,10 @@
 import { Compartment } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useEffect, useRef } from 'react';
+import { useAppSettingsStore } from '../stores/appSettingsStore';
 import { cn } from '../utils/cn';
 import { baseExtensions } from './editorExtensions';
+import { indentExtensions } from './indent';
 import { editorLanguageKind, loadLanguageExtension } from './languageRegistry';
 import './codeEditor.css';
 
@@ -17,11 +19,14 @@ export function CodeEditor({ path, value, onChange, className }: CodeEditorProps
   const parentRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const languageCompartmentRef = useRef<Compartment | null>(null);
+  const indentCompartmentRef = useRef<Compartment | null>(null);
   const languageLoadSeqRef = useRef(0);
   const onChangeRef = useRef(onChange);
   const initialValueRef = useRef(value);
   onChangeRef.current = onChange;
 
+  const indentStyle = useAppSettingsStore((state) => state.settings.indentStyle);
+  const indentSize = useAppSettingsStore((state) => state.settings.indentSize);
   const languageKind = editorLanguageKind(path);
 
   useEffect(() => {
@@ -30,12 +35,16 @@ export function CodeEditor({ path, value, onChange, className }: CodeEditorProps
     }
 
     const languageCompartment = new Compartment();
+    const indentCompartment = new Compartment();
     languageCompartmentRef.current = languageCompartment;
+    indentCompartmentRef.current = indentCompartment;
 
+    const { indentStyle: style, indentSize: size } = useAppSettingsStore.getState().settings;
     const view = new EditorView({
       doc: initialValueRef.current,
       extensions: [
         ...baseExtensions,
+        indentCompartment.of(indentExtensions(style, size)),
         languageCompartment.of([]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
@@ -51,8 +60,20 @@ export function CodeEditor({ path, value, onChange, className }: CodeEditorProps
       view.destroy();
       viewRef.current = null;
       languageCompartmentRef.current = null;
+      indentCompartmentRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    const indentCompartment = indentCompartmentRef.current;
+    if (!view || !indentCompartment) {
+      return;
+    }
+    view.dispatch({
+      effects: indentCompartment.reconfigure(indentExtensions(indentStyle, indentSize)),
+    });
+  }, [indentStyle, indentSize]);
 
   useEffect(() => {
     const view = viewRef.current;

@@ -9,8 +9,7 @@ import {
   openMarkdownPath,
   writeTextFile,
 } from '../lib/tauri/fs';
-import { loadAppSettings } from '../lib/tauri/storage';
-import { applyAppFonts } from '../theme/fonts';
+import { useAppSettingsStore } from '../stores/appSettingsStore';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
 import { resolveActiveTabId } from '../utils/editorSession';
@@ -24,11 +23,14 @@ import {
 } from '../utils/editorTab';
 import { fileName, sameFilePath } from '../utils/path';
 import { markStartupUiReady } from '../utils/startupTiming';
+import { AppMenu } from './components/AppMenu';
 import { DiskChangeBanner } from './components/DiskChangeBanner';
 import { EditorTabBar } from './components/EditorTabBar';
 import { FileDragOverlay } from './components/FileDragOverlay';
 import { PreviewOverlay } from './components/PreviewOverlay';
 import { SettingsOverlay } from './components/SettingsOverlay';
+import { StartupTimingOverlay } from './components/StartupTimingOverlay';
+import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
 import { useDiskWatch } from './hooks/useDiskWatch';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
 import { useExternalOpenFile } from './hooks/useExternalOpenFile';
@@ -40,11 +42,6 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-const toolbarButtonClass = cn(
-  'rounded border border-(--app-border) bg-(--app-surface) px-3 py-1 text-sm text-(--app-fg)',
-  'hover:bg-(--app-surface-hover) disabled:cursor-not-allowed disabled:opacity-50',
-);
-
 export function EditorScreen() {
   /* -------------------------------------------------------------------------- */
   /* State & data */
@@ -54,15 +51,12 @@ export function EditorScreen() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [startupTimingOpen, setStartupTimingOpen] = useState(false);
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
 
   useEffect(() => {
-    void loadAppSettings()
-      .then(applyAppFonts)
-      .catch(() => {
-        // Browser / non-tauri：沿用 :root 默认字体
-      });
+    void useAppSettingsStore.getState().hydrate();
   }, []);
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? null;
@@ -207,6 +201,7 @@ export function EditorScreen() {
   useUnsavedCloseGuard(
     () => tabs.filter((tab) => tab.source !== tab.savedSource).length,
   );
+  useBlockBrowserShortcuts();
   useEditorHotkeys({
     onSave: handleSave,
     onTogglePreview: handleTogglePreview,
@@ -226,53 +221,46 @@ export function EditorScreen() {
   return (
     <div className={cn('relative flex h-full min-h-0 w-full flex-col')}>
       <FileDragOverlay active={fileDragActive} />
-      <header
-        className={cn(
-          'flex shrink-0 items-center gap-3 border-b border-(--app-border) bg-(--app-bg-raised) px-3 py-2',
-        )}
-      >
-        <button
-          type="button"
-          className={toolbarButtonClass}
-          onClick={() => {
-            void handleOpen();
-          }}
-        >
-          打开
-        </button>
-        <button
-          type="button"
-          className={toolbarButtonClass}
-          disabled={!activeTab || !dirty}
-          onClick={() => {
-            void handleSave();
-          }}
-        >
-          保存
-        </button>
-        <button
-          type="button"
-          className={toolbarButtonClass}
-          onClick={() => {
-            setSettingsOpen(true);
-          }}
-        >
-          设置
-        </button>
-        <EditorTabBar
-          tabs={tabs.map((tab) => ({
-            id: tab.id,
-            title: fileName(tab.path),
-            dirty: tab.source !== tab.savedSource,
-            diskChange: tab.diskChange !== null,
-          }))}
-          activeId={activeId}
-          onSelect={setActiveId}
-          onClose={(id) => {
-            void handleCloseTab(id);
-          }}
-        />
-      </header>
+      <EditorTabBar
+        tabs={tabs.map((tab) => ({
+          id: tab.id,
+          title: fileName(tab.path),
+          dirty: tab.source !== tab.savedSource,
+          diskChange: tab.diskChange !== null,
+        }))}
+        activeId={activeId}
+        onSelect={setActiveId}
+        onClose={(id) => {
+          void handleCloseTab(id);
+        }}
+        trailing={
+          <AppMenu
+            items={[
+              {
+                id: 'open',
+                label: '打开',
+                onSelect: () => {
+                  void handleOpen();
+                },
+              },
+              {
+                id: 'settings',
+                label: '设置',
+                onSelect: () => {
+                  setSettingsOpen(true);
+                },
+              },
+              {
+                id: 'startup-timing',
+                label: '启动耗时',
+                onSelect: () => {
+                  setStartupTimingOpen(true);
+                },
+              },
+            ]}
+          />
+        }
+      />
 
       {activeTab && (
         <DiskChangeBanner
@@ -294,7 +282,7 @@ export function EditorScreen() {
         {tabs.length === 0
           ? (
             <p className={cn('p-4 text-sm text-(--app-muted)')}>
-              打开一个文件开始编辑（Ctrl+E 切换预览）
+              打开一个文件开始编辑（Ctrl+S 保存 · Ctrl+E 切换预览）
             </p>
           )
           : tabs.map((tab) => {
@@ -328,6 +316,12 @@ export function EditorScreen() {
           open={settingsOpen}
           onClose={() => {
             setSettingsOpen(false);
+          }}
+        />
+        <StartupTimingOverlay
+          open={startupTimingOpen}
+          onClose={() => {
+            setStartupTimingOpen(false);
           }}
         />
       </section>

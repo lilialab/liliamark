@@ -1,4 +1,5 @@
 import './theme/bootstrap';
+import './stores/appSettingsStore';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

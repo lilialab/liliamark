@@ -14,6 +14,25 @@ use file_watch::{sync_watched_files, FileWatchState};
 use open_file::{PendingOpenPath, open_path_in_running_app, paths_from_args, remember_open_path};
 use startup_timing::{get_native_startup_timing, mark_window_visible, StartupTiming};
 
+/// 屏蔽 WebView 浏览器默认快捷键（Ctrl+P 等在 Win 上不会进到 JS）。
+fn prevent_default_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    use tauri_plugin_prevent_default::Flags;
+
+    #[cfg(debug_assertions)]
+    let flags = Flags::keyboard().difference(Flags::DEV_TOOLS);
+    #[cfg(not(debug_assertions))]
+    let flags = Flags::keyboard();
+
+    let builder = tauri_plugin_prevent_default::Builder::new().with_flags(flags);
+
+    #[cfg(windows)]
+    let builder = builder.platform(
+        tauri_plugin_prevent_default::PlatformOptions::new().browser_accelerator_keys(false),
+    );
+
+    builder.build()
+}
+
 /// 启动 Tauri：单实例、文件关联打开、注册读写命令。
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -37,6 +56,7 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(prevent_default_plugin())
         .plugin(navigation_guard::init())
         .manage(startup)
         .manage(PendingOpenPath::new())

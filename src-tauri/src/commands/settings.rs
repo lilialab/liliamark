@@ -5,10 +5,13 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 const SETTINGS_FILE: &str = "settings.json";
-const DEFAULT_FONT_SIZE: u32 = 16;
 
-fn default_font_size() -> u32 {
-    DEFAULT_FONT_SIZE
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum IndentStyle {
+    #[default]
+    Space,
+    Tab,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -16,11 +19,15 @@ fn default_font_size() -> u32 {
 pub struct AppSettings {
     #[serde(default)]
     pub font_family: String,
-    #[serde(default = "default_font_size")]
+    #[serde(default)]
     pub font_size: u32,
+    #[serde(default)]
+    pub indent_style: IndentStyle,
+    #[serde(default)]
+    pub indent_size: u32,
 }
 
-/// 旧版双字段；仅用于读入迁移。
+/// 旧版双字段；仅用于读入迁移。缺字段为类型空值（0 / "" / Space），默认由前端补。
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LegacyAppSettings {
@@ -30,14 +37,20 @@ struct LegacyAppSettings {
     prose_font: String,
     #[serde(default)]
     mono_font: String,
-    #[serde(default = "default_font_size")]
+    #[serde(default)]
     font_size: u32,
+    #[serde(default)]
+    indent_style: IndentStyle,
+    #[serde(default)]
+    indent_size: u32,
 }
 
 fn empty_settings() -> AppSettings {
     AppSettings {
         font_family: String::new(),
-        font_size: DEFAULT_FONT_SIZE,
+        font_size: 0,
+        indent_style: IndentStyle::Space,
+        indent_size: 0,
     }
 }
 
@@ -46,14 +59,11 @@ fn settings_from_legacy(legacy: LegacyAppSettings) -> AppSettings {
         .into_iter()
         .find(|value| !value.trim().is_empty())
         .unwrap_or_default();
-    let font_size = if legacy.font_size == 0 {
-        DEFAULT_FONT_SIZE
-    } else {
-        legacy.font_size
-    };
     AppSettings {
         font_family,
-        font_size,
+        font_size: legacy.font_size,
+        indent_style: legacy.indent_style,
+        indent_size: legacy.indent_size,
     }
 }
 
@@ -65,7 +75,7 @@ fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join(SETTINGS_FILE))
 }
 
-/// 解析设置 JSON；缺失字段或非法内容视为空设置。兼容旧 proseFont/monoFont。
+/// 解析设置 JSON；缺失字段为类型空值；坏 JSON 为空设置。兼容旧 proseFont/monoFont。
 fn parse_settings_json(text: &str) -> AppSettings {
     serde_json::from_str::<LegacyAppSettings>(text)
         .map(settings_from_legacy)
@@ -100,28 +110,32 @@ pub(crate) fn save_app_settings(app: AppHandle, settings: AppSettings) -> Result
 
 #[cfg(test)]
 mod tests {
-    use super::{empty_settings, parse_settings_json, AppSettings, DEFAULT_FONT_SIZE};
+    use super::{empty_settings, parse_settings_json, AppSettings, IndentStyle};
 
     #[test]
     fn parse_valid_settings() {
+        let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18,"indentStyle":"tab","indentSize":2}"#;
+        assert_eq!(
+            parse_settings_json(json),
+            AppSettings {
+                font_family: "Consolas, monospace".into(),
+                font_size: 18,
+                indent_style: IndentStyle::Tab,
+                indent_size: 2,
+            }
+        );
+    }
+
+    #[test]
+    fn parse_missing_fields_are_empty() {
         let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18}"#;
         assert_eq!(
             parse_settings_json(json),
             AppSettings {
                 font_family: "Consolas, monospace".into(),
                 font_size: 18,
-            }
-        );
-    }
-
-    #[test]
-    fn parse_missing_font_size_defaults() {
-        let json = r#"{"fontFamily":"Consolas, monospace"}"#;
-        assert_eq!(
-            parse_settings_json(json),
-            AppSettings {
-                font_family: "Consolas, monospace".into(),
-                font_size: DEFAULT_FONT_SIZE,
+                indent_style: IndentStyle::Space,
+                indent_size: 0,
             }
         );
     }
@@ -133,7 +147,9 @@ mod tests {
             parse_settings_json(json),
             AppSettings {
                 font_family: "Cascadia Code, monospace".into(),
-                font_size: DEFAULT_FONT_SIZE,
+                font_size: 0,
+                indent_style: IndentStyle::Space,
+                indent_size: 0,
             }
         );
     }
@@ -143,5 +159,14 @@ mod tests {
         assert_eq!(parse_settings_json(""), empty_settings());
         assert_eq!(parse_settings_json("{"), empty_settings());
         assert_eq!(parse_settings_json("null"), empty_settings());
+        assert_eq!(
+            empty_settings(),
+            AppSettings {
+                font_family: String::new(),
+                font_size: 0,
+                indent_style: IndentStyle::Space,
+                indent_size: 0,
+            }
+        );
     }
 }

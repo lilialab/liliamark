@@ -12,7 +12,7 @@ export async function saveEditorSession(session: EditorSession): Promise<void> {
   await invoke('save_editor_session', { session });
 }
 
-/** 读取应用设置；无文件或坏数据时为空字符串字段 */
+/** 读取应用设置；无文件 / 坏 JSON / 缺字段时为类型空值（0、""），默认由 store normalize */
 export async function loadAppSettings(): Promise<AppSettings> {
   return invoke<AppSettings>('load_app_settings');
 }

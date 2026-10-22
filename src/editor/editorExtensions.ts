@@ -1,4 +1,4 @@
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { EditorState, type Extension } from '@codemirror/state';
 import { drawSelection, highlightSpecialChars, keymap, lineNumbers } from '@codemirror/view';
@@ -34,5 +34,5 @@ export const baseExtensions: Extension[] = [
   catppuccinEditorTheme(),
   markdownHighlight,
   highlightActiveLineExclusive(),
-  keymap.of([...defaultKeymap, ...historyKeymap]),
+  keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
 ];

@@ -6,7 +6,7 @@ type EditorHotkeys = {
   onCloseTab: () => void | Promise<void>;
 };
 
-/** Ctrl/Cmd+S 保存；Ctrl/Cmd+E 切换预览；Ctrl/Cmd+W 关闭当前标签；屏蔽刷新 */
+/** Ctrl/Cmd+S 保存；Ctrl/Cmd+E 切换预览；Ctrl/Cmd+W 关闭当前标签 */
 export function useEditorHotkeys({
   onSave,
   onTogglePreview,
@@ -24,39 +24,32 @@ export function useEditorHotkeys({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'F5') {
-        event.preventDefault();
-        return;
-      }
-
       if (!(event.ctrlKey || event.metaKey)) {
         return;
       }
 
       const key = event.key.toLowerCase();
-      if (key === 's') {
+      const code = event.code;
+
+      if (key === 's' || code === 'KeyS') {
         event.preventDefault();
         save();
         return;
       }
-      if (key === 'e') {
+      if (key === 'e' || code === 'KeyE') {
         event.preventDefault();
         togglePreview();
         return;
       }
-      if (key === 'w') {
+      if (key === 'w' || code === 'KeyW') {
         event.preventDefault();
         closeTab();
-        return;
-      }
-      if (key === 'r') {
-        event.preventDefault();
       }
     }
 
-    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', onKeyDown, true);
     return () => {
-      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keydown', onKeyDown, true);
     };
   }, []);
 }

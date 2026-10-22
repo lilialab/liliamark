@@ -1,6 +1,5 @@
 import type { AppSettings } from '../types/appSettings';
 
-export const DEFAULT_FONT_SIZE = 16;
 export const MIN_FONT_SIZE = 8;
 export const MAX_FONT_SIZE = 72;
 
@@ -23,7 +22,10 @@ export function parseFontSizeInput(value: string): number | null {
   return n;
 }
 
-/** 把字体栈与字号写到 html；font-family 空则 removeProperty（保存 / 启动时调用） */
+/**
+ * 把字体栈与字号写到 html。
+ * font-family 空则 removeProperty（回落 :root）；字号始终由 settings 写入（默认见 store）。
+ */
 export function applyAppFonts(settings: AppSettings): void {
   const root = document.documentElement.style;
   const next = resolvedFontVar(settings.fontFamily);
