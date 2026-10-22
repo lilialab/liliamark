@@ -102,7 +102,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
             type="text"
             className={fieldClass}
             value={fontFamily}
-            placeholder="留空使用默认"
+            placeholder={defaults.fontFamily}
             disabled={saving}
             onChange={(event) => {
               setFontFamily(event.target.value);

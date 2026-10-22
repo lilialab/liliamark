@@ -3,12 +3,6 @@ import type { AppSettings } from '../types/appSettings';
 export const MIN_FONT_SIZE = 8;
 export const MAX_FONT_SIZE = 72;
 
-/** 有内容则写入；空则 null（调用方 removeProperty，回落 :root） */
-export function resolvedFontVar(value: string): string | null {
-  const trimmed = value.trim();
-  return trimmed || null;
-}
-
 /** 8–72 的正整数则返回；否则 null（设置页禁止保存） */
 export function parseFontSizeInput(value: string): number | null {
   const trimmed = value.trim();
@@ -22,17 +16,9 @@ export function parseFontSizeInput(value: string): number | null {
   return n;
 }
 
-/**
- * 把字体栈与字号写到 html。
- * font-family 空则 removeProperty（回落 :root）；字号始终由 settings 写入（默认见 store）。
- */
+/** 把字体栈与字号写到 html（调用方保证 fontFamily 非空） */
 export function applyAppFonts(settings: AppSettings): void {
   const root = document.documentElement.style;
-  const next = resolvedFontVar(settings.fontFamily);
-  if (next !== null) {
-    root.setProperty('--app-font', next);
-  } else {
-    root.removeProperty('--app-font');
-  }
+  root.setProperty('--app-font', settings.fontFamily.trim());
   root.setProperty('--app-font-size', `${settings.fontSize}px`);
 }

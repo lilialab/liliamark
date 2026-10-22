@@ -1,21 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  MAX_FONT_SIZE,
-  MIN_FONT_SIZE,
-  parseFontSizeInput,
-  resolvedFontVar,
-} from '../../src/theme/fonts';
-
-describe('resolvedFontVar', () => {
-  it('returns trimmed stack when non-empty', () => {
-    expect(resolvedFontVar('  Georgia, serif  ')).toBe('Georgia, serif');
-  });
-
-  it('returns null when blank so caller can removeProperty', () => {
-    expect(resolvedFontVar('')).toBeNull();
-    expect(resolvedFontVar('   ')).toBeNull();
-  });
-});
+import { MAX_FONT_SIZE, MIN_FONT_SIZE, parseFontSizeInput } from '../../src/theme/fonts';
 
 describe('parseFontSizeInput', () => {
   it('accepts integers in 8–72', () => {

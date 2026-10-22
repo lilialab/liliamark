@@ -16,8 +16,7 @@
   --app-warn-border: color-mix(in srgb, var(--ctp-yellow) 45%, var(--ctp-surface1));
   --app-overlay-scrim: color-mix(in srgb, var(--ctp-crust) 55%, transparent);
   --app-overlay-card: color-mix(in srgb, var(--ctp-base) 95%, transparent);
-  /* 编辑器 / 预览共用（壳 UI 不用）；字号由 appSettingsStore 写入 --app-font-size */
-  --app-font: 'Cascadia Code', 'Sarasa Mono SC', Consolas, monospace;
+  /* 编辑器 / 预览字体由 appSettingsStore → applyAppFonts 写入 --app-font / --app-font-size */
 
   /* 预览（style-guide 角色） */
   --md-bg: var(--ctp-base);

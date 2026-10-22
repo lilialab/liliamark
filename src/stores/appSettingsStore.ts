@@ -4,21 +4,21 @@ import { loadAppSettings, saveAppSettings } from '../lib/tauri/storage';
 import { applyAppFonts } from '../theme/fonts';
 import type { AppSettings } from '../types/appSettings';
 
-/** 默认设置；fontFamily 空串 → apply 时回落 CSS :root */
+/** 默认设置（字体为 VS Code Windows 默认栈） */
 export function defaultAppSettings(): AppSettings {
   return {
-    fontFamily: '',
+    fontFamily: "Consolas, 'Courier New', monospace",
     fontSize: 16,
     indentStyle: 'space',
     indentSize: 4,
   };
 }
 
-/** 磁盘空值（数字 0、非法 indent）→ 默认；fontFamily 空串合法（回落 :root） */
+/** 各字段空值 / 非法 → 对应默认 */
 function normalizeSettings(settings: AppSettings): AppSettings {
   const defaults = defaultAppSettings();
   return {
-    fontFamily: settings.fontFamily,
+    fontFamily: settings.fontFamily.trim() || defaults.fontFamily,
     fontSize: settings.fontSize === 0 ? defaults.fontSize : settings.fontSize,
     indentStyle: parseIndentStyle(settings.indentStyle),
     indentSize: parseIndentSize(settings.indentSize, defaults.indentSize),
@@ -59,5 +59,5 @@ export const useAppSettingsStore = create<AppSettingsStore>((set) => ({
   },
 }));
 
-/** 默认字号真源在 defaultAppSettings；模块加载时写入 CSS，避免首屏无 --app-font-size */
+/** 默认字体/字号真源在 defaultAppSettings；模块加载时写入 CSS，避免首屏无变量 */
 applySettingsEffects(defaultAppSettings());
