@@ -122,7 +122,6 @@ export function EditorScreen() {
     try {
       await writeTextFile(activeTab.path, activeTab.source);
       setTabs((prev) => updateTab(prev, activeTab.id, withSavedSource));
-      toast.success('已保存');
     } catch (error) {
       toast.error('保存失败', { description: errorMessage(error) });
     }

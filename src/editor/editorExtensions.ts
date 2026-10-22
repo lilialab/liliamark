@@ -1,10 +1,11 @@
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { EditorState, type Extension } from '@codemirror/state';
 import { drawSelection, highlightSpecialChars, keymap, lineNumbers } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { catppuccinEditorTheme } from '../theme/flavor';
 import { highlightActiveLineExclusive } from './activeLineHighlight';
+import { indentKeymap } from './indent';
 
 /**
  * Markdown 语义挂稳定 class，样式走 CSS（特异性高于主题 StyleModule，
@@ -34,5 +35,5 @@ export const baseExtensions: Extension[] = [
   catppuccinEditorTheme(),
   markdownHighlight,
   highlightActiveLineExclusive(),
-  keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
+  keymap.of([...indentKeymap, ...defaultKeymap, ...historyKeymap]),
 ];

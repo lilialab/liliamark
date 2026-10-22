@@ -41,16 +41,18 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            if let Some(path) = paths_from_args(args).into_iter().next() {
-                open_path_in_running_app(&app, path);
-                return;
-            }
+        builder = builder
+            .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+                if let Some(path) = paths_from_args(args).into_iter().next() {
+                    open_path_in_running_app(&app, path);
+                    return;
+                }
 
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.set_focus();
-            }
-        }));
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.set_focus();
+                }
+            }))
+            .plugin(tauri_plugin_window_state::Builder::default().build());
     }
 
     builder
