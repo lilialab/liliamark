@@ -1,5 +1,6 @@
 import { selectAll } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
+import { arrayMove } from '@dnd-kit/sortable';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
@@ -255,6 +256,14 @@ export function EditorScreen() {
     selectAll(editorView);
   }
 
+  function handleReorderTabs(draggedId: string, overId: string) {
+    setTabs((prev) => {
+      const from = prev.findIndex((tab) => tab.id === draggedId);
+      const to = prev.findIndex((tab) => tab.id === overId);
+      return arrayMove(prev, from, to);
+    });
+  }
+
   /* -------------------------------------------------------------------------- */
   /* Effects */
   /* -------------------------------------------------------------------------- */
@@ -310,6 +319,7 @@ export function EditorScreen() {
         onClose={(id) => {
           void handleCloseTab(id);
         }}
+        onReorder={handleReorderTabs}
         trailing={
           <AppMenu
             items={[
