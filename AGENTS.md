@@ -1,6 +1,6 @@
 # LiliaMark Agent 指南
 
-跨平台本地 Markdown 编辑预览（Tauri 2 + Rust + Vite + React + CodeMirror 6）。产品范围以 [README.md](README.md) 为准。
+跨平台本地 Markdown 编辑预览（Tauri 2 + Rust + Vite + React + CodeMirror 6）。桌面应用，不为浏览器单独降级。产品范围以 [README.md](README.md) 为准。
 
 ## 读文件
 
@@ -25,7 +25,7 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 | 编辑器装配 | `src/editor/`（CodeMirror；只做源码高亮） |
 | 预览 | `src/preview/`（markdown-it → HTML 的纯函数，以及预览区） |
 | 主题色 | `src/theme/`（`flavor.ts` 的 `APP_FLAVOR`；`--ctp-*` 与 `--app-*` / `--md-*`） |
-| 桌面 IO 封装 | `src/lib/tauri/`（invoke；组件不直接调用） |
+| 桌面 IO 封装 | `src/lib/tauri/`（唯一裸 `invoke` 出口） |
 | 共享类型 | `src/types/` |
 | 纯函数 | `src/utils/`（无 I/O，不依赖 Tauri / DOM） |
 | Rust 命令 | `src-tauri/src/`（读、写、监听文件） |
@@ -58,8 +58,8 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 
 | 层级 | 职责 | 禁止 |
 |------|------|------|
-| 组件 | 渲染 | `invoke`、解析 Markdown、手写文件路径 |
-| Screen / hook | 编排缓冲、脏状态、调用 IO 封装 | 直接 `invoke` |
+| 共用 UI（`src/components/`） | 纯展示 | `invoke`、调 `lib/tauri`、解析 Markdown |
+| 业务模块（`src/editor/` 等）/ Screen / hook | 编排与域逻辑；IO 只经 `lib/tauri` | 裸 `invoke` |
 | `src/preview/` | 原文 → HTML | Tauri、DOM |
 | `src/lib/tauri/` | 打开、读取、保存、监听 | 业务分支、渲染 |
 | Rust 命令 | 文件 IO | 解析 Markdown、碰 UI |
@@ -87,6 +87,7 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 - 可选字段扁平：`key: value | undefined`；勿 `...(cond ? { key } : {})`
 - 默认值用 `??`；布尔组合或空串也要 fallback 时用 `||`
 - `src/preview/`、`src/lib/tauri/` 的 export 函数补简短中文 JSDoc
+- **异步副作用**：`useEffect` 等里用具名 `async function` + `void name()`（需 cleanup 时 `const ready = name()`），不要 `(async () => { … })()` 自调用
 - **拆分与分段 banner**：先判断拆不拆，banner 不替代拆分。有独立职责/复用/嵌套过深 → 抽组件、hook 或域内模块；只出现一次且拆了更难读、或「将来可能复用」的提前拆 → 不拆。仍合在一处且偏长（约 ≥100～150 行或多段逻辑）→ 加 banner；短文件、单线薄封装不加。格式：
 
 ```

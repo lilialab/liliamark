@@ -41,14 +41,9 @@ export const useAppSettingsStore = create<AppSettingsStore>((set) => ({
   settings: defaultAppSettings(),
 
   async hydrate() {
-    try {
-      const settings = normalizeSettings(await loadAppSettings());
-      set({ settings });
-      applySettingsEffects(settings);
-    } catch {
-      // Browser / non-tauri：保留默认
-      applySettingsEffects(defaultAppSettings());
-    }
+    const settings = normalizeSettings(await loadAppSettings());
+    set({ settings });
+    applySettingsEffects(settings);
   },
 
   async commit(next) {

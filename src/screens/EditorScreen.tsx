@@ -1,3 +1,4 @@
+import type { EditorView } from '@codemirror/view';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
@@ -5,8 +6,7 @@ import { supportsMarkdownPreview } from '../editor/languageRegistry';
 import {
   closeCurrentWindow,
   confirmDiscardChanges,
-  openMarkdownFile,
-  openMarkdownPath,
+  pickTextFile,
   writeTextFile,
 } from '../lib/tauri/fs';
 import { useAppSettingsStore } from '../stores/appSettingsStore';
@@ -17,9 +17,9 @@ import {
   createTabId,
   updateTab,
   withDiskChange,
-  withDiskContent,
+  withDiskReload,
   withoutDiskChange,
-  withSavedSource,
+  withSaved,
 } from '../utils/editorTab';
 import { fileName, sameFilePath } from '../utils/path';
 import { markStartupUiReady } from '../utils/startupTiming';
@@ -36,6 +36,7 @@ import { useEditorHotkeys } from './hooks/useEditorHotkeys';
 import { useExternalOpenFile } from './hooks/useExternalOpenFile';
 import { useFileDragOpen } from './hooks/useFileDragOpen';
 import { usePersistEditorSession } from './hooks/usePersistEditorSession';
+import { useRestoreEditorSession } from './hooks/useRestoreEditorSession';
 import { useUnsavedCloseGuard } from './hooks/useUnsavedCloseGuard';
 
 function errorMessage(error: unknown): string {
@@ -50,25 +51,58 @@ export function EditorScreen() {
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewSource, setPreviewSource] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [startupTimingOpen, setStartupTimingOpen] = useState(false);
-  const tabsRef = useRef(tabs);
-  tabsRef.current = tabs;
+
+  const editorViewsRef = useRef(new Map<string, EditorView>());
 
   useEffect(() => {
     void useAppSettingsStore.getState().hydrate();
   }, []);
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? null;
-  const source = activeTab?.source ?? '';
-  const dirty = activeTab !== null && activeTab.source !== activeTab.savedSource;
+  const dirty = activeTab?.dirty ?? false;
+
+  function readDoc(tabId: string): string | null {
+    return editorViewsRef.current.get(tabId)?.state.doc.toString() ?? null;
+  }
+
+  function refreshPreview(tabId: string | null) {
+    if (!previewOpen || tabId === null) {
+      return;
+    }
+    const doc = readDoc(tabId);
+    if (doc !== null) {
+      setPreviewSource(doc);
+    }
+  }
+
+  function removeTab(tabId: string) {
+    editorViewsRef.current.delete(tabId);
+    setTabs((prev) => {
+      const index = prev.findIndex((item) => item.id === tabId);
+      if (index < 0) {
+        return prev;
+      }
+      const next = prev.filter((item) => item.id !== tabId);
+      setActiveId((current) => {
+        if (current !== tabId) {
+          return current;
+        }
+        const neighbor = next[index] ?? next[index - 1] ?? null;
+        return neighbor?.id ?? null;
+      });
+      return next;
+    });
+  }
 
   /* -------------------------------------------------------------------------- */
   /* Handlers */
   /* -------------------------------------------------------------------------- */
 
-  function focusOrOpenTab(path: string, content: string) {
-    const existing = tabsRef.current.find((tab) => sameFilePath(tab.path, path));
+  function focusOrOpenTab(path: string) {
+    const existing = tabs.find((tab) => sameFilePath(tab.path, path));
     if (existing) {
       setActiveId(existing.id);
       return;
@@ -77,8 +111,7 @@ export function EditorScreen() {
     const tab: EditorTab = {
       id: createTabId(),
       path,
-      source: content,
-      savedSource: content,
+      dirty: false,
       diskChange: null,
       docEpoch: 0,
     };
@@ -87,28 +120,16 @@ export function EditorScreen() {
   }
 
   async function loadFile(filePath: string) {
-    try {
-      const existing = tabsRef.current.find((tab) => sameFilePath(tab.path, filePath));
-      if (existing) {
-        setActiveId(existing.id);
-        return;
-      }
-
-      const file = await openMarkdownPath(filePath);
-      focusOrOpenTab(file.path, file.content);
-    } catch (error) {
-      toast.error('打开失败', { description: errorMessage(error) });
-    }
+    focusOrOpenTab(filePath);
   }
 
   async function handleOpen() {
     try {
-      const file = await openMarkdownFile();
-      if (!file) {
+      const path = await pickTextFile();
+      if (!path) {
         return;
       }
-
-      focusOrOpenTab(file.path, file.content);
+      focusOrOpenTab(path);
     } catch (error) {
       toast.error('打开失败', { description: errorMessage(error) });
     }
@@ -119,60 +140,80 @@ export function EditorScreen() {
       return;
     }
 
+    const content = readDoc(activeTab.id);
+    if (content === null) {
+      toast.error('保存失败', { description: '编辑器尚未就绪' });
+      return;
+    }
+
     try {
-      await writeTextFile(activeTab.path, activeTab.source);
-      setTabs((prev) => updateTab(prev, activeTab.id, withSavedSource));
+      await writeTextFile(activeTab.path, content);
+      setTabs((prev) => updateTab(prev, activeTab.id, withSaved));
     } catch (error) {
       toast.error('保存失败', { description: errorMessage(error) });
     }
   }
 
-  function handleSourceChange(tabId: string, next: string) {
-    setTabs((prev) => updateTab(prev, tabId, (tab) => ({ ...tab, source: next })));
+  function handleDirty(tabId: string) {
+    setTabs((prev) => {
+      const tab = prev.find((item) => item.id === tabId);
+      if (!tab || tab.dirty) {
+        return prev;
+      }
+      return updateTab(prev, tabId, (item) => ({ ...item, dirty: true }));
+    });
+    if (tabId === activeId) {
+      refreshPreview(tabId);
+    }
+  }
+
+  function handleEditorReady(tabId: string, editorView: EditorView) {
+    editorViewsRef.current.set(tabId, editorView);
+    refreshPreview(tabId);
+  }
+
+  function handleEditorDestroy(tabId: string) {
+    editorViewsRef.current.delete(tabId);
+  }
+
+  function handleLoadError(tabId: string, error: unknown) {
+    toast.error('打开失败', { description: errorMessage(error) });
+    removeTab(tabId);
+  }
+
+  function handlePathResolved(tabId: string, path: string) {
+    setTabs((prev) => updateTab(prev, tabId, (tab) => ({ ...tab, path })));
   }
 
   function handleKeepEdits(id: string) {
     setTabs((prev) => updateTab(prev, id, withoutDiskChange));
   }
 
-  async function handleReloadFromDisk(id: string) {
-    const tab = tabsRef.current.find((item) => item.id === id);
+  function handleReloadFromDisk(id: string) {
+    const tab = tabs.find((item) => item.id === id);
     if (!tab || tab.diskChange !== 'modify') {
       return;
     }
-
-    try {
-      const file = await openMarkdownPath(tab.path);
-      setTabs((prev) => updateTab(prev, id, (item) => withDiskContent(item, file.content)));
-    } catch (error) {
-      toast.error('重载失败', { description: errorMessage(error) });
-    }
+    setTabs((prev) => updateTab(prev, id, withDiskReload));
   }
 
   async function handleCloseTab(id: string) {
-    const currentTabs = tabsRef.current;
-    const tab = currentTabs.find((item) => item.id === id);
+    const tab = tabs.find((item) => item.id === id);
     if (!tab) {
       return;
     }
 
-    if (tab.source !== tab.savedSource && !(await confirmDiscardChanges())) {
+    if (tab.dirty && !(await confirmDiscardChanges())) {
       return;
     }
 
-    const index = currentTabs.findIndex((item) => item.id === id);
-    const next = currentTabs.filter((item) => item.id !== id);
-    setTabs(next);
-    setActiveId((current) => {
-      if (current !== id) {
-        return current;
-      }
-      const neighbor = next[index] ?? next[index - 1] ?? null;
-      return neighbor?.id ?? null;
-    });
+    removeTab(id);
   }
 
   function handleTogglePreview() {
+    if (!previewOpen && activeId !== null) {
+      setPreviewSource(readDoc(activeId) ?? '');
+    }
     setPreviewOpen((open) => !open);
   }
 
@@ -184,12 +225,22 @@ export function EditorScreen() {
     markStartupUiReady();
   }, []);
 
+  useEffect(() => {
+    if (!previewOpen || activeId === null) {
+      return;
+    }
+    const doc = editorViewsRef.current.get(activeId)?.state.doc.toString();
+    if (doc !== undefined) {
+      setPreviewSource(doc);
+    }
+  }, [activeId, previewOpen]);
+
   const fileDragActive = useFileDragOpen(loadFile);
-  useExternalOpenFile((restored, activePath) => {
-    tabsRef.current = restored;
+  const sessionReady = useRestoreEditorSession((restored, activePath) => {
     setTabs(restored);
     setActiveId(resolveActiveTabId(restored, activePath));
-  }, loadFile);
+  });
+  useExternalOpenFile(loadFile, sessionReady);
   usePersistEditorSession(tabs, activeId);
   useDiskWatch(
     tabs.map((tab) => tab.path),
@@ -197,9 +248,7 @@ export function EditorScreen() {
       setTabs((prev) => withDiskChange(prev, path, kind));
     },
   );
-  useUnsavedCloseGuard(
-    () => tabs.filter((tab) => tab.source !== tab.savedSource).length,
-  );
+  useUnsavedCloseGuard(() => tabs.filter((tab) => tab.dirty).length);
   useBlockBrowserShortcuts();
   useEditorHotkeys({
     onSave: handleSave,
@@ -224,7 +273,7 @@ export function EditorScreen() {
         tabs={tabs.map((tab) => ({
           id: tab.id,
           title: fileName(tab.path),
-          dirty: tab.source !== tab.savedSource,
+          dirty: tab.dirty,
           diskChange: tab.diskChange !== null,
         }))}
         activeId={activeId}
@@ -266,7 +315,7 @@ export function EditorScreen() {
           diskChange={activeTab.diskChange}
           dirty={dirty}
           onReload={() => {
-            void handleReloadFromDisk(activeTab.id);
+            handleReloadFromDisk(activeTab.id);
           }}
           onKeepEdits={() => {
             handleKeepEdits(activeTab.id);
@@ -298,9 +347,20 @@ export function EditorScreen() {
                 <CodeEditor
                   key={tab.docEpoch}
                   path={tab.path}
-                  value={tab.source}
-                  onChange={(next) => {
-                    handleSourceChange(tab.id, next);
+                  onDirty={() => {
+                    handleDirty(tab.id);
+                  }}
+                  onReady={(editorView) => {
+                    handleEditorReady(tab.id, editorView);
+                  }}
+                  onDestroy={() => {
+                    handleEditorDestroy(tab.id);
+                  }}
+                  onLoadError={(error) => {
+                    handleLoadError(tab.id, error);
+                  }}
+                  onPathResolved={(path) => {
+                    handlePathResolved(tab.id, path);
                   }}
                 />
               </div>
@@ -309,7 +369,7 @@ export function EditorScreen() {
         <PreviewOverlay
           open={previewOpen}
           supportsPreview={activeTab !== null && supportsMarkdownPreview(activeTab.path)}
-          source={source}
+          source={previewSource}
         />
         <SettingsOverlay
           open={settingsOpen}

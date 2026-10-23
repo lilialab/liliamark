@@ -1,8 +1,10 @@
-import { Compartment } from '@codemirror/state';
+import { Compartment, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
+import { openTextPath } from '../lib/tauri/fs';
 import { useAppSettingsStore } from '../stores/appSettingsStore';
 import { cn } from '../utils/cn';
+import { sameFilePath } from '../utils/path';
 import { baseExtensions } from './editorExtensions';
 import { indentExtensions } from './indent';
 import { editorLanguageKind, loadLanguageExtension } from './languageRegistry';
@@ -10,114 +12,128 @@ import './codeEditor.css';
 
 type CodeEditorProps = {
   path: string;
-  value: string;
-  onChange: (value: string) => void;
+  onDirty: () => void;
+  /** 读盘成功并写入文档后调用 */
+  onReady: (editorView: EditorView) => void;
+  onDestroy: () => void;
+  onLoadError: (error: unknown) => void;
+  /** 读盘返回的路径与 prop 不一致时（规范化等） */
+  onPathResolved: (path: string) => void;
   className?: string;
 };
 
-export function CodeEditor({ path, value, onChange, className }: CodeEditorProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<EditorView | null>(null);
-  const languageCompartmentRef = useRef<Compartment | null>(null);
+export function CodeEditor({
+  path,
+  onDirty,
+  onReady,
+  onDestroy,
+  onLoadError,
+  onPathResolved,
+  className,
+}: CodeEditorProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorViewRef = useRef<EditorView | null>(null);
   const indentCompartmentRef = useRef<Compartment | null>(null);
-  const languageLoadSeqRef = useRef(0);
-  const onChangeRef = useRef(onChange);
-  const initialValueRef = useRef(value);
-  onChangeRef.current = onChange;
+  const hydratingRef = useRef(false);
+
+  const isCurrentView = (view: EditorView) => editorViewRef.current === view;
+
+  const reportDirty = useEffectEvent(onDirty);
+  const notifyReady = useEffectEvent(onReady);
+  const notifyDestroy = useEffectEvent(onDestroy);
+  const notifyLoadError = useEffectEvent(onLoadError);
+  const notifyPathResolved = useEffectEvent(onPathResolved);
+
+  const languageKindForPath = useEffectEvent(() => editorLanguageKind(path));
+
+  const hydrateFromDisk = useEffectEvent(async (editorView: EditorView) => {
+    try {
+      const file = await openTextPath(path);
+      if (!isCurrentView(editorView)) {
+        return;
+      }
+
+      hydratingRef.current = true;
+      editorView.dispatch({
+        changes: { from: 0, to: editorView.state.doc.length, insert: file.content },
+        annotations: [Transaction.addToHistory.of(false)],
+      });
+      hydratingRef.current = false;
+
+      if (!sameFilePath(path, file.path)) {
+        notifyPathResolved(file.path);
+      }
+      notifyReady(editorView);
+    } catch (error) {
+      if (isCurrentView(editorView)) {
+        notifyLoadError(error);
+      }
+    }
+  });
 
   const indentStyle = useAppSettingsStore((state) => state.settings.indentStyle);
   const indentSize = useAppSettingsStore((state) => state.settings.indentSize);
-  const languageKind = editorLanguageKind(path);
 
+  // 挂载空 EditorView：按 path 定语言、读盘灌入；卸载时销毁
   useEffect(() => {
-    if (!parentRef.current) {
+    if (!containerRef.current) {
       return;
     }
 
     const languageCompartment = new Compartment();
     const indentCompartment = new Compartment();
-    languageCompartmentRef.current = languageCompartment;
     indentCompartmentRef.current = indentCompartment;
 
     const { indentStyle: style, indentSize: size } = useAppSettingsStore.getState().settings;
-    const view = new EditorView({
-      doc: initialValueRef.current,
+    const editorView = new EditorView({
+      doc: '',
       extensions: [
         ...baseExtensions,
         indentCompartment.of(indentExtensions(style, size)),
         languageCompartment.of([]),
         EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            onChangeRef.current(update.state.doc.toString());
+          if (update.docChanged && !hydratingRef.current) {
+            reportDirty();
           }
         }),
       ],
-      parent: parentRef.current,
+      parent: containerRef.current,
     });
-    viewRef.current = view;
+    editorViewRef.current = editorView;
+
+    void loadLanguageExtension(languageKindForPath()).then((extension) => {
+      if (!isCurrentView(editorView)) {
+        return;
+      }
+      editorView.dispatch({
+        effects: languageCompartment.reconfigure(extension),
+      });
+    });
+    void hydrateFromDisk(editorView);
 
     return () => {
-      view.destroy();
-      viewRef.current = null;
-      languageCompartmentRef.current = null;
+      notifyDestroy();
+      editorView.destroy();
+      editorViewRef.current = null;
       indentCompartmentRef.current = null;
     };
   }, []);
 
+  // 设置变更时重配缩进
   useEffect(() => {
-    const view = viewRef.current;
+    const editorView = editorViewRef.current;
     const indentCompartment = indentCompartmentRef.current;
-    if (!view || !indentCompartment) {
+    if (!editorView || !indentCompartment) {
       return;
     }
-    view.dispatch({
+    editorView.dispatch({
       effects: indentCompartment.reconfigure(indentExtensions(indentStyle, indentSize)),
     });
   }, [indentStyle, indentSize]);
 
-  useEffect(() => {
-    const view = viewRef.current;
-    const languageCompartment = languageCompartmentRef.current;
-    if (!view || !languageCompartment) {
-      return;
-    }
-
-    const seq = ++languageLoadSeqRef.current;
-    let cancelled = false;
-
-    void loadLanguageExtension(languageKind).then((extension) => {
-      if (cancelled || seq !== languageLoadSeqRef.current || !viewRef.current) {
-        return;
-      }
-      viewRef.current.dispatch({
-        effects: languageCompartment.reconfigure(extension),
-      });
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [languageKind]);
-
-  useEffect(() => {
-    const view = viewRef.current;
-    if (!view) {
-      return;
-    }
-
-    const current = view.state.doc.toString();
-    if (current === value) {
-      return;
-    }
-
-    view.dispatch({
-      changes: { from: 0, to: current.length, insert: value },
-    });
-  }, [value]);
-
   return (
     <div
-      ref={parentRef}
+      ref={containerRef}
       className={cn('code-editor h-full', className)}
     />
   );

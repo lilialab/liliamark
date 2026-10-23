@@ -5,7 +5,7 @@ import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { ask, open } from '@tauri-apps/plugin-dialog';
 import type { DiskFileChanged } from '../../types/diskFileChanged';
-import type { OpenedMarkdownFile } from '../../types/markdownFile';
+import type { OpenedTextFile } from '../../types/textFile';
 
 export type DropPathsClassification = {
   files: string[];
@@ -22,14 +22,14 @@ export async function writeTextFile(path: string, content: string): Promise<void
   await invoke('write_text_file', { path, content });
 }
 
-/** 按路径打开文本文件 */
-export async function openMarkdownPath(path: string): Promise<OpenedMarkdownFile> {
+/** 按路径读取文本文件（路径 + 内容） */
+export async function openTextPath(path: string): Promise<OpenedTextFile> {
   const content = await readTextFile(path);
   return { path, content };
 }
 
-/** 选择并打开本地文件；取消选择时返回 null（不按扩展名过滤） */
-export async function openMarkdownFile(): Promise<OpenedMarkdownFile | null> {
+/** 选择本地文件路径；取消选择时返回 null（不按扩展名过滤，不读内容） */
+export async function pickTextFile(): Promise<string | null> {
   const selected = await open({
     multiple: false,
     directory: false,
@@ -40,11 +40,7 @@ export async function openMarkdownFile(): Promise<OpenedMarkdownFile | null> {
   }
 
   const path = Array.isArray(selected) ? selected[0] : selected;
-  if (!path) {
-    return null;
-  }
-
-  return openMarkdownPath(path);
+  return path ?? null;
 }
 
 /** 确认是否丢弃未保存更改 */

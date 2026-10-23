@@ -6,27 +6,20 @@ export function useUnsavedCloseGuard(getDirtyCount: () => number) {
   const readDirtyCount = useEffectEvent(() => getDirtyCount());
 
   useEffect(() => {
-    const ready = (async () => {
-      try {
-        return await onWindowCloseRequested(async (event) => {
-          const dirtyCount = readDirtyCount();
-          if (dirtyCount === 0) {
-            return;
-          }
-
-          const discard = await confirmDiscardUnsavedTabs(dirtyCount);
-          if (!discard) {
-            event.preventDefault();
-          }
-        });
-      } catch {
-        // Browser / non-tauri preview has no window close hook.
-        return undefined;
+    const ready = onWindowCloseRequested(async (event) => {
+      const dirtyCount = readDirtyCount();
+      if (dirtyCount === 0) {
+        return;
       }
-    })();
+
+      const discard = await confirmDiscardUnsavedTabs(dirtyCount);
+      if (!discard) {
+        event.preventDefault();
+      }
+    });
 
     return () => {
-      void ready.then((unlisten) => unlisten?.());
+      void ready.then((unlisten) => unlisten());
     };
   }, []);
 }

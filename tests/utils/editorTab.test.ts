@@ -4,17 +4,16 @@ import {
   createTabId,
   updateTab,
   withDiskChange,
-  withDiskContent,
+  withDiskReload,
   withoutDiskChange,
-  withSavedSource,
+  withSaved,
 } from '../../src/utils/editorTab';
 
 function tab(overrides: Partial<EditorTab> = {}): EditorTab {
   return {
     id: 'a',
     path: 'C:\\Docs\\note.md',
-    source: 'hello',
-    savedSource: 'hello',
+    dirty: false,
     diskChange: null,
     docEpoch: 0,
     ...overrides,
@@ -30,28 +29,22 @@ describe('createTabId', () => {
 describe('updateTab', () => {
   it('updates only the matching id', () => {
     const tabs = [tab({ id: 'a' }), tab({ id: 'b', path: 'C:\\Docs\\other.md' })];
-    const next = updateTab(tabs, 'a', (item) => ({ ...item, source: 'edited' }));
-    expect(next[0]?.source).toBe('edited');
-    expect(next[1]?.source).toBe('hello');
+    const next = updateTab(tabs, 'a', (item) => ({ ...item, dirty: true }));
+    expect(next[0]?.dirty).toBe(true);
+    expect(next[1]?.dirty).toBe(false);
   });
 });
 
-describe('withSavedSource', () => {
-  it('copies source into savedSource', () => {
-    expect(withSavedSource(tab({ source: 'draft', savedSource: 'old' })).savedSource).toBe(
-      'draft',
-    );
+describe('withSaved', () => {
+  it('clears dirty', () => {
+    expect(withSaved(tab({ dirty: true })).dirty).toBe(false);
   });
 });
 
-describe('withDiskContent', () => {
-  it('replaces content, clears diskChange, and bumps docEpoch', () => {
-    const next = withDiskContent(
-      tab({ source: 'local', diskChange: 'modify', docEpoch: 2 }),
-      'from-disk',
-    );
-    expect(next.source).toBe('from-disk');
-    expect(next.savedSource).toBe('from-disk');
+describe('withDiskReload', () => {
+  it('clears dirty and diskChange, and bumps docEpoch', () => {
+    const next = withDiskReload(tab({ dirty: true, diskChange: 'modify', docEpoch: 2 }));
+    expect(next.dirty).toBe(false);
     expect(next.diskChange).toBeNull();
     expect(next.docEpoch).toBe(3);
   });
@@ -59,9 +52,8 @@ describe('withDiskContent', () => {
 
 describe('withoutDiskChange', () => {
   it('clears diskChange only', () => {
-    const next = withoutDiskChange(tab({ source: 'local', diskChange: 'remove' }));
+    const next = withoutDiskChange(tab({ diskChange: 'remove' }));
     expect(next.diskChange).toBeNull();
-    expect(next.source).toBe('local');
   });
 });
 

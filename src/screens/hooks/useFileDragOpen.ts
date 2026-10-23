@@ -17,59 +17,54 @@ export function useFileDragOpen(loadFile: (path: string) => Promise<void>): bool
   useEffect(() => {
     let cancelled = false;
 
-    const ready = (async () => {
+    async function handleDrop(paths: string[]) {
       try {
-        return await onDragDrop((event) => {
+        const { files, hadDirectory } = await classifyDropPaths(paths);
+        if (cancelled) {
+          return;
+        }
+        if (hadDirectory) {
+          toast.message('请拖入文件');
+        }
+        for (const path of files) {
           if (cancelled) {
             return;
           }
-
-          if (event.type === 'enter') {
-            setFileDragActive(true);
-            return;
-          }
-
-          if (event.type === 'leave') {
-            setFileDragActive(false);
-            return;
-          }
-
-          if (event.type !== 'drop') {
-            return;
-          }
-
-          setFileDragActive(false);
-
-          void (async () => {
-            try {
-              const { files, hadDirectory } = await classifyDropPaths(event.paths);
-              if (cancelled) {
-                return;
-              }
-              if (hadDirectory) {
-                toast.message('请拖入文件');
-              }
-              for (const path of files) {
-                if (cancelled) {
-                  return;
-                }
-                await openPath(path);
-              }
-            } catch (error) {
-              if (!cancelled) {
-                toast.error('打开失败', { description: errorMessage(error) });
-              }
-            }
-          })();
-        });
-      } catch {
-        return undefined;
+          await openPath(path);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          toast.error('打开失败', { description: errorMessage(error) });
+        }
       }
-    })();
+    }
+
+    const ready = onDragDrop((event) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (event.type === 'enter') {
+        setFileDragActive(true);
+        return;
+      }
+
+      if (event.type === 'leave') {
+        setFileDragActive(false);
+        return;
+      }
+
+      if (event.type !== 'drop') {
+        return;
+      }
+
+      setFileDragActive(false);
+      void handleDrop(event.paths);
+    });
 
     return () => {
       cancelled = true;
-      void ready.then((unlisten) => unlisten?.());
+      void ready.then((unlisten) => unlisten());
     };
   }, []);
 

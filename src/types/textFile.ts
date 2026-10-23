@@ -1,4 +1,4 @@
-export type OpenedMarkdownFile = {
+export type OpenedTextFile = {
   path: string;
   content: string;
 };

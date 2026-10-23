@@ -16,17 +16,16 @@ export function updateTab(
   return tabs.map((tab) => (tab.id === id ? update(tab) : tab));
 }
 
-/** 把当前正文记为已保存 */
-export function withSavedSource(tab: EditorTab): EditorTab {
-  return { ...tab, savedSource: tab.source };
+/** 标记为已保存（清脏） */
+export function withSaved(tab: EditorTab): EditorTab {
+  return { ...tab, dirty: false };
 }
 
-/** 用磁盘内容覆盖正文并清掉磁盘变更标记 */
-export function withDiskContent(tab: EditorTab, content: string): EditorTab {
+/** 触发 CM 重挂并清脏 / 磁盘标记；正文由挂载后读盘灌入 */
+export function withDiskReload(tab: EditorTab): EditorTab {
   return {
     ...tab,
-    source: content,
-    savedSource: content,
+    dirty: false,
     diskChange: null,
     docEpoch: tab.docEpoch + 1,
   };

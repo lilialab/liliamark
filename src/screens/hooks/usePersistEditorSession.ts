@@ -15,8 +15,6 @@ export function usePersistEditorSession(tabs: EditorTab[], activeId: string | nu
     }
 
     const paths = pathsKey.length === 0 ? [] : pathsKey.split('\0');
-    void saveEditorSession({ paths, activePath }).catch(() => {
-      // Browser / non-tauri preview has no session command.
-    });
+    void saveEditorSession({ paths, activePath });
   }, [pathsKey, activePath]);
 }

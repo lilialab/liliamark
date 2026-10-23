@@ -62,15 +62,9 @@ export async function reportStartupTiming() {
     return;
   }
 
-  let processMs = scriptMs;
-  let windowMs = scriptMs;
-  try {
-    const native = await getNativeStartupTiming();
-    processMs = native.processStartedMs;
-    windowMs = native.windowVisibleMs ?? scriptMs;
-  } catch {
-    // Browser / non-tauri：从 script-start 起算后两段
-  }
+  const native = await getNativeStartupTiming();
+  const processMs = native.processStartedMs;
+  const windowMs = native.windowVisibleMs ?? scriptMs;
 
   // 按时间序钳制，避免时钟抖动出现负值
   const t0 = processMs;

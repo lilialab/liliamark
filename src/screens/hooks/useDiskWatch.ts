@@ -15,24 +15,16 @@ export function useDiskWatch(
 
   useEffect(() => {
     const nextPaths = watchedPathsKey.length === 0 ? [] : watchedPathsKey.split('\0');
-    void syncWatchedFiles(nextPaths).catch(() => {
-      // Browser / non-tauri preview has no watch command.
-    });
+    void syncWatchedFiles(nextPaths);
   }, [watchedPathsKey]);
 
   useEffect(() => {
-    const ready = (async () => {
-      try {
-        return await onDiskFileChanged((payload) => {
-          reportDiskChange(payload.path, payload.kind);
-        });
-      } catch {
-        return undefined;
-      }
-    })();
+    const ready = onDiskFileChanged((payload) => {
+      reportDiskChange(payload.path, payload.kind);
+    });
 
     return () => {
-      void ready.then((unlisten) => unlisten?.());
+      void ready.then((unlisten) => unlisten());
     };
   }, []);
 }

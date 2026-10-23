@@ -45,7 +45,7 @@ src-tauri/src/                  文件读写和监听
 tests/                          镜像 src/，不跟源码放在一起
 ```
 
-数据流：编辑器把原文交给 `src/preview/` 渲染。打开和保存只经过 `src/lib/tauri/`，组件里不直接 `invoke`。Rust 命令只做文件 IO。
+数据流：编辑器把原文交给 `src/preview/` 渲染。打开和保存只经过 `src/lib/tauri/`（业务模块 / Screen 可调封装；`src/components/` 共用 UI 不调）。Rust 命令只做文件 IO。
 
 ## 本地开发
 
