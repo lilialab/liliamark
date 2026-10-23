@@ -15,7 +15,7 @@
 做这些：
 
 - 打开、保存本地文本文件（Markdown / 其它文本）
-- 源码高亮；Ctrl/Cmd+E 切换预览覆盖层（预览按需加载）；Ctrl/Cmd+W 关闭当前标签（无标签时退出）
+- 源码高亮；Ctrl/Cmd+E 切换预览覆盖层（预览按需加载）；Ctrl/Cmd+W 关闭当前标签；Ctrl/Cmd+Q 关闭窗口（走未保存确认）
 - 记住上次打开的文件，启动时恢复（打不开的跳过）；「打开方式」会在恢复后再打开并聚焦该文件
 - 修改后预览跟着更新；界面 / 编辑器 / 预览统一 Catppuccin Macchiato（`src/theme/` + `@catppuccin/codemirror`；围栏 highlight.js）
 - 相对路径的图片能在预览里显示（经 Tauri 的资源协议，不把裸文件路径写进 `<img>`）

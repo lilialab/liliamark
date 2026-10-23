@@ -1,3 +1,4 @@
+import { selectAll } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ import {
   writeTextFile,
 } from '../lib/tauri/fs';
 import { useAppSettingsStore } from '../stores/appSettingsStore';
+import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
 import { resolveActiveTabId } from '../utils/editorSession';
@@ -217,6 +219,42 @@ export function EditorScreen() {
     setPreviewOpen((open) => !open);
   }
 
+  function applyRestoredSession(restored: EditorTab[], activePath: string | null) {
+    setTabs(restored);
+    setActiveId(resolveActiveTabId(restored, activePath));
+  }
+
+  function handleDiskChange(path: string, kind: DiskChangeKind) {
+    setTabs((prev) => withDiskChange(prev, path, kind));
+  }
+
+  function getDirtyTabCount() {
+    return tabs.filter((tab) => tab.dirty).length;
+  }
+
+  function handleCloseTabHotkey() {
+    if (activeId === null) {
+      return;
+    }
+    void handleCloseTab(activeId);
+  }
+
+  function handleCloseWindowHotkey() {
+    void closeCurrentWindow();
+  }
+
+  function handleSelectAllInEditor() {
+    if (activeId === null) {
+      return;
+    }
+    const editorView = editorViewsRef.current.get(activeId);
+    if (!editorView) {
+      return;
+    }
+    editorView.focus();
+    selectAll(editorView);
+  }
+
   /* -------------------------------------------------------------------------- */
   /* Effects */
   /* -------------------------------------------------------------------------- */
@@ -236,30 +274,21 @@ export function EditorScreen() {
   }, [activeId, previewOpen]);
 
   const fileDragActive = useFileDragOpen(loadFile);
-  const sessionReady = useRestoreEditorSession((restored, activePath) => {
-    setTabs(restored);
-    setActiveId(resolveActiveTabId(restored, activePath));
-  });
+  const sessionReady = useRestoreEditorSession(applyRestoredSession);
   useExternalOpenFile(loadFile, sessionReady);
   usePersistEditorSession(tabs, activeId);
   useDiskWatch(
     tabs.map((tab) => tab.path),
-    (path, kind) => {
-      setTabs((prev) => withDiskChange(prev, path, kind));
-    },
+    handleDiskChange,
   );
-  useUnsavedCloseGuard(() => tabs.filter((tab) => tab.dirty).length);
+  useUnsavedCloseGuard(getDirtyTabCount);
   useBlockBrowserShortcuts();
   useEditorHotkeys({
     onSave: handleSave,
     onTogglePreview: handleTogglePreview,
-    onCloseTab: () => {
-      if (activeId !== null) {
-        void handleCloseTab(activeId);
-        return;
-      }
-      void closeCurrentWindow();
-    },
+    onCloseTab: handleCloseTabHotkey,
+    onCloseWindow: handleCloseWindowHotkey,
+    onSelectAllInEditor: handleSelectAllInEditor,
   });
 
   /* -------------------------------------------------------------------------- */

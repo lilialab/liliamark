@@ -20,7 +20,7 @@
   white-space: nowrap;
 }
 
-/* 与编辑器 Catppuccin 选区一致：overlay2 @ ~25% */
+/* 与编辑器 Catppuccin 选区接近：overlay2 @ ~25% */
 .markdown-preview ::selection {
   background-color: color-mix(in srgb, var(--ctp-overlay2) 25%, transparent);
 }

@@ -4,13 +4,34 @@ type EditorHotkeys = {
   onSave: () => void | Promise<void>;
   onTogglePreview: () => void;
   onCloseTab: () => void | Promise<void>;
+  onCloseWindow: () => void | Promise<void>;
+  /** 焦点不在编辑器 / 表单控件时：聚焦当前编辑器并全选 */
+  onSelectAllInEditor: () => void;
 };
 
-/** Ctrl/Cmd+S 保存；Ctrl/Cmd+E 切换预览；Ctrl/Cmd+W 关闭当前标签 */
+function shouldKeepNativeSelectAll(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  if (target.closest('.cm-editor')) {
+    return true;
+  }
+  if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+    return true;
+  }
+  if (target instanceof HTMLElement && target.isContentEditable) {
+    return true;
+  }
+  return false;
+}
+
+/** Ctrl/Cmd+S 保存；E 预览；W 关标签；Q 关窗口；A 在编辑区外时回编辑器全选 */
 export function useEditorHotkeys({
   onSave,
   onTogglePreview,
   onCloseTab,
+  onCloseWindow,
+  onSelectAllInEditor,
 }: EditorHotkeys) {
   const save = useEffectEvent(() => {
     void onSave();
@@ -20,6 +41,12 @@ export function useEditorHotkeys({
   });
   const closeTab = useEffectEvent(() => {
     void onCloseTab();
+  });
+  const closeWindow = useEffectEvent(() => {
+    void onCloseWindow();
+  });
+  const selectAllInEditor = useEffectEvent(() => {
+    onSelectAllInEditor();
   });
 
   useEffect(() => {
@@ -44,6 +71,19 @@ export function useEditorHotkeys({
       if (key === 'w' || code === 'KeyW') {
         event.preventDefault();
         closeTab();
+        return;
+      }
+      if (key === 'q' || code === 'KeyQ') {
+        event.preventDefault();
+        closeWindow();
+        return;
+      }
+      if (key === 'a' || code === 'KeyA') {
+        if (shouldKeepNativeSelectAll(event.target)) {
+          return;
+        }
+        event.preventDefault();
+        selectAllInEditor();
       }
     }
 

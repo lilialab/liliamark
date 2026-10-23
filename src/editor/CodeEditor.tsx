@@ -7,7 +7,7 @@ import { cn } from '../utils/cn';
 import { sameFilePath } from '../utils/path';
 import { baseExtensions } from './editorExtensions';
 import { indentExtensions } from './indent';
-import { editorLanguageKind, loadLanguageExtension } from './languageRegistry';
+import { loadLanguageExtension } from './languageRegistry';
 import './codeEditor.css';
 
 type CodeEditorProps = {
@@ -43,8 +43,6 @@ export function CodeEditor({
   const notifyDestroy = useEffectEvent(onDestroy);
   const notifyLoadError = useEffectEvent(onLoadError);
   const notifyPathResolved = useEffectEvent(onPathResolved);
-
-  const languageKindForPath = useEffectEvent(() => editorLanguageKind(path));
 
   const hydrateFromDisk = useEffectEvent(async (editorView: EditorView) => {
     try {
@@ -101,7 +99,7 @@ export function CodeEditor({
     });
     editorViewRef.current = editorView;
 
-    void loadLanguageExtension(languageKindForPath()).then((extension) => {
+    void loadLanguageExtension(path).then((extension) => {
       if (!isCurrentView(editorView)) {
         return;
       }
@@ -117,6 +115,8 @@ export function CodeEditor({
       editorViewRef.current = null;
       indentCompartmentRef.current = null;
     };
+    // 只在挂载时建 EditorView；path / 重载靠外层 key（如 docEpoch）remount
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once
   }, []);
 
   // 设置变更时重配缩进
