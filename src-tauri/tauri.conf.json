@@ -95,6 +95,14 @@
         "mimeType": "application/xml",
         "role": "Editor",
         "rank": "Alternate"
+      },
+      {
+        "ext": ["html", "htm"],
+        "name": "LiliaMark.HTML",
+        "description": "HTML Document",
+        "mimeType": "text/html",
+        "role": "Editor",
+        "rank": "Alternate"
       }
     ]
   }

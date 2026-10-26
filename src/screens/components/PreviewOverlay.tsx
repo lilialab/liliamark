@@ -29,21 +29,27 @@ export function PreviewOverlay({
   return (
     <div
       className={cn(
-        'absolute inset-0 z-20 overflow-auto bg-(--app-bg)',
+        'absolute inset-0 z-20 flex flex-col bg-(--app-bg)',
         open ? 'z-20' : 'pointer-events-none invisible z-0',
       )}
       aria-hidden={!open}
       aria-label="预览"
     >
-      {supportsPreview
-        ? (
-          <Suspense
-            fallback={<p className={cn('p-4 text-sm text-(--app-muted)')}>加载预览…</p>}
-          >
-            <MarkdownPreview source={source} />
-          </Suspense>
-        )
-        : <p className={cn('p-4 text-sm text-(--app-muted)')}>不支持预览</p>}
+      <div
+        className={cn('h-1 shrink-0 bg-(--ctp-mauve)')}
+        aria-hidden
+      />
+      <div className={cn('min-h-0 flex-1 overflow-auto')}>
+        {supportsPreview
+          ? (
+            <Suspense
+              fallback={<p className={cn('p-4 text-sm text-(--app-muted)')}>加载预览…</p>}
+            >
+              <MarkdownPreview source={source} />
+            </Suspense>
+          )
+          : <p className={cn('p-4 text-sm text-(--app-muted)')}>不支持预览</p>}
+      </div>
     </div>
   );
 }
