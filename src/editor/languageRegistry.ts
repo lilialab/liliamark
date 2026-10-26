@@ -4,6 +4,7 @@ import type { Extension } from '@codemirror/state';
 import { fileName } from '../utils/path';
 
 const markdownExtensions = new Set(['md', 'markdown']);
+const htmlExtensions = new Set(['html', 'htm']);
 
 function fileExtension(path: string): string {
   const name = fileName(path);
@@ -17,6 +18,16 @@ function fileExtension(path: string): string {
 /** 当前是否提供 Markdown 预览（仅 .md / .markdown） */
 export function supportsMarkdownPreview(path: string): boolean {
   return markdownExtensions.has(fileExtension(path));
+}
+
+/** 是否用系统默认应用（浏览器）打开预览（.html / .htm） */
+export function supportsHtmlBrowserOpen(path: string): boolean {
+  return htmlExtensions.has(fileExtension(path));
+}
+
+/** 预览层是否有可展示内容（应用内 MD 或浏览器打开 HTML） */
+export function supportsPreviewPanel(path: string): boolean {
+  return supportsMarkdownPreview(path) || supportsHtmlBrowserOpen(path);
 }
 
 /** 是否有整文件语法高亮（markdown 或 language-data 能匹配的扩展名） */

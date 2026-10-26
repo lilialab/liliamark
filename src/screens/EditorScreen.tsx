@@ -4,13 +4,14 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
-import { supportsMarkdownPreview } from '../editor/languageRegistry';
+import { supportsHtmlBrowserOpen, supportsMarkdownPreview } from '../editor/languageRegistry';
 import {
   closeCurrentWindow,
   confirmDiscardChanges,
   pickTextFile,
   writeTextFile,
 } from '../lib/tauri/fs';
+import { openLocalPath } from '../lib/tauri/opener';
 import { useAppSettingsStore } from '../stores/appSettingsStore';
 import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
@@ -220,6 +221,17 @@ export function EditorScreen() {
     setPreviewOpen((open) => !open);
   }
 
+  async function handleOpenHtmlInBrowser() {
+    if (!activeTab) {
+      toast.error('无法打开', { description: '文件路径无效' });
+      return;
+    }
+    const ok = await openLocalPath(activeTab.path);
+    if (!ok) {
+      toast.error('打开失败', { description: '系统未能用默认应用打开该文件' });
+    }
+  }
+
   function applyRestoredSession(restored: EditorTab[], activePath: string | null) {
     setTabs(restored);
     setActiveId(resolveActiveTabId(restored, activePath));
@@ -407,8 +419,10 @@ export function EditorScreen() {
           })}
         <PreviewOverlay
           open={previewOpen}
-          supportsPreview={activeTab !== null && supportsMarkdownPreview(activeTab.path)}
+          markdownPreview={activeTab !== null && supportsMarkdownPreview(activeTab.path)}
+          htmlBrowserOpen={activeTab !== null && supportsHtmlBrowserOpen(activeTab.path)}
           source={previewSource}
+          onOpenInBrowser={handleOpenHtmlInBrowser}
         />
         <SettingsOverlay
           open={settingsOpen}

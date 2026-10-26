@@ -1,4 +1,4 @@
-import { openUrl } from '@tauri-apps/plugin-opener';
+import { openPath, openUrl } from '@tauri-apps/plugin-opener';
 import { isHttpUrl } from '../../utils/externalUrl';
 
 /**
@@ -11,6 +11,19 @@ export async function openExternalUrl(href: string): Promise<boolean> {
   }
   try {
     await openUrl(href);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 用系统默认应用打开本地路径（HTML 通常进浏览器）。
+ * 失败时返回 false。
+ */
+export async function openLocalPath(path: string): Promise<boolean> {
+  try {
+    await openPath(path);
     return true;
   } catch {
     return false;

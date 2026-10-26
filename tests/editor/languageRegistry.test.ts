@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { hasEditorHighlight, supportsMarkdownPreview } from '../../src/editor/languageRegistry';
+import {
+  hasEditorHighlight,
+  supportsHtmlBrowserOpen,
+  supportsMarkdownPreview,
+  supportsPreviewPanel,
+} from '../../src/editor/languageRegistry';
 
 describe('supportsMarkdownPreview', () => {
   it('is true only for markdown paths', () => {
@@ -7,6 +12,24 @@ describe('supportsMarkdownPreview', () => {
     expect(supportsMarkdownPreview('Note.Markdown')).toBe(true);
     expect(supportsMarkdownPreview('a.json')).toBe(false);
     expect(supportsMarkdownPreview('a.txt')).toBe(false);
+    expect(supportsMarkdownPreview('a.html')).toBe(false);
+  });
+});
+
+describe('supportsHtmlBrowserOpen', () => {
+  it('is true only for html paths', () => {
+    expect(supportsHtmlBrowserOpen('a.html')).toBe(true);
+    expect(supportsHtmlBrowserOpen('Index.HTM')).toBe(true);
+    expect(supportsHtmlBrowserOpen('a.md')).toBe(false);
+    expect(supportsHtmlBrowserOpen('a.xml')).toBe(false);
+  });
+});
+
+describe('supportsPreviewPanel', () => {
+  it('covers markdown and html', () => {
+    expect(supportsPreviewPanel('a.md')).toBe(true);
+    expect(supportsPreviewPanel('a.html')).toBe(true);
+    expect(supportsPreviewPanel('a.json')).toBe(false);
   });
 });
 
