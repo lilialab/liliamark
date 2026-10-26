@@ -1,6 +1,9 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from '../../components/Button';
 import { cn } from '../../utils/cn';
+import './PreviewOverlay.css';
+
+const PREVIEW_MOTION_MS = 200;
 
 const MarkdownPreview = lazy(async () => {
   const mod = await import('../../preview/MarkdownPreview');
@@ -61,6 +64,7 @@ function PreviewBody({
   return <p className={cn('p-4 text-sm text-(--app-muted)')}>不支持预览</p>;
 }
 
+/** 预览覆盖层；透明度 + 内容位移/缩放，可打断。 */
 export function PreviewOverlay({
   open,
   markdownPreview,
@@ -71,13 +75,32 @@ export function PreviewOverlay({
   const [mounted, setMounted] = useState(false);
   const [opening, setOpening] = useState(false);
 
-  if (open && !mounted) {
-    setMounted(true);
-  }
+  useEffect(() => {
+    void import('../../preview/MarkdownPreview');
+  }, []);
 
-  if (!mounted) {
-    return null;
-  }
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      setMounted(false);
+      return;
+    }
+
+    const hide = window.setTimeout(() => {
+      setMounted(false);
+    }, PREVIEW_MOTION_MS);
+    return () => {
+      window.clearTimeout(hide);
+    };
+  }, [open, mounted]);
 
   async function handleOpenInBrowser() {
     setOpening(true);
@@ -88,29 +111,38 @@ export function PreviewOverlay({
     }
   }
 
+  if (!mounted) {
+    return null;
+  }
+
+  const openAttr = open ? 'true' : 'false';
+
   return (
     <div
       className={cn(
-        'absolute inset-0 z-20 flex flex-col bg-(--app-bg)',
-        open ? 'z-20' : 'pointer-events-none invisible z-0',
+        'preview-overlay-shell absolute inset-0 z-20 flex flex-col overflow-hidden bg-(--app-bg)',
+        !open && 'pointer-events-none',
       )}
+      data-open={openAttr}
       aria-hidden={!open}
       aria-label="预览"
     >
       <div
-        className={cn('h-1 shrink-0 bg-(--ctp-mauve)')}
-        aria-hidden
-      />
-      <div className={cn('min-h-0 flex-1 overflow-auto')}>
-        <PreviewBody
-          markdownPreview={markdownPreview}
-          htmlBrowserOpen={htmlBrowserOpen}
-          source={source}
-          opening={opening}
-          onOpenInBrowser={() => {
-            void handleOpenInBrowser();
-          }}
-        />
+        className={cn('preview-overlay-motion flex min-h-0 flex-1 flex-col')}
+        data-open={openAttr}
+      >
+        <div className={cn('h-1 shrink-0 bg-(--ctp-mauve)')} aria-hidden />
+        <div className={cn('min-h-0 flex-1 overflow-auto')}>
+          <PreviewBody
+            markdownPreview={markdownPreview}
+            htmlBrowserOpen={htmlBrowserOpen}
+            source={source}
+            opening={opening}
+            onOpenInBrowser={() => {
+              void handleOpenInBrowser();
+            }}
+          />
+        </div>
       </div>
     </div>
   );

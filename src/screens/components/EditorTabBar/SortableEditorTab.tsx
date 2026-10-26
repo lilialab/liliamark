@@ -19,8 +19,9 @@ export function SortableEditorTab({ tab, active, onSelect, onClose }: SortableEd
   });
 
   const style: CSSProperties = {
+    // 只用 Translate，避免 Transform 带上 scale 导致拖拽时宽度被挤/拉
     // 标签条只允许横向位移，避免指针上下移时其它 tab 跟着飞
-    transform: CSS.Transform.toString(transform ? { ...transform, y: 0 } : null),
+    transform: CSS.Translate.toString(transform ? { ...transform, y: 0 } : null),
     transition,
   };
 
