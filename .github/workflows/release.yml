@@ -1,0 +1,79 @@
+# 推送 v* tag（或手动 Run workflow）后，在 GitHub 云端打多平台包并挂到 Draft Release。
+# 用法：先把 package.json / tauri.conf.json 版本对齐，再：
+#   git tag v0.1.0
+#   git push origin v0.1.0
+# 然后到 Actions 看构建；成功后到 Releases 编辑草稿并 Publish。
+# 未配置代码签名：Windows 可能 SmartScreen 警告，macOS 可能需右键「打开」。
+
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+          - platform: ubuntu-24.04
+            args: ''
+          - platform: windows-latest
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: LiliaMark v__VERSION__
+          releaseBody: |
+            下载下方 Assets 安装对应平台包。
+
+            构建未签名：Windows 可能出现 SmartScreen 提示；macOS 首次可能需右键 → 打开。
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
