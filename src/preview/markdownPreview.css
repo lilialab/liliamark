@@ -125,6 +125,62 @@
   margin: 0.25em 0;
 }
 
+/* 任务列表：无圆点；勾选框与首行文字对齐；自绘样式避免 disabled 发灰 */
+.markdown-preview ul.contains-task-list {
+  list-style: none;
+  padding-left: 0.15em;
+}
+
+.markdown-preview .task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  list-style: none;
+}
+
+.markdown-preview .task-list-item:has(.task-list-item-checkbox:checked) {
+  color: var(--md-fg-muted);
+}
+
+.markdown-preview .task-list-item > p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.markdown-preview .task-list-item-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 0.95em;
+  height: 0.95em;
+  margin: calc((1em * var(--md-line) - 0.95em) / 2) 0 0;
+  border: 1.5px solid var(--ctp-overlay1);
+  border-radius: 3px;
+  background-color: var(--md-bg);
+  pointer-events: none;
+  cursor: default;
+}
+
+.markdown-preview .task-list-item-checkbox:checked {
+  border-color: var(--ctp-mauve);
+  background-color: var(--ctp-mauve);
+  /* 对勾 path 来自 Lucide Check（viewBox 24）；浅色描边在 mauve 上够清楚 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23eff1f5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-size: 85% 85%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.markdown-preview .task-list-item-checkbox:disabled {
+  opacity: 1;
+  color: inherit;
+}
+
 .markdown-preview blockquote {
   margin: 0 0 var(--md-space);
   padding: 0.15em 0 0.15em 1em;
@@ -195,8 +251,4 @@
 .markdown-preview img {
   max-width: none;
   height: auto;
-}
-
-.markdown-preview input[type='checkbox'] {
-  margin-right: 0.4em;
 }

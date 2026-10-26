@@ -15,4 +15,13 @@ describe('renderMarkdown', () => {
     expect(html).toContain('hljs');
     expect(html).toContain('hljs-keyword');
   });
+
+  it('renders task list checkboxes as disabled', () => {
+    const html = renderMarkdown('- [ ] todo\n- [x] done\n');
+    expect(html).toContain('type="checkbox"');
+    expect(html).toContain('disabled');
+    expect(html).toContain('checked');
+    expect(html).toContain('todo');
+    expect(html).toContain('done');
+  });
 });
