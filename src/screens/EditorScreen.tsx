@@ -31,8 +31,10 @@ import { AppMenu } from './components/AppMenu';
 import { DiskChangeBanner } from './components/DiskChangeBanner';
 import { EditorTabBar } from './components/EditorTabBar';
 import { FileDragOverlay } from './components/FileDragOverlay';
+import { MarkdownCheatSheetOverlay } from './components/MarkdownCheatSheetOverlay';
 import { PreviewOverlay } from './components/PreviewOverlay';
 import { SettingsOverlay } from './components/SettingsOverlay';
+import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { StartupTimingOverlay } from './components/StartupTimingOverlay';
 import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
 import { useDiskWatch } from './hooks/useDiskWatch';
@@ -57,6 +59,8 @@ export function EditorScreen() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewSource, setPreviewSource] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [markdownCheatSheetOpen, setMarkdownCheatSheetOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [startupTimingOpen, setStartupTimingOpen] = useState(false);
 
   const editorViewsRef = useRef(new Map<string, EditorView>());
@@ -350,6 +354,20 @@ export function EditorScreen() {
                 },
               },
               {
+                id: 'markdown-cheat-sheet',
+                label: 'Markdown 标记',
+                onSelect: () => {
+                  setMarkdownCheatSheetOpen(true);
+                },
+              },
+              {
+                id: 'shortcuts',
+                label: '快捷键',
+                onSelect: () => {
+                  setShortcutsOpen(true);
+                },
+              },
+              {
                 id: 'startup-timing',
                 label: '启动耗时',
                 onSelect: () => {
@@ -428,6 +446,18 @@ export function EditorScreen() {
           open={settingsOpen}
           onClose={() => {
             setSettingsOpen(false);
+          }}
+        />
+        <MarkdownCheatSheetOverlay
+          open={markdownCheatSheetOpen}
+          onClose={() => {
+            setMarkdownCheatSheetOpen(false);
+          }}
+        />
+        <ShortcutsOverlay
+          open={shortcutsOpen}
+          onClose={() => {
+            setShortcutsOpen(false);
           }}
         />
         <StartupTimingOverlay

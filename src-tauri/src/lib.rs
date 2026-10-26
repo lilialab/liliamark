@@ -11,7 +11,9 @@ use commands::launch::take_pending_open_path;
 use commands::session::{load_editor_session, save_editor_session};
 use commands::settings::{load_app_settings, save_app_settings};
 use file_watch::{sync_watched_files, FileWatchState};
-use open_file::{PendingOpenPath, open_path_in_running_app, paths_from_args, remember_open_path};
+use open_file::{PendingOpenPath, open_path_in_running_app, paths_from_args};
+#[cfg(any(windows, target_os = "linux"))]
+use open_file::remember_open_path;
 use startup_timing::{get_native_startup_timing, mark_window_visible, StartupTiming};
 
 /// 屏蔽 WebView 浏览器默认快捷键（Ctrl+P 等在 Win 上不会进到 JS）。
@@ -70,6 +72,8 @@ pub fn run() {
                     remember_open_path(app.handle(), path);
                 }
             }
+            #[cfg(not(any(windows, target_os = "linux")))]
+            let _ = app;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
