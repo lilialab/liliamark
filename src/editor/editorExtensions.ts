@@ -7,6 +7,7 @@ import { catppuccinEditorTheme } from '../theme/flavor';
 import { highlightActiveLineExclusive } from './activeLineHighlight';
 import { indentKeymap } from './indent';
 import { markdownBoldKeymap } from './markdownBold';
+import { markdownTaskKeymap } from './markdownTask';
 
 /**
  * Markdown 语义挂稳定 class，样式走 CSS（特异性高于主题 StyleModule，
@@ -34,5 +35,11 @@ export const baseExtensions: Extension[] = [
   catppuccinEditorTheme(),
   markdownHighlight,
   highlightActiveLineExclusive(),
-  keymap.of([...indentKeymap, ...markdownBoldKeymap, ...defaultKeymap, ...historyKeymap]),
+  keymap.of([
+    ...indentKeymap,
+    ...markdownBoldKeymap,
+    ...markdownTaskKeymap,
+    ...defaultKeymap,
+    ...historyKeymap,
+  ]),
 ];

@@ -160,6 +160,7 @@
     "closeTab": "Close current tab",
     "closeWindow": "Close window (confirms if unsaved)",
     "bold": "Bold: wrap/unwrap selection with **; insert **** with caret in the middle if empty",
+    "toggleTask": "Toggle task on the current line [ ] ↔ [x]",
     "tab": "Insert indent; indent selection when present",
     "shiftTab": "Outdent",
     "undo": "Undo",

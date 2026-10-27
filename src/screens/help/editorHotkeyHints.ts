@@ -1,6 +1,6 @@
 /**
  * 快捷键说明结构（只读）。
- * 应用级对齐 `useEditorHotkeys` / `markdownBoldKeymap` / `indentKeymap`；
+ * 应用级对齐 `useEditorHotkeys` / `markdownBoldKeymap` / `markdownTaskKeymap` / `indentKeymap`；
  * 编辑器级摘自 CodeMirror `defaultKeymap` / `historyKeymap`（非整表）。
  * 文案键在 i18n `hotkeys.*`。
  */
@@ -52,6 +52,7 @@ export function editorHotkeyHintSections(
       title: t('hotkeys.sectionEdit'),
       hints: [
         { keys: `${mod}+B`, description: t('hotkeys.bold') },
+        { keys: 'Alt+Enter', description: t('hotkeys.toggleTask') },
         { keys: 'Tab', description: t('hotkeys.tab') },
         { keys: 'Shift+Tab', description: t('hotkeys.shiftTab') },
         { keys: `${mod}+Z`, description: t('hotkeys.undo') },

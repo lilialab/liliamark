@@ -37,6 +37,7 @@ import { PreviewOverlay } from './components/PreviewOverlay';
 import { SettingsOverlay } from './components/SettingsOverlay';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { StartupTimingOverlay } from './components/StartupTimingOverlay';
+import { modifierKeyLabel } from './help/editorHotkeyHints';
 import { useAutoSaveOnBlur } from './hooks/useAutoSaveOnBlur';
 import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
 import { useDiskWatch } from './hooks/useDiskWatch';
@@ -46,7 +47,6 @@ import { useFileDragOpen } from './hooks/useFileDragOpen';
 import { usePersistEditorSession } from './hooks/usePersistEditorSession';
 import { useRestoreEditorSession } from './hooks/useRestoreEditorSession';
 import { useUnsavedCloseGuard } from './hooks/useUnsavedCloseGuard';
-import { modifierKeyLabel } from './help/editorHotkeyHints';
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
