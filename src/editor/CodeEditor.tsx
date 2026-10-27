@@ -13,6 +13,8 @@ import './codeEditor.css';
 type CodeEditorProps = {
   path: string;
   onDirty: () => void;
+  /** 编辑器 DOM 失焦（点到菜单、预览、其它控件等） */
+  onBlur: () => void;
   /** 读盘成功并写入文档后调用 */
   onReady: (editorView: EditorView) => void;
   onDestroy: () => void;
@@ -25,6 +27,7 @@ type CodeEditorProps = {
 export function CodeEditor({
   path,
   onDirty,
+  onBlur,
   onReady,
   onDestroy,
   onLoadError,
@@ -39,6 +42,7 @@ export function CodeEditor({
   const isCurrentView = (view: EditorView) => editorViewRef.current === view;
 
   const reportDirty = useEffectEvent(onDirty);
+  const reportBlur = useEffectEvent(onBlur);
   const notifyReady = useEffectEvent(onReady);
   const notifyDestroy = useEffectEvent(onDestroy);
   const notifyLoadError = useEffectEvent(onLoadError);
@@ -93,6 +97,12 @@ export function CodeEditor({
           if (update.docChanged && !hydratingRef.current) {
             reportDirty();
           }
+        }),
+        EditorView.domEventHandlers({
+          blur: () => {
+            reportBlur();
+            return false;
+          },
         }),
       ],
       parent: containerRef.current,

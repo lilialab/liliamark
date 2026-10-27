@@ -66,6 +66,15 @@ export function onWindowCloseRequested(
   return getCurrentWindow().onCloseRequested(handler);
 }
 
+/** 监听窗口焦点变化；payload 为是否聚焦 */
+export function onWindowFocusChanged(
+  handler: (focused: boolean) => void,
+) {
+  return getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+    handler(focused);
+  });
+}
+
 /** 关闭当前窗口（会走 onCloseRequested / 未保存确认） */
 export async function closeCurrentWindow(): Promise<void> {
   await getCurrentWindow().close();

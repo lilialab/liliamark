@@ -36,6 +36,7 @@ import { PreviewOverlay } from './components/PreviewOverlay';
 import { SettingsOverlay } from './components/SettingsOverlay';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { StartupTimingOverlay } from './components/StartupTimingOverlay';
+import { useAutoSaveOnBlur } from './hooks/useAutoSaveOnBlur';
 import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
 import { useDiskWatch } from './hooks/useDiskWatch';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
@@ -64,6 +65,8 @@ export function EditorScreen() {
   const [startupTimingOpen, setStartupTimingOpen] = useState(false);
 
   const editorViewsRef = useRef(new Map<string, EditorView>());
+  const tabsRef = useRef(tabs);
+  tabsRef.current = tabs;
 
   useEffect(() => {
     void useAppSettingsStore.getState().hydrate();
@@ -143,23 +146,47 @@ export function EditorScreen() {
     }
   }
 
-  async function handleSave() {
-    if (!activeTab) {
+  /** 保存指定标签；写盘期间若正文又变了则保持 dirty */
+  async function saveTab(tabId: string, options?: { requireReadyToast?: boolean }) {
+    const tab = tabsRef.current.find((item) => item.id === tabId);
+    if (!tab?.dirty) {
       return;
     }
 
-    const content = readDoc(activeTab.id);
+    const content = readDoc(tabId);
     if (content === null) {
-      toast.error('保存失败', { description: '编辑器尚未就绪' });
+      if (options?.requireReadyToast) {
+        toast.error('保存失败', { description: '编辑器尚未就绪' });
+      }
       return;
     }
 
     try {
-      await writeTextFile(activeTab.path, content);
-      setTabs((prev) => updateTab(prev, activeTab.id, withSaved));
+      await writeTextFile(tab.path, content);
+      setTabs((prev) => {
+        const latest = readDoc(tabId);
+        if (latest !== null && latest !== content) {
+          return prev;
+        }
+        return updateTab(prev, tabId, withSaved);
+      });
     } catch (error) {
       toast.error('保存失败', { description: errorMessage(error) });
     }
+  }
+
+  async function saveDirtyTabs() {
+    const dirtyIds = tabsRef.current.filter((tab) => tab.dirty).map((tab) => tab.id);
+    for (const id of dirtyIds) {
+      await saveTab(id);
+    }
+  }
+
+  async function handleSave() {
+    if (!activeId) {
+      return;
+    }
+    await saveTab(activeId, { requireReadyToast: true });
   }
 
   function handleDirty(tabId: string) {
@@ -307,6 +334,7 @@ export function EditorScreen() {
     handleDiskChange,
   );
   useUnsavedCloseGuard(getDirtyTabCount);
+  useAutoSaveOnBlur(saveDirtyTabs);
   useBlockBrowserShortcuts();
   useEditorHotkeys({
     onSave: handleSave,
@@ -418,6 +446,9 @@ export function EditorScreen() {
                   path={tab.path}
                   onDirty={() => {
                     handleDirty(tab.id);
+                  }}
+                  onBlur={() => {
+                    void saveTab(tab.id);
                   }}
                   onReady={(editorView) => {
                     handleEditorReady(tab.id, editorView);
