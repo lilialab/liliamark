@@ -54,3 +54,7 @@ Also:
 - `pnpm test:run` — Vitest
 
 Stack: Tauri 2 · Vite · React · TypeScript · CodeMirror 6 · markdown-it. Project conventions live in [`AGENTS.md`](AGENTS.md) (Chinese).
+
+## License
+
+[MIT](LICENSE) © Liu Yuchuan

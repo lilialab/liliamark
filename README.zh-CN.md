@@ -54,3 +54,7 @@ pnpm tauri build  # 打安装包
 - `pnpm test:run` — Vitest
 
 技术栈：Tauri 2 · Vite · React · TypeScript · CodeMirror 6 · markdown-it。仓库约定与分层见 [`AGENTS.md`](AGENTS.md)。
+
+## 许可
+
+[MIT](LICENSE) © Liu Yuchuan
