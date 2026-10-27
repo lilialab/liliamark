@@ -1,6 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
 import { cn } from '../../utils/cn';
-import { markdownCheatSheet } from '../help/markdownCheatSheet';
+import { markdownCheatSheetIds } from '../help/markdownCheatSheet';
 
 type MarkdownCheatSheetOverlayProps = {
   open: boolean;
@@ -9,6 +10,8 @@ type MarkdownCheatSheetOverlayProps = {
 
 /** Markdown 常用标记速查（只读）。 */
 export function MarkdownCheatSheetOverlay({ open, onClose }: MarkdownCheatSheetOverlayProps) {
+  const { t } = useTranslation();
+
   if (!open) {
     return null;
   }
@@ -21,7 +24,7 @@ export function MarkdownCheatSheetOverlay({ open, onClose }: MarkdownCheatSheetO
       )}
       role="dialog"
       aria-modal="true"
-      aria-label="Markdown 标记"
+      aria-label={t('cheatSheet.aria')}
       onClick={onClose}
     >
       <div
@@ -33,15 +36,17 @@ export function MarkdownCheatSheetOverlay({ open, onClose }: MarkdownCheatSheetO
           event.stopPropagation();
         }}
       >
-        <h2 className={cn('mb-1 text-base font-medium text-(--app-fg)')}>Markdown 标记</h2>
-        <p className={cn('mb-4 text-xs text-(--app-muted)')}>
-          常用写法速查；在编辑区输入对应源码即可。
-        </p>
+        <h2 className={cn('mb-1 text-base font-medium text-(--app-fg)')}>
+          {t('cheatSheet.title')}
+        </h2>
+        <p className={cn('mb-4 text-xs text-(--app-muted)')}>{t('cheatSheet.hint')}</p>
 
         <dl className={cn('mb-4 space-y-3')}>
-          {markdownCheatSheet.map((entry) => (
-            <div key={entry.name}>
-              <dt className={cn('mb-1 text-sm text-(--app-fg)')}>{entry.name}</dt>
+          {markdownCheatSheetIds.map((id) => (
+            <div key={id}>
+              <dt className={cn('mb-1 text-sm text-(--app-fg)')}>
+                {t(`cheatSheet.${id}.name`)}
+              </dt>
               <dd>
                 <pre
                   className={cn(
@@ -49,7 +54,7 @@ export function MarkdownCheatSheetOverlay({ open, onClose }: MarkdownCheatSheetO
                     'px-3 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap text-(--app-fg)',
                   )}
                 >
-                  {entry.example}
+                  {t(`cheatSheet.${id}.example`)}
                 </pre>
               </dd>
             </div>
@@ -58,7 +63,7 @@ export function MarkdownCheatSheetOverlay({ open, onClose }: MarkdownCheatSheetO
 
         <div className={cn('flex justify-end')}>
           <Button tabFocusable onClick={onClose}>
-            关闭
+            {t('cheatSheet.close')}
           </Button>
         </div>
       </div>

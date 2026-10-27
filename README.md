@@ -1,52 +1,56 @@
 # LiliaMark
 
-跨平台本地 Markdown / 文本编辑器。源码高亮编辑，快捷键切换预览；基于 Tauri 2，使用系统 WebView，不打包 Chromium。
+English | [简体中文](README.zh-CN.md)
 
-## 功能
+Cross-platform local Markdown / text editor. Edit with syntax highlighting, toggle preview with a shortcut. Built with Tauri 2 and the system WebView — no bundled Chromium.
 
-- 打开、编辑、保存本地文本（Markdown、JSON、YAML、TOML、HTML 等）
-- CodeMirror 源码高亮；多标签，可拖拽排序
-- `Ctrl/Cmd+E` 预览：Markdown 应用内渲染；HTML 一键用系统浏览器打开（不内嵌执行脚本）
-- GFM 任务列表只读展示；失焦 / 窗口失焦自动保存
-- 记住上次打开的文件；支持系统「打开方式」
-- 界面主题：Catppuccin Macchiato
+<!-- Add a screenshot later, e.g. ![LiliaMark](docs/screenshot.png) -->
 
-当前不做：富文本工具栏、目录树、滚动同步、KaTeX / Mermaid、账号与同步。
+## Features
 
-## 安装
+- Open, edit, and save local text (Markdown, JSON, YAML, TOML, HTML, and more)
+- CodeMirror syntax highlighting; multi-tab with drag-and-drop reorder
+- `Ctrl/Cmd+E` preview: in-app Markdown; HTML opens in the system browser (no in-app script execution)
+- Read-only GFM task lists; auto-save on editor blur and window blur
+- Restore last opened files; supports OS “Open with”
+- UI theme: Catppuccin Macchiato; UI language follows the system (override to Chinese / English in Settings)
 
-从仓库 **Releases** 页下载对应平台安装包：
+Out of scope for now: rich-text toolbar, file tree, scroll sync, KaTeX / Mermaid, accounts and sync.
 
-| 系统 | 推荐文件 |
-|------|----------|
-| Windows | `*_x64-setup.exe` 或 `*_x64_en-US.msi` |
-| macOS（Apple Silicon） | `*_aarch64.dmg` |
-| macOS（Intel） | `*_x64.dmg` |
-| Linux（Debian / Ubuntu） | `*_amd64.deb` 或 AppImage |
-| Linux（Fedora 等） | `*.rpm` |
+## Install
 
-构建默认**未代码签名**：Windows 可能出现 SmartScreen；macOS 首次可能需右键 → 打开。
+Download the build for your platform from the repository **Releases** page:
 
-## 使用
+| Platform | Recommended asset |
+|----------|-------------------|
+| Windows | `*_x64-setup.exe` or `*_x64_en-US.msi` |
+| macOS (Apple Silicon) | `*_aarch64.dmg` |
+| macOS (Intel) | `*_x64.dmg` |
+| Linux (Debian / Ubuntu) | `*_amd64.deb` or AppImage |
+| Linux (Fedora, etc.) | `*.rpm` |
 
-- `Ctrl/Cmd+S` 保存 · `Ctrl/Cmd+E` 预览 · `Ctrl/Cmd+W` 关标签 · `Ctrl/Cmd+Q` 关窗口
-- `Shift+滚轮` 横向滚动（编辑区不自动换行）
-- 更多说明见应用内菜单「快捷键」「Markdown 标记」
+Builds are **unsigned** by default: Windows may show SmartScreen; on macOS you may need right-click → Open the first time.
 
-## 开发
+## Usage
 
-需要：Node.js、[pnpm](https://pnpm.io)、Rust 工具链，以及本机系统 WebView（Windows WebView2、macOS WKWebView、Linux WebKitGTK）。
+- `Ctrl/Cmd+S` save · `Ctrl/Cmd+E` preview · `Ctrl/Cmd+W` close tab · `Ctrl/Cmd+Q` quit
+- `Shift+scroll` horizontal scroll (editor does not soft-wrap)
+- More details in the in-app **Keyboard shortcuts** and **Markdown reference** menus
+
+## Development
+
+Requires Node.js, [pnpm](https://pnpm.io), a Rust toolchain, and the platform WebView (WebView2 / WKWebView / WebKitGTK).
 
 ```bash
 pnpm install
-pnpm tauri dev    # 开发（与安装版隔离为 LiliaMark Dev）
-pnpm tauri build  # 打安装包
+pnpm tauri dev    # development (isolated as LiliaMark Dev from the installed app)
+pnpm tauri build  # produce installers
 ```
 
-其它：
+Also:
 
 - `pnpm format` — dprint
 - `pnpm lint` — ESLint
 - `pnpm test:run` — Vitest
 
-技术栈：Tauri 2 · Vite · React · TypeScript · CodeMirror 6 · markdown-it。仓库约定与分层见 [`AGENTS.md`](AGENTS.md)。
+Stack: Tauri 2 · Vite · React · TypeScript · CodeMirror 6 · markdown-it. Project conventions live in [`AGENTS.md`](AGENTS.md) (Chinese).

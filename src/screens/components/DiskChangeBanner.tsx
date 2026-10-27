@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
 import type { DiskChangeKind } from '../../types/diskFileChanged';
 import { cn } from '../../utils/cn';
@@ -19,10 +20,12 @@ export function DiskChangeBanner({
   onReload,
   onKeepEdits,
 }: DiskChangeBannerProps) {
+  const { t } = useTranslation();
+
   if (diskChange === 'remove') {
     return (
       <div className={bannerClass}>
-        <p className={cn('min-w-0 flex-1')}>文件已删除或移走</p>
+        <p className={cn('min-w-0 flex-1')}>{t('disk.removed')}</p>
       </div>
     );
   }
@@ -30,8 +33,8 @@ export function DiskChangeBanner({
   if (diskChange === 'modify' && !dirty) {
     return (
       <div className={bannerClass}>
-        <p className={cn('min-w-0 flex-1')}>磁盘上的文件已更新</p>
-        <Button onClick={onReload}>重载</Button>
+        <p className={cn('min-w-0 flex-1')}>{t('disk.updated')}</p>
+        <Button onClick={onReload}>{t('disk.reload')}</Button>
       </div>
     );
   }
@@ -39,9 +42,9 @@ export function DiskChangeBanner({
   if (diskChange === 'modify' && dirty) {
     return (
       <div className={bannerClass}>
-        <p className={cn('min-w-0 flex-1')}>磁盘上的文件已更新，与当前未保存的修改冲突</p>
-        <Button onClick={onKeepEdits}>保留编辑</Button>
-        <Button onClick={onReload}>用磁盘版本</Button>
+        <p className={cn('min-w-0 flex-1')}>{t('disk.conflict')}</p>
+        <Button onClick={onKeepEdits}>{t('disk.keepEdits')}</Button>
+        <Button onClick={onReload}>{t('disk.useDisk')}</Button>
       </div>
     );
   }

@@ -1,8 +1,11 @@
 /**
- * 快捷键说明（只读）。
+ * 快捷键说明结构（只读）。
  * 应用级对齐 `useEditorHotkeys` / `markdownBoldKeymap` / `indentKeymap`；
  * 编辑器级摘自 CodeMirror `defaultKeymap` / `historyKeymap`（非整表）。
+ * 文案键在 i18n `hotkeys.*`。
  */
+
+import type { TFunction } from 'i18next';
 
 export type EditorHotkeyHint = {
   keys: string;
@@ -28,6 +31,7 @@ export function modifierKeyLabel(): string {
 
 /** 按平台分组的快捷键说明。 */
 export function editorHotkeyHintSections(
+  t: TFunction,
   mod: string = modifierKeyLabel(),
 ): EditorHotkeyHintSection[] {
   const apple = isApplePlatform();
@@ -36,65 +40,63 @@ export function editorHotkeyHintSections(
 
   return [
     {
-      title: '应用',
+      title: t('hotkeys.sectionApp'),
       hints: [
-        { keys: `${mod}+S`, description: '保存当前文件' },
-        { keys: `${mod}+E`, description: '切换 Markdown 预览 / HTML「用浏览器打开」' },
-        { keys: `${mod}+W`, description: '关闭当前标签' },
-        { keys: `${mod}+Q`, description: '关闭窗口（有未保存改动时会确认）' },
+        { keys: `${mod}+S`, description: t('hotkeys.save') },
+        { keys: `${mod}+E`, description: t('hotkeys.preview') },
+        { keys: `${mod}+W`, description: t('hotkeys.closeTab') },
+        { keys: `${mod}+Q`, description: t('hotkeys.closeWindow') },
       ],
     },
     {
-      title: '编辑',
+      title: t('hotkeys.sectionEdit'),
       hints: [
-        { keys: `${mod}+B`, description: '加粗：选区包/解 **；无选区插入 **** 并置于中间' },
-        { keys: 'Tab', description: '插入缩进；有选区时整块增加缩进' },
-        { keys: 'Shift+Tab', description: '减少缩进' },
-        { keys: `${mod}+Z`, description: '撤销' },
-        { keys: redoKeys, description: '重做' },
-        { keys: `${mod}+Shift+K`, description: '删除当前行' },
-        { keys: `${mod}+A`, description: '全选（编辑区外触发时会先聚焦编辑器）' },
-        { keys: `${mod}+/`, description: '切换行注释' },
+        { keys: `${mod}+B`, description: t('hotkeys.bold') },
+        { keys: 'Tab', description: t('hotkeys.tab') },
+        { keys: 'Shift+Tab', description: t('hotkeys.shiftTab') },
+        { keys: `${mod}+Z`, description: t('hotkeys.undo') },
+        { keys: redoKeys, description: t('hotkeys.redo') },
+        { keys: `${mod}+Shift+K`, description: t('hotkeys.deleteLine') },
+        { keys: `${mod}+A`, description: t('hotkeys.selectAll') },
+        { keys: `${mod}+/`, description: t('hotkeys.toggleComment') },
       ],
     },
     {
-      title: '光标与选区',
+      title: t('hotkeys.sectionCursor'),
       hints: [
         {
           keys: `${wordMod}+← / →`,
-          description: '按词移动；加 Shift 扩展选区',
+          description: t('hotkeys.wordMove'),
         },
         {
           keys: `${mod}+Shift+← / →`,
-          description: apple
-            ? '按词扩展选区（等同 ⌥+Shift+方向）'
-            : '按词扩展选区',
+          description: apple ? t('hotkeys.wordSelectMac') : t('hotkeys.wordSelect'),
         },
         {
           keys: apple ? `${mod}+← / →` : 'Home / End',
-          description: apple ? '移到行首 / 行尾' : '移到行首 / 行尾',
+          description: t('hotkeys.lineBoundary'),
         },
-        { keys: `${mod}+Home / End`, description: '移到文档开头 / 结尾' },
+        { keys: `${mod}+Home / End`, description: t('hotkeys.docBoundary') },
         {
           keys: `${mod}+Backspace / Delete`,
-          description: apple ? '删除到行首 / 行尾' : '按词删除（前/后）',
+          description: apple ? t('hotkeys.deleteLineBoundary') : t('hotkeys.deleteGroup'),
         },
       ],
     },
     {
-      title: '行',
+      title: t('hotkeys.sectionLine'),
       hints: [
-        { keys: 'Alt+↑ / ↓', description: '上移 / 下移当前行' },
-        { keys: 'Shift+Alt+↑ / ↓', description: '向上 / 向下复制当前行' },
-        { keys: `${mod}+Alt+↑ / ↓`, description: '在上方 / 下方添加光标' },
+        { keys: 'Alt+↑ / ↓', description: t('hotkeys.moveLine') },
+        { keys: 'Shift+Alt+↑ / ↓', description: t('hotkeys.copyLine') },
+        { keys: `${mod}+Alt+↑ / ↓`, description: t('hotkeys.addCursor') },
       ],
     },
     {
-      title: '视图',
+      title: t('hotkeys.sectionView'),
       hints: [
         {
-          keys: 'Shift+滚轮',
-          description: '横向滚动编辑区（不自动换行）',
+          keys: t('hotkeys.shiftWheelKeys'),
+          description: t('hotkeys.shiftWheel'),
         },
       ],
     },

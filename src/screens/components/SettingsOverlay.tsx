@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '../../components/Button';
 import { defaultAppSettings, useAppSettingsStore } from '../../stores/appSettingsStore';
 import { MAX_FONT_SIZE, MIN_FONT_SIZE, parseFontSizeInput } from '../../theme/fonts';
-import type { AppSettings, IndentStyle } from '../../types/appSettings';
+import type { AppLocalePreference, AppSettings, IndentStyle } from '../../types/appSettings';
 import { cn } from '../../utils/cn';
 
 type SettingsOverlayProps = {
@@ -24,12 +25,14 @@ function errorMessage(error: unknown): string {
 const defaults = defaultAppSettings();
 
 export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
+  const { t } = useTranslation();
   const stored = useAppSettingsStore((state) => state.settings);
   const commit = useAppSettingsStore((state) => state.commit);
 
   const [fontFamily, setFontFamily] = useState(defaults.fontFamily);
   const [fontSize, setFontSize] = useState(String(defaults.fontSize));
   const [indentStyle, setIndentStyle] = useState<IndentStyle>(defaults.indentStyle);
+  const [locale, setLocale] = useState<AppLocalePreference>(defaults.locale);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -39,12 +42,15 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
     setFontFamily(stored.fontFamily);
     setFontSize(String(stored.fontSize));
     setIndentStyle(stored.indentStyle);
+    setLocale(stored.locale);
   }, [open, stored]);
 
   async function handleSave() {
     const parsedSize = parseFontSizeInput(fontSize);
     if (parsedSize === null) {
-      toast.error(`字号须为 ${MIN_FONT_SIZE}–${MAX_FONT_SIZE} 的整数`);
+      toast.error(
+        t('toast.fontSizeInvalid', { min: MIN_FONT_SIZE, max: MAX_FONT_SIZE }),
+      );
       return;
     }
 
@@ -53,14 +59,14 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
       fontSize: parsedSize,
       indentStyle,
       indentSize: stored.indentSize,
+      locale,
     };
     setSaving(true);
     try {
       await commit(settings);
-      toast.success('设置已保存');
       onClose();
     } catch (error) {
-      toast.error(`保存失败：${errorMessage(error)}`);
+      toast.error(t('toast.saveFailedWithReason', { reason: errorMessage(error) }));
     } finally {
       setSaving(false);
     }
@@ -78,7 +84,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
       )}
       role="dialog"
       aria-modal="true"
-      aria-label="设置"
+      aria-label={t('settings.aria')}
       onClick={onClose}
     >
       <div
@@ -90,14 +96,17 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
           event.stopPropagation();
         }}
       >
-        <h2 className={cn('mb-3 text-base font-medium text-(--app-fg)')}>字体</h2>
+        <h2 className={cn('mb-3 text-base font-medium text-(--app-fg)')}>
+          {t('settings.fonts')}
+        </h2>
         <p className={cn('mb-4 text-xs text-(--app-muted)')}>
-          编辑器与预览共用。font-family 留空则用默认；字号{' '}
-          {MIN_FONT_SIZE}–{MAX_FONT_SIZE}（px）。保存后生效。
+          {t('settings.fontsHint', { min: MIN_FONT_SIZE, max: MAX_FONT_SIZE })}
         </p>
 
         <label className={cn('mb-4 block')}>
-          <span className={cn('mb-1 block text-sm text-(--app-fg)')}>font-family</span>
+          <span className={cn('mb-1 block text-sm text-(--app-fg)')}>
+            {t('settings.fontFamily')}
+          </span>
           <input
             type="text"
             className={fieldClass}
@@ -111,7 +120,9 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
         </label>
 
         <label className={cn('mb-4 block')}>
-          <span className={cn('mb-1 block text-sm text-(--app-fg)')}>字号（px）</span>
+          <span className={cn('mb-1 block text-sm text-(--app-fg)')}>
+            {t('settings.fontSize')}
+          </span>
           <input
             type="number"
             inputMode="numeric"
@@ -129,9 +140,13 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
         </label>
 
         <div className={cn('mb-4 border-t border-(--app-border) pt-3')}>
-          <h3 className={cn('mb-2 text-sm font-medium text-(--app-fg)')}>缩进</h3>
+          <h3 className={cn('mb-2 text-sm font-medium text-(--app-fg)')}>
+            {t('settings.indent')}
+          </h3>
           <fieldset className={cn('flex flex-col gap-2')} disabled={saving}>
-            <legend className={cn('mb-1 text-sm text-(--app-fg)')}>方式</legend>
+            <legend className={cn('mb-1 text-sm text-(--app-fg)')}>
+              {t('settings.indentStyle')}
+            </legend>
             <label className={cn('flex items-center gap-2 text-sm text-(--app-fg)')}>
               <input
                 type="radio"
@@ -142,7 +157,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
                   setIndentStyle('space');
                 }}
               />
-              空格
+              {t('settings.space')}
             </label>
             <label className={cn('flex items-center gap-2 text-sm text-(--app-fg)')}>
               <input
@@ -154,14 +169,45 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
                   setIndentStyle('tab');
                 }}
               />
-              制表符
+              {t('settings.tab')}
             </label>
+          </fieldset>
+        </div>
+
+        <div className={cn('mb-4 border-t border-(--app-border) pt-3')}>
+          <h3 className={cn('mb-2 text-sm font-medium text-(--app-fg)')}>
+            {t('settings.language')}
+          </h3>
+          <fieldset className={cn('flex flex-col gap-2')} disabled={saving}>
+            {(
+              [
+                ['system', 'settings.languageSystem'],
+                ['zh', 'settings.languageZh'],
+                ['en', 'settings.languageEn'],
+              ] as const
+            ).map(([value, labelKey]) => (
+              <label
+                key={value}
+                className={cn('flex items-center gap-2 text-sm text-(--app-fg)')}
+              >
+                <input
+                  type="radio"
+                  name="locale"
+                  value={value}
+                  checked={locale === value}
+                  onChange={() => {
+                    setLocale(value);
+                  }}
+                />
+                {t(labelKey)}
+              </label>
+            ))}
           </fieldset>
         </div>
 
         <div className={cn('flex justify-end gap-2')}>
           <Button tabFocusable disabled={saving} onClick={onClose}>
-            取消
+            {t('settings.cancel')}
           </Button>
           <Button
             tabFocusable
@@ -170,7 +216,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
               void handleSave();
             }}
           >
-            保存
+            {t('settings.save')}
           </Button>
         </div>
       </div>

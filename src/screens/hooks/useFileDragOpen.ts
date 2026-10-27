@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { toast } from 'sonner';
+import i18n from '../../i18n';
 import { classifyDropPaths, onDragDrop } from '../../lib/tauri/fs';
 
 function errorMessage(error: unknown): string {
@@ -24,7 +25,7 @@ export function useFileDragOpen(loadFile: (path: string) => Promise<void>): bool
           return;
         }
         if (hadDirectory) {
-          toast.message('请拖入文件');
+          toast.error(i18n.t('toast.dropFilesOnly'));
         }
         for (const path of files) {
           if (cancelled) {
@@ -34,7 +35,7 @@ export function useFileDragOpen(loadFile: (path: string) => Promise<void>): bool
         }
       } catch (error) {
         if (!cancelled) {
-          toast.error('打开失败', { description: errorMessage(error) });
+          toast.error(i18n.t('toast.openFailed'), { description: errorMessage(error) });
         }
       }
     }

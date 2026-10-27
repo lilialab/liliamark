@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/cn';
 
 type FileDragOverlayProps = {
@@ -5,6 +6,8 @@ type FileDragOverlayProps = {
 };
 
 export function FileDragOverlay({ active }: FileDragOverlayProps) {
+  const { t } = useTranslation();
+
   if (!active) {
     return null;
   }
@@ -22,7 +25,7 @@ export function FileDragOverlay({ active }: FileDragOverlayProps) {
           'rounded-md bg-(--app-overlay-card) px-5 py-2.5 text-sm text-(--app-fg)',
         )}
       >
-        松开以打开
+        {t('drag.releaseToOpen')}
       </p>
     </div>
   );

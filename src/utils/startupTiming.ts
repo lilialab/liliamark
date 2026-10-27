@@ -8,10 +8,16 @@ type WallMark = (typeof WALL_MARKS)[number];
 let uiReadyMarked = false;
 let reported = false;
 
-/** 最近一次冷启动汇总（设置页临时展示） */
+export type StartupTimingId =
+  | 'processToWindow'
+  | 'windowToScript'
+  | 'scriptToUi'
+  | 'uiToReady'
+  | 'total';
+
+/** 最近一次冷启动汇总（启动耗时页展示；文案在 i18n） */
 export type StartupTimingRow = {
-  label: string;
-  meaning: string;
+  id: StartupTimingId;
   durationMs: number;
 };
 
@@ -74,37 +80,17 @@ export async function reportStartupTiming() {
   const t4 = Math.max(sessionMs, t3);
 
   lastStartupTiming = [
-    {
-      label: '进程→窗口',
-      meaning: '原生启动到窗口可见',
-      durationMs: gapMs(t0, t1),
-    },
-    {
-      label: '窗口→脚本',
-      meaning: 'WebView / 前端资源加载',
-      durationMs: gapMs(t1, t2),
-    },
-    {
-      label: '脚本→界面',
-      meaning: 'React 主界面首挂',
-      durationMs: gapMs(t2, t3),
-    },
-    {
-      label: '界面→可用',
-      meaning: '会话恢复等到可编辑',
-      durationMs: gapMs(t3, t4),
-    },
-    {
-      label: '总耗时',
-      meaning: '进程启动到可用',
-      durationMs: gapMs(t0, t4),
-    },
+    { id: 'processToWindow', durationMs: gapMs(t0, t1) },
+    { id: 'windowToScript', durationMs: gapMs(t1, t2) },
+    { id: 'scriptToUi', durationMs: gapMs(t2, t3) },
+    { id: 'uiToReady', durationMs: gapMs(t3, t4) },
+    { id: 'total', durationMs: gapMs(t0, t4) },
   ];
 
   console.warn(
     '[startup]',
     Object.fromEntries(
-      lastStartupTiming.map((row) => [row.label, `${row.durationMs}ms`]),
+      lastStartupTiming.map((row) => [row.id, `${row.durationMs}ms`]),
     ),
   );
 }

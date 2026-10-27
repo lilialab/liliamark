@@ -25,6 +25,9 @@ pub struct AppSettings {
     pub indent_style: IndentStyle,
     #[serde(default)]
     pub indent_size: u32,
+    /// 界面语言偏好：system / zh / en；空串由前端当 system
+    #[serde(default)]
+    pub locale: String,
 }
 
 /// 旧版双字段；仅用于读入迁移。缺字段为类型空值（0 / "" / Space），默认由前端补。
@@ -43,6 +46,8 @@ struct LegacyAppSettings {
     indent_style: IndentStyle,
     #[serde(default)]
     indent_size: u32,
+    #[serde(default)]
+    locale: String,
 }
 
 fn empty_settings() -> AppSettings {
@@ -51,6 +56,7 @@ fn empty_settings() -> AppSettings {
         font_size: 0,
         indent_style: IndentStyle::Space,
         indent_size: 0,
+        locale: String::new(),
     }
 }
 
@@ -64,6 +70,7 @@ fn settings_from_legacy(legacy: LegacyAppSettings) -> AppSettings {
         font_size: legacy.font_size,
         indent_style: legacy.indent_style,
         indent_size: legacy.indent_size,
+        locale: legacy.locale,
     }
 }
 
@@ -122,6 +129,7 @@ mod tests {
                 font_size: 18,
                 indent_style: IndentStyle::Tab,
                 indent_size: 2,
+                locale: String::new(),
             }
         );
     }
@@ -136,6 +144,7 @@ mod tests {
                 font_size: 18,
                 indent_style: IndentStyle::Space,
                 indent_size: 0,
+                locale: String::new(),
             }
         );
     }
@@ -150,6 +159,7 @@ mod tests {
                 font_size: 0,
                 indent_style: IndentStyle::Space,
                 indent_size: 0,
+                locale: String::new(),
             }
         );
     }
@@ -166,6 +176,7 @@ mod tests {
                 font_size: 0,
                 indent_style: IndentStyle::Space,
                 indent_size: 0,
+                locale: String::new(),
             }
         );
     }

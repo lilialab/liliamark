@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { X } from 'lucide-react';
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button';
 import { cn } from '../../../utils/cn';
 import type { EditorTabBarItem } from './types';
@@ -14,6 +15,7 @@ type SortableEditorTabProps = {
 };
 
 export function SortableEditorTab({ tab, active, onSelect, onClose }: SortableEditorTabProps) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tab.id,
   });
@@ -54,7 +56,10 @@ export function SortableEditorTab({ tab, active, onSelect, onClose }: SortableEd
       >
         <span className={cn('min-w-0 truncate')}>{tab.title}</span>
         {tab.diskChange && (
-          <span className={cn('shrink-0 text-(--app-warn-fg)')} title="磁盘已变更">
+          <span
+            className={cn('shrink-0 text-(--app-warn-fg)')}
+            title={t('editor.diskChanged')}
+          >
             !
           </span>
         )}
@@ -66,7 +71,7 @@ export function SortableEditorTab({ tab, active, onSelect, onClose }: SortableEd
           'hover:bg-transparent',
           active || tab.dirty ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
         )}
-        aria-label={`关闭 ${tab.title}`}
+        aria-label={t('editor.closeTab', { title: tab.title })}
         onPointerDown={(event) => {
           event.stopPropagation();
         }}

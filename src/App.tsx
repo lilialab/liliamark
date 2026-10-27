@@ -12,7 +12,7 @@ export default function App() {
         theme={isDarkFlavor() ? 'dark' : 'light'}
         richColors
         closeButton
-        position="bottom-right"
+        position="top-center"
       />
     </>
   );

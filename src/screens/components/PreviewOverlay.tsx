@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
 import { cn } from '../../utils/cn';
 import './PreviewOverlay.css';
@@ -35,10 +36,12 @@ function PreviewBody({
   opening,
   onOpenInBrowser,
 }: PreviewBodyProps) {
+  const { t } = useTranslation();
+
   if (markdownPreview) {
     return (
       <Suspense
-        fallback={<p className={cn('p-4 text-sm text-(--app-muted)')}>加载预览…</p>}
+        fallback={<p className={cn('p-4 text-sm text-(--app-muted)')}>{t('preview.loading')}</p>}
       >
         <MarkdownPreview source={source} />
       </Suspense>
@@ -48,20 +51,16 @@ function PreviewBody({
   if (htmlBrowserOpen) {
     return (
       <div className={cn('flex flex-col items-start gap-3 p-6')}>
-        <p className={cn('text-sm text-(--app-fg)')}>
-          HTML 不在应用内预览，以免执行页面脚本。
-        </p>
-        <p className={cn('text-sm text-(--app-muted)')}>
-          可用系统默认浏览器（或其它关联应用）打开当前文件。未保存的修改不会出现在浏览器里。
-        </p>
+        <p className={cn('text-sm text-(--app-fg)')}>{t('preview.htmlNoInline')}</p>
+        <p className={cn('text-sm text-(--app-muted)')}>{t('preview.htmlOpenHint')}</p>
         <Button tabFocusable disabled={opening} onClick={onOpenInBrowser}>
-          {opening ? '正在打开…' : '用浏览器打开'}
+          {opening ? t('preview.opening') : t('preview.openInBrowser')}
         </Button>
       </div>
     );
   }
 
-  return <p className={cn('p-4 text-sm text-(--app-muted)')}>不支持预览</p>;
+  return <p className={cn('p-4 text-sm text-(--app-muted)')}>{t('preview.unsupported')}</p>;
 }
 
 /** 预览覆盖层；透明度 + 内容位移/缩放，可打断。 */
@@ -72,6 +71,7 @@ export function PreviewOverlay({
   source,
   onOpenInBrowser,
 }: PreviewOverlayProps) {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [opening, setOpening] = useState(false);
 
@@ -125,7 +125,7 @@ export function PreviewOverlay({
       )}
       data-open={openAttr}
       aria-hidden={!open}
-      aria-label="预览"
+      aria-label={t('preview.aria')}
     >
       <div
         className={cn('preview-overlay-motion flex min-h-0 flex-1 flex-col')}

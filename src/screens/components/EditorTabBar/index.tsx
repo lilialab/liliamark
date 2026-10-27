@@ -14,6 +14,7 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../utils/cn';
 import { SortableEditorTab } from './SortableEditorTab';
 import type { EditorTabBarItem } from './types';
@@ -40,6 +41,7 @@ export function EditorTabBar({
   onReorder,
   trailing,
 }: EditorTabBarProps) {
+  const { t } = useTranslation();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 },
@@ -76,7 +78,7 @@ export function EditorTabBar({
           <div
             className={cn('flex min-w-0 flex-1 items-stretch overflow-x-auto')}
             role="tablist"
-            aria-label="已打开文件"
+            aria-label={t('editor.ariaTabList')}
           >
             {tabs.map((tab) => (
               <SortableEditorTab

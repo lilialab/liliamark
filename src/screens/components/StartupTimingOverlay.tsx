@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
 import { cn } from '../../utils/cn';
 import { getLastStartupTiming } from '../../utils/startupTiming';
@@ -9,6 +10,8 @@ type StartupTimingOverlayProps = {
 
 /** 冷启动耗时（临时调试；上线前可整段删除） */
 export function StartupTimingOverlay({ open, onClose }: StartupTimingOverlayProps) {
+  const { t } = useTranslation();
+
   if (!open) {
     return null;
   }
@@ -23,7 +26,7 @@ export function StartupTimingOverlay({ open, onClose }: StartupTimingOverlayProp
       )}
       role="dialog"
       aria-modal="true"
-      aria-label="启动耗时"
+      aria-label={t('startup.aria')}
       onClick={onClose}
     >
       <div
@@ -35,13 +38,19 @@ export function StartupTimingOverlay({ open, onClose }: StartupTimingOverlayProp
           event.stopPropagation();
         }}
       >
-        <h2 className={cn('mb-3 text-base font-medium text-(--app-fg)')}>启动耗时</h2>
+        <h2 className={cn('mb-3 text-base font-medium text-(--app-fg)')}>
+          {t('startup.title')}
+        </h2>
         <dl className={cn('mb-4 space-y-2 text-xs')}>
           {startupTiming.map((row) => (
-            <div key={row.label} className={cn('flex justify-between gap-4')}>
+            <div key={row.id} className={cn('flex justify-between gap-4')}>
               <dt>
-                <div className={cn('font-mono text-(--app-fg)')}>{row.label}</div>
-                <div className={cn('text-(--app-muted)')}>{row.meaning}</div>
+                <div className={cn('font-mono text-(--app-fg)')}>
+                  {t(`startup.${row.id}.label`)}
+                </div>
+                <div className={cn('text-(--app-muted)')}>
+                  {t(`startup.${row.id}.meaning`)}
+                </div>
               </dt>
               <dd className={cn('shrink-0 font-mono text-(--app-fg)')}>{row.durationMs}ms</dd>
             </div>
@@ -49,7 +58,7 @@ export function StartupTimingOverlay({ open, onClose }: StartupTimingOverlayProp
         </dl>
         <div className={cn('flex justify-end')}>
           <Button tabFocusable onClick={onClose}>
-            关闭
+            {t('startup.close')}
           </Button>
         </div>
       </div>

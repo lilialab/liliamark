@@ -4,6 +4,7 @@ import type { DragDropEvent } from '@tauri-apps/api/webview';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { ask, open } from '@tauri-apps/plugin-dialog';
+import i18n from '../../i18n';
 import type { DiskFileChanged } from '../../types/diskFileChanged';
 import type { OpenedTextFile } from '../../types/textFile';
 
@@ -45,7 +46,7 @@ export async function pickTextFile(): Promise<string | null> {
 
 /** 确认是否丢弃未保存更改 */
 export async function confirmDiscardChanges(): Promise<boolean> {
-  return await ask('有未保存的更改，确定继续吗？', {
+  return await ask(i18n.t('dialog.discardChanges'), {
     title: 'LiliaMark',
     kind: 'warning',
   });
@@ -53,7 +54,7 @@ export async function confirmDiscardChanges(): Promise<boolean> {
 
 /** 退出前确认：丢弃全部未保存文件 */
 export async function confirmDiscardUnsavedTabs(count: number): Promise<boolean> {
-  return await ask(`有 ${count} 个未保存的文件，确定退出吗？`, {
+  return await ask(i18n.t('dialog.discardUnsavedTabs', { count }), {
     title: 'LiliaMark',
     kind: 'warning',
   });

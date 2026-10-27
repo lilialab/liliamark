@@ -2,6 +2,7 @@ import { selectAll } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
 import { arrayMove } from '@dnd-kit/sortable';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
 import { supportsHtmlBrowserOpen, supportsMarkdownPreview } from '../editor/languageRegistry';
@@ -56,6 +57,7 @@ export function EditorScreen() {
   /* State & data */
   /* -------------------------------------------------------------------------- */
 
+  const { t } = useTranslation();
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -144,7 +146,7 @@ export function EditorScreen() {
       }
       focusOrOpenTab(path);
     } catch (error) {
-      toast.error('打开失败', { description: errorMessage(error) });
+      toast.error(t('toast.openFailed'), { description: errorMessage(error) });
     }
   }
 
@@ -158,7 +160,7 @@ export function EditorScreen() {
     const content = readDoc(tabId);
     if (content === null) {
       if (options?.requireReadyToast) {
-        toast.error('保存失败', { description: '编辑器尚未就绪' });
+        toast.error(t('toast.saveFailed'), { description: t('toast.editorNotReady') });
       }
       return;
     }
@@ -173,7 +175,7 @@ export function EditorScreen() {
         return updateTab(prev, tabId, withSaved);
       });
     } catch (error) {
-      toast.error('保存失败', { description: errorMessage(error) });
+      toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
     }
   }
 
@@ -214,7 +216,7 @@ export function EditorScreen() {
   }
 
   function handleLoadError(tabId: string, error: unknown) {
-    toast.error('打开失败', { description: errorMessage(error) });
+    toast.error(t('toast.openFailed'), { description: errorMessage(error) });
     removeTab(tabId);
   }
 
@@ -256,12 +258,12 @@ export function EditorScreen() {
 
   async function handleOpenHtmlInBrowser() {
     if (!activeTab) {
-      toast.error('无法打开', { description: '文件路径无效' });
+      toast.error(t('toast.cannotOpen'), { description: t('toast.invalidPath') });
       return;
     }
     const ok = await openLocalPath(activeTab.path);
     if (!ok) {
-      toast.error('打开失败', { description: '系统未能用默认应用打开该文件' });
+      toast.error(t('toast.openFailed'), { description: t('toast.openWithSystemFailed') });
     }
   }
 
@@ -371,35 +373,35 @@ export function EditorScreen() {
             items={[
               {
                 id: 'open',
-                label: '打开',
+                label: t('menu.open'),
                 onSelect: () => {
                   void handleOpen();
                 },
               },
               {
                 id: 'settings',
-                label: '设置',
+                label: t('menu.settings'),
                 onSelect: () => {
                   setSettingsOpen(true);
                 },
               },
               {
                 id: 'markdown-cheat-sheet',
-                label: 'Markdown 标记',
+                label: t('menu.markdownCheatSheet'),
                 onSelect: () => {
                   setMarkdownCheatSheetOpen(true);
                 },
               },
               {
                 id: 'shortcuts',
-                label: '快捷键',
+                label: t('menu.shortcuts'),
                 onSelect: () => {
                   setShortcutsOpen(true);
                 },
               },
               {
                 id: 'startup-timing',
-                label: '启动耗时',
+                label: t('menu.startupTiming'),
                 onSelect: () => {
                   setStartupTimingOpen(true);
                 },
@@ -424,12 +426,12 @@ export function EditorScreen() {
 
       <section
         className={cn('relative min-h-0 min-w-0 flex-1 overflow-hidden bg-(--app-bg)')}
-        aria-label="源码"
+        aria-label={t('editor.ariaSource')}
       >
         {tabs.length === 0
           ? (
             <p className={cn('p-4 text-sm text-(--app-muted)')}>
-              {`打开一个文件开始编辑（${modKey}+S 保存 · ${modKey}+E 切换预览 · Shift+滚轮横向滚动）`}
+              {t('empty.hint', { mod: modKey })}
             </p>
           )
           : tabs.map((tab) => {

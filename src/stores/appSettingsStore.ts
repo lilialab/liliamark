@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { parseIndentSize, parseIndentStyle } from '../editor/indent';
+import { applyLocalePreference } from '../i18n';
 import { loadAppSettings, saveAppSettings } from '../lib/tauri/storage';
 import { applyAppFonts } from '../theme/fonts';
-import type { AppSettings } from '../types/appSettings';
+import type { AppLocalePreference, AppSettings } from '../types/appSettings';
 
 /** 默认设置（字体为 VS Code Windows 默认栈） */
 export function defaultAppSettings(): AppSettings {
@@ -11,7 +12,15 @@ export function defaultAppSettings(): AppSettings {
     fontSize: 16,
     indentStyle: 'space',
     indentSize: 4,
+    locale: 'system',
   };
+}
+
+function parseLocale(value: string | undefined): AppLocalePreference {
+  if (value === 'zh' || value === 'en' || value === 'system') {
+    return value;
+  }
+  return 'system';
 }
 
 /** 各字段空值 / 非法 → 对应默认 */
@@ -22,11 +31,13 @@ function normalizeSettings(settings: AppSettings): AppSettings {
     fontSize: settings.fontSize === 0 ? defaults.fontSize : settings.fontSize,
     indentStyle: parseIndentStyle(settings.indentStyle),
     indentSize: parseIndentSize(settings.indentSize, defaults.indentSize),
+    locale: parseLocale(settings.locale),
   };
 }
 
 function applySettingsEffects(settings: AppSettings): void {
   applyAppFonts(settings);
+  applyLocalePreference(settings.locale);
 }
 
 type AppSettingsStore = {

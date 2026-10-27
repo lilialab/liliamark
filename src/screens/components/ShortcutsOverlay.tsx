@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
 import { cn } from '../../utils/cn';
 import { editorHotkeyHintSections } from '../help/editorHotkeyHints';
@@ -9,11 +10,13 @@ type ShortcutsOverlayProps = {
 
 /** 应用快捷键说明（只读，不可改键）。 */
 export function ShortcutsOverlay({ open, onClose }: ShortcutsOverlayProps) {
+  const { t } = useTranslation();
+
   if (!open) {
     return null;
   }
 
-  const sections = editorHotkeyHintSections();
+  const sections = editorHotkeyHintSections(t);
 
   return (
     <div
@@ -23,7 +26,7 @@ export function ShortcutsOverlay({ open, onClose }: ShortcutsOverlayProps) {
       )}
       role="dialog"
       aria-modal="true"
-      aria-label="快捷键"
+      aria-label={t('shortcuts.aria')}
       onClick={onClose}
     >
       <div
@@ -35,8 +38,10 @@ export function ShortcutsOverlay({ open, onClose }: ShortcutsOverlayProps) {
           event.stopPropagation();
         }}
       >
-        <h2 className={cn('mb-1 text-base font-medium text-(--app-fg)')}>快捷键</h2>
-        <p className={cn('mb-4 text-xs text-(--app-muted)')}>当前版本固定绑定，暂不支持修改。</p>
+        <h2 className={cn('mb-1 text-base font-medium text-(--app-fg)')}>
+          {t('shortcuts.title')}
+        </h2>
+        <p className={cn('mb-4 text-xs text-(--app-muted)')}>{t('shortcuts.hint')}</p>
 
         <div className={cn('mb-4 space-y-4')}>
           {sections.map((section) => (
@@ -78,7 +83,7 @@ export function ShortcutsOverlay({ open, onClose }: ShortcutsOverlayProps) {
 
         <div className={cn('flex justify-end')}>
           <Button tabFocusable onClick={onClose}>
-            关闭
+            {t('shortcuts.close')}
           </Button>
         </div>
       </div>

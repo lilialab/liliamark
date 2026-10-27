@@ -1,0 +1,183 @@
+{
+  "menu": {
+    "aria": "Menu",
+    "open": "Open",
+    "settings": "Settings",
+    "markdownCheatSheet": "Markdown reference",
+    "shortcuts": "Keyboard shortcuts",
+    "startupTiming": "Startup timing"
+  },
+  "empty": {
+    "hint": "Open a file to start editing ({{mod}}+S save · {{mod}}+E preview · Shift+scroll for horizontal scroll)"
+  },
+  "editor": {
+    "ariaSource": "Source",
+    "ariaTabList": "Open files",
+    "closeTab": "Close {{title}}",
+    "diskChanged": "Changed on disk"
+  },
+  "toast": {
+    "openFailed": "Could not open",
+    "saveFailed": "Could not save",
+    "editorNotReady": "Editor is not ready",
+    "cannotOpen": "Cannot open",
+    "invalidPath": "Invalid file path",
+    "openWithSystemFailed": "The system could not open the file with the default app",
+    "dropFilesOnly": "Please drop files",
+    "fontSizeInvalid": "Font size must be an integer between {{min}} and {{max}}",
+    "saveFailedWithReason": "Could not save: {{reason}}"
+  },
+  "dialog": {
+    "discardChanges": "You have unsaved changes. Continue anyway?",
+    "discardUnsavedTabs": "You have {{count}} unsaved file(s). Quit anyway?"
+  },
+  "drag": {
+    "releaseToOpen": "Release to open"
+  },
+  "disk": {
+    "removed": "File was deleted or moved",
+    "updated": "File was updated on disk",
+    "conflict": "File was updated on disk and conflicts with unsaved edits",
+    "reload": "Reload",
+    "keepEdits": "Keep edits",
+    "useDisk": "Use disk version"
+  },
+  "preview": {
+    "aria": "Preview",
+    "htmlNoInline": "HTML is not previewed in-app, to avoid running page scripts.",
+    "htmlOpenHint": "Open the current file with the system default browser (or another associated app). Unsaved changes will not appear there.",
+    "opening": "Opening…",
+    "openInBrowser": "Open in browser",
+    "unsupported": "Preview not supported",
+    "loading": "Loading preview…"
+  },
+  "settings": {
+    "aria": "Settings",
+    "fonts": "Fonts",
+    "fontsHint": "Shared by editor and preview. Leave font-family empty for the default; size {{min}}–{{max}} (px). Applies after save.",
+    "fontFamily": "font-family",
+    "fontSize": "Size (px)",
+    "indent": "Indent",
+    "indentStyle": "Style",
+    "space": "Spaces",
+    "tab": "Tabs",
+    "language": "Language",
+    "languageSystem": "System",
+    "languageZh": "中文",
+    "languageEn": "English",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "shortcuts": {
+    "aria": "Keyboard shortcuts",
+    "title": "Keyboard shortcuts",
+    "hint": "Bindings are fixed in this version and cannot be customized.",
+    "close": "Close"
+  },
+  "cheatSheet": {
+    "aria": "Markdown reference",
+    "title": "Markdown reference",
+    "hint": "Common syntax; type the source in the editor.",
+    "close": "Close",
+    "heading": {
+      "name": "Heading",
+      "example": "# H1\n## H2\n### H3"
+    },
+    "boldItalic": {
+      "name": "Bold / italic",
+      "example": "**bold**  *italic*"
+    },
+    "ul": {
+      "name": "Unordered list",
+      "example": "- item\n- item"
+    },
+    "ol": {
+      "name": "Ordered list",
+      "example": "1. first\n2. second"
+    },
+    "task": {
+      "name": "Task list",
+      "example": "- [ ] todo\n- [x] done"
+    },
+    "link": {
+      "name": "Link",
+      "example": "[text](https://example.com)"
+    },
+    "image": {
+      "name": "Image",
+      "example": "![alt](./image.png)"
+    },
+    "inlineCode": {
+      "name": "Inline code",
+      "example": "`code`"
+    },
+    "codeBlock": {
+      "name": "Code block",
+      "example": "```js\nconsole.log(1)\n```"
+    },
+    "quote": {
+      "name": "Blockquote",
+      "example": "> quote"
+    },
+    "table": {
+      "name": "Table",
+      "example": "| Col A | Col B |\n| --- | --- |\n| cell | cell |"
+    }
+  },
+  "startup": {
+    "aria": "Startup timing",
+    "title": "Startup timing",
+    "close": "Close",
+    "processToWindow": {
+      "label": "Process→window",
+      "meaning": "Native startup until window visible"
+    },
+    "windowToScript": {
+      "label": "Window→script",
+      "meaning": "WebView / frontend asset load"
+    },
+    "scriptToUi": {
+      "label": "Script→UI",
+      "meaning": "React shell first paint"
+    },
+    "uiToReady": {
+      "label": "UI→ready",
+      "meaning": "Session restore until editable"
+    },
+    "total": {
+      "label": "Total",
+      "meaning": "Process start until ready"
+    }
+  },
+  "hotkeys": {
+    "sectionApp": "App",
+    "sectionEdit": "Editing",
+    "sectionCursor": "Caret & selection",
+    "sectionLine": "Lines",
+    "sectionView": "View",
+    "save": "Save current file",
+    "preview": "Toggle Markdown preview / HTML “open in browser”",
+    "closeTab": "Close current tab",
+    "closeWindow": "Close window (confirms if unsaved)",
+    "bold": "Bold: wrap/unwrap selection with **; insert **** with caret in the middle if empty",
+    "tab": "Insert indent; indent selection when present",
+    "shiftTab": "Outdent",
+    "undo": "Undo",
+    "redo": "Redo",
+    "deleteLine": "Delete current line",
+    "selectAll": "Select all (focuses editor first if focus is outside)",
+    "toggleComment": "Toggle line comment",
+    "wordMove": "Move by word; hold Shift to extend selection",
+    "wordSelect": "Extend selection by word",
+    "wordSelectMac": "Extend selection by word (same as ⌥+Shift+arrows)",
+    "lineBoundary": "Go to line start / end",
+    "docBoundary": "Go to document start / end",
+    "deleteGroup": "Delete by word (backward / forward)",
+    "deleteLineBoundary": "Delete to line start / end",
+    "moveLine": "Move line up / down",
+    "copyLine": "Copy line up / down",
+    "addCursor": "Add cursor above / below",
+    "shiftWheel": "Scroll editor horizontally (no soft wrap)",
+    "shiftWheelKeys": "Shift+scroll"
+  }
+}

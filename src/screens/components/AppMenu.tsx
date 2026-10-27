@@ -1,5 +1,6 @@
 import { Menu } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
 import { cn } from '../../utils/cn';
 
@@ -15,6 +16,7 @@ type AppMenuProps = {
 
 /** 应用菜单；图标触发，absolute 浮层右对齐 */
 export function AppMenu({ items }: AppMenuProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -50,7 +52,7 @@ export function AppMenu({ items }: AppMenuProps) {
       <Button
         variant="ghost"
         className={cn('flex size-8 items-center justify-center')}
-        aria-label="菜单"
+        aria-label={t('menu.aria')}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}

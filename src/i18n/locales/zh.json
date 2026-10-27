@@ -1,0 +1,183 @@
+{
+  "menu": {
+    "aria": "菜单",
+    "open": "打开",
+    "settings": "设置",
+    "markdownCheatSheet": "Markdown 标记",
+    "shortcuts": "快捷键",
+    "startupTiming": "启动耗时"
+  },
+  "empty": {
+    "hint": "打开一个文件开始编辑（{{mod}}+S 保存 · {{mod}}+E 切换预览 · Shift+滚轮横向滚动）"
+  },
+  "editor": {
+    "ariaSource": "源码",
+    "ariaTabList": "已打开文件",
+    "closeTab": "关闭 {{title}}",
+    "diskChanged": "磁盘已变更"
+  },
+  "toast": {
+    "openFailed": "打开失败",
+    "saveFailed": "保存失败",
+    "editorNotReady": "编辑器尚未就绪",
+    "cannotOpen": "无法打开",
+    "invalidPath": "文件路径无效",
+    "openWithSystemFailed": "系统未能用默认应用打开该文件",
+    "dropFilesOnly": "请拖入文件",
+    "fontSizeInvalid": "字号须为 {{min}}–{{max}} 的整数",
+    "saveFailedWithReason": "保存失败：{{reason}}"
+  },
+  "dialog": {
+    "discardChanges": "有未保存的更改，确定继续吗？",
+    "discardUnsavedTabs": "有 {{count}} 个未保存的文件，确定退出吗？"
+  },
+  "drag": {
+    "releaseToOpen": "松开以打开"
+  },
+  "disk": {
+    "removed": "文件已删除或移走",
+    "updated": "磁盘上的文件已更新",
+    "conflict": "磁盘上的文件已更新，与当前未保存的修改冲突",
+    "reload": "重载",
+    "keepEdits": "保留编辑",
+    "useDisk": "用磁盘版本"
+  },
+  "preview": {
+    "aria": "预览",
+    "htmlNoInline": "HTML 不在应用内预览，以免执行页面脚本。",
+    "htmlOpenHint": "可用系统默认浏览器（或其它关联应用）打开当前文件。未保存的修改不会出现在浏览器里。",
+    "opening": "正在打开…",
+    "openInBrowser": "用浏览器打开",
+    "unsupported": "不支持预览",
+    "loading": "加载预览…"
+  },
+  "settings": {
+    "aria": "设置",
+    "fonts": "字体",
+    "fontsHint": "编辑器与预览共用。font-family 留空则用默认；字号 {{min}}–{{max}}（px）。保存后生效。",
+    "fontFamily": "font-family",
+    "fontSize": "字号（px）",
+    "indent": "缩进",
+    "indentStyle": "方式",
+    "space": "空格",
+    "tab": "制表符",
+    "language": "语言",
+    "languageSystem": "跟随系统",
+    "languageZh": "中文",
+    "languageEn": "English",
+    "cancel": "取消",
+    "save": "保存"
+  },
+  "shortcuts": {
+    "aria": "快捷键",
+    "title": "快捷键",
+    "hint": "当前版本固定绑定，暂不支持修改。",
+    "close": "关闭"
+  },
+  "cheatSheet": {
+    "aria": "Markdown 标记",
+    "title": "Markdown 标记",
+    "hint": "常用写法速查；在编辑区输入对应源码即可。",
+    "close": "关闭",
+    "heading": {
+      "name": "标题",
+      "example": "# 一级\n## 二级\n### 三级"
+    },
+    "boldItalic": {
+      "name": "粗体 / 斜体",
+      "example": "**粗体**  *斜体*"
+    },
+    "ul": {
+      "name": "无序列表",
+      "example": "- 项目\n- 项目"
+    },
+    "ol": {
+      "name": "有序列表",
+      "example": "1. 第一项\n2. 第二项"
+    },
+    "task": {
+      "name": "任务列表",
+      "example": "- [ ] 待办\n- [x] 已完成"
+    },
+    "link": {
+      "name": "链接",
+      "example": "[文字](https://example.com)"
+    },
+    "image": {
+      "name": "图片",
+      "example": "![说明](./image.png)"
+    },
+    "inlineCode": {
+      "name": "行内代码",
+      "example": "`code`"
+    },
+    "codeBlock": {
+      "name": "代码块",
+      "example": "```js\nconsole.log(1)\n```"
+    },
+    "quote": {
+      "name": "引用",
+      "example": "> 引用文字"
+    },
+    "table": {
+      "name": "表格",
+      "example": "| 列 A | 列 B |\n| --- | --- |\n| 单元格 | 单元格 |"
+    }
+  },
+  "startup": {
+    "aria": "启动耗时",
+    "title": "启动耗时",
+    "close": "关闭",
+    "processToWindow": {
+      "label": "进程→窗口",
+      "meaning": "原生启动到窗口可见"
+    },
+    "windowToScript": {
+      "label": "窗口→脚本",
+      "meaning": "WebView / 前端资源加载"
+    },
+    "scriptToUi": {
+      "label": "脚本→界面",
+      "meaning": "React 主界面首挂"
+    },
+    "uiToReady": {
+      "label": "界面→可用",
+      "meaning": "会话恢复等到可编辑"
+    },
+    "total": {
+      "label": "总耗时",
+      "meaning": "进程启动到可用"
+    }
+  },
+  "hotkeys": {
+    "sectionApp": "应用",
+    "sectionEdit": "编辑",
+    "sectionCursor": "光标与选区",
+    "sectionLine": "行",
+    "sectionView": "视图",
+    "save": "保存当前文件",
+    "preview": "切换 Markdown 预览 / HTML「用浏览器打开」",
+    "closeTab": "关闭当前标签",
+    "closeWindow": "关闭窗口（有未保存改动时会确认）",
+    "bold": "加粗：选区包/解 **；无选区插入 **** 并置于中间",
+    "tab": "插入缩进；有选区时整块增加缩进",
+    "shiftTab": "减少缩进",
+    "undo": "撤销",
+    "redo": "重做",
+    "deleteLine": "删除当前行",
+    "selectAll": "全选（编辑区外触发时会先聚焦编辑器）",
+    "toggleComment": "切换行注释",
+    "wordMove": "按词移动；加 Shift 扩展选区",
+    "wordSelect": "按词扩展选区",
+    "wordSelectMac": "按词扩展选区（等同 ⌥+Shift+方向）",
+    "lineBoundary": "移到行首 / 行尾",
+    "docBoundary": "移到文档开头 / 结尾",
+    "deleteGroup": "按词删除（前/后）",
+    "deleteLineBoundary": "删除到行首 / 行尾",
+    "moveLine": "上移 / 下移当前行",
+    "copyLine": "向上 / 向下复制当前行",
+    "addCursor": "在上方 / 下方添加光标",
+    "shiftWheel": "横向滚动编辑区（不自动换行）",
+    "shiftWheelKeys": "Shift+滚轮"
+  }
+}
