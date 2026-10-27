@@ -89,5 +89,14 @@ export function editorHotkeyHintSections(
         { keys: `${mod}+Alt+↑ / ↓`, description: '在上方 / 下方添加光标' },
       ],
     },
+    {
+      title: '视图',
+      hints: [
+        {
+          keys: 'Shift+滚轮',
+          description: '横向滚动编辑区（不自动换行）',
+        },
+      ],
+    },
   ];
 }

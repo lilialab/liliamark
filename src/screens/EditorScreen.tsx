@@ -45,6 +45,7 @@ import { useFileDragOpen } from './hooks/useFileDragOpen';
 import { usePersistEditorSession } from './hooks/usePersistEditorSession';
 import { useRestoreEditorSession } from './hooks/useRestoreEditorSession';
 import { useUnsavedCloseGuard } from './hooks/useUnsavedCloseGuard';
+import { modifierKeyLabel } from './help/editorHotkeyHints';
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -74,6 +75,7 @@ export function EditorScreen() {
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? null;
   const dirty = activeTab?.dirty ?? false;
+  const modKey = modifierKeyLabel();
 
   function readDoc(tabId: string): string | null {
     return editorViewsRef.current.get(tabId)?.state.doc.toString() ?? null;
@@ -427,7 +429,7 @@ export function EditorScreen() {
         {tabs.length === 0
           ? (
             <p className={cn('p-4 text-sm text-(--app-muted)')}>
-              打开一个文件开始编辑（Ctrl+S 保存 · Ctrl+E 切换预览）
+              {`打开一个文件开始编辑（${modKey}+S 保存 · ${modKey}+E 切换预览 · Shift+滚轮横向滚动）`}
             </p>
           )
           : tabs.map((tab) => {
