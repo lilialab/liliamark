@@ -32,8 +32,12 @@
     "saveFailedWithReason": "Could not save: {{reason}}"
   },
   "dialog": {
-    "discardChanges": "You have unsaved changes. Close anyway?",
-    "discardUnsavedTabs": "You have {{count}} unsaved file(s). Quit anyway?"
+    "title": "Notice",
+    "close": "Close",
+    "save": "Save",
+    "discard": "Don't save",
+    "discardChanges": "Save changes to “{{title}}”?",
+    "discardUnsavedTabs": "You have {{count}} unsaved file(s). Save before quitting?"
   },
   "drag": {
     "releaseToOpen": "Release to open"

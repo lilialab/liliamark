@@ -32,8 +32,12 @@
     "saveFailedWithReason": "保存失败：{{reason}}"
   },
   "dialog": {
-    "discardChanges": "有未保存的更改，确定关闭吗？",
-    "discardUnsavedTabs": "有 {{count}} 个未保存的文件，确定退出吗？"
+    "title": "提示",
+    "close": "关闭",
+    "save": "保存",
+    "discard": "不保存",
+    "discardChanges": "是否保存对「{{title}}」的更改？",
+    "discardUnsavedTabs": "有 {{count}} 个未保存的文件，退出前是否保存？"
   },
   "drag": {
     "releaseToOpen": "松开以打开"

@@ -40,6 +40,7 @@ export function SortableEditorTab({ tab, active, onSelect, onClose }: SortableEd
       )}
       {...attributes}
       {...listeners}
+      tabIndex={-1}
       role="tab"
       aria-selected={active}
     >

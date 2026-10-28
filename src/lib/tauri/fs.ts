@@ -3,8 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import type { DragDropEvent } from '@tauri-apps/api/webview';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { ask, open, save } from '@tauri-apps/plugin-dialog';
-import i18n from '../../i18n';
+import { open, save } from '@tauri-apps/plugin-dialog';
 import type { DiskFileChanged } from '../../types/diskFileChanged';
 import type { OpenedTextFile } from '../../types/textFile';
 
@@ -52,27 +51,16 @@ export async function pickSaveTextFile(defaultPath: string): Promise<string | nu
   return selected ?? null;
 }
 
-/** 确认是否丢弃未保存更改 */
-export async function confirmDiscardChanges(): Promise<boolean> {
-  return await ask(i18n.t('dialog.discardChanges'), {
-    title: 'LiliaMark',
-    kind: 'warning',
-  });
-}
-
-/** 退出前确认：丢弃全部未保存文件 */
-export async function confirmDiscardUnsavedTabs(count: number): Promise<boolean> {
-  return await ask(i18n.t('dialog.discardUnsavedTabs', { count }), {
-    title: 'LiliaMark',
-    kind: 'warning',
-  });
-}
-
 /** 监听窗口关闭请求；取消时在 handler 内 preventDefault */
 export function onWindowCloseRequested(
   handler: (event: { preventDefault: () => void }) => void | Promise<void>,
 ) {
   return getCurrentWindow().onCloseRequested(handler);
+}
+
+/** 销毁当前窗口（不再走 onCloseRequested） */
+export async function destroyCurrentWindow(): Promise<void> {
+  await getCurrentWindow().destroy();
 }
 
 /** 监听窗口焦点变化；payload 为是否聚焦 */

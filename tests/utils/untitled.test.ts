@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeUntitledExt, parseUntitledExt, tabLanguagePath } from '../../src/utils/untitled';
+import {
+  completeUntitledExt,
+  normalizeUntitledExt,
+  parseUntitledExt,
+  suggestUntitledExt,
+  tabLanguagePath,
+} from '../../src/utils/untitled';
 
 describe('normalizeUntitledExt', () => {
   it('normalizes known and custom extensions', () => {
@@ -21,6 +27,39 @@ describe('parseUntitledExt', () => {
   it('falls back to md when normalize fails', () => {
     expect(parseUntitledExt('')).toBe('md');
     expect(parseUntitledExt('a/b')).toBe('md');
+  });
+});
+
+describe('suggestUntitledExt', () => {
+  const extensions = ['markdown', 'yaml', 'json', 'jsx', 'tsx'] as const;
+
+  it('returns first prefix match', () => {
+    expect(suggestUntitledExt('mark', extensions)).toBe('markdown');
+    expect(suggestUntitledExt('j', extensions)).toBe('json');
+  });
+
+  it('returns null when empty or no match', () => {
+    expect(suggestUntitledExt('', extensions)).toBeNull();
+    expect(suggestUntitledExt('rs', extensions)).toBeNull();
+  });
+});
+
+describe('completeUntitledExt', () => {
+  const extensions = ['markdown', 'yaml', 'json', 'jsx', 'tsx'] as const;
+
+  it('accepts the current suggestion', () => {
+    expect(completeUntitledExt('mark', extensions)).toBe('markdown');
+    expect(completeUntitledExt('j', extensions)).toBe('json');
+  });
+
+  it('cycles when query already equals a match among several', () => {
+    const short = ['ts', 'tsx'] as const;
+    expect(completeUntitledExt('ts', short)).toBe('tsx');
+    expect(completeUntitledExt('tsx', short)).toBe('tsx');
+  });
+
+  it('returns raw when nothing matches', () => {
+    expect(completeUntitledExt('rs', extensions)).toBe('rs');
   });
 });
 

@@ -7,7 +7,7 @@ const variantClass = {
     'hover:bg-(--app-surface-hover) disabled:cursor-not-allowed disabled:opacity-50',
   ),
   ghost: cn(
-    'rounded-sm text-(--app-muted)',
+    'rounded-sm text-sm text-(--app-muted)',
     'hover:bg-(--app-surface-hover) hover:text-(--app-fg)',
     'disabled:cursor-not-allowed disabled:opacity-50',
   ),

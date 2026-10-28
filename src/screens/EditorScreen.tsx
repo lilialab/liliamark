@@ -5,13 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
-import {
-  closeCurrentWindow,
-  confirmDiscardChanges,
-  pickSaveTextFile,
-  pickTextFile,
-  writeTextFile,
-} from '../lib/tauri/fs';
+import { closeCurrentWindow, pickSaveTextFile, pickTextFile, writeTextFile } from '../lib/tauri/fs';
 import { openLocalPath } from '../lib/tauri/opener';
 import { useAppSettingsStore } from '../stores/appSettingsStore';
 import type { DiskChangeKind } from '../types/diskFileChanged';
@@ -42,6 +36,7 @@ import { UntitledExtPicker } from './components/UntitledExtPicker';
 import { modifierKeyLabel } from './help/editorHotkeyHints';
 import { useAutoSaveOnBlur } from './hooks/useAutoSaveOnBlur';
 import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
+import { useConfirmDialog } from './hooks/useConfirmDialog';
 import { useDiskWatch } from './hooks/useDiskWatch';
 import { useEditorHotkeys } from './hooks/useEditorHotkeys';
 import { useExternalOpenFile } from './hooks/useExternalOpenFile';
@@ -60,6 +55,7 @@ export function EditorScreen() {
   /* -------------------------------------------------------------------------- */
 
   const { t } = useTranslation();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -166,11 +162,14 @@ export function EditorScreen() {
     }
   }
 
-  /** 保存指定已落盘标签；写盘期间若正文又变了则保持 dirty */
-  async function saveTab(tabId: string, options?: { requireReadyToast?: boolean }) {
+  /** 保存指定已落盘标签；写盘期间若正文又变了则保持 dirty。成功 true */
+  async function saveTab(
+    tabId: string,
+    options?: { requireReadyToast?: boolean },
+  ): Promise<boolean> {
     const tab = tabsRef.current.find((item) => item.id === tabId);
     if (!tab?.dirty || tab.path === null) {
-      return;
+      return true;
     }
 
     const content = readDoc(tabId);
@@ -178,7 +177,7 @@ export function EditorScreen() {
       if (options?.requireReadyToast) {
         toast.error(t('toast.saveFailed'), { description: t('toast.editorNotReady') });
       }
-      return;
+      return false;
     }
 
     try {
@@ -190,22 +189,24 @@ export function EditorScreen() {
         }
         return updateTab(prev, tabId, withSaved);
       });
+      return true;
     } catch (error) {
       toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
+      return false;
     }
   }
 
-  /** 另存为：选路径写入；当前标签切到新路径（未命名即晋升） */
-  async function saveTabAs(tabId: string) {
+  /** 另存为：选路径写入；当前标签切到新路径（未命名即晋升）。取消或失败 false */
+  async function saveTabAs(tabId: string): Promise<boolean> {
     const tab = tabsRef.current.find((item) => item.id === tabId);
     if (!tab) {
-      return;
+      return false;
     }
 
     const content = readDoc(tabId);
     if (content === null) {
       toast.error(t('toast.saveFailed'), { description: t('toast.editorNotReady') });
-      return;
+      return false;
     }
 
     try {
@@ -214,7 +215,7 @@ export function EditorScreen() {
         : fileName(tab.path);
       const path = await pickSaveTextFile(defaultName);
       if (!path) {
-        return;
+        return false;
       }
 
       await writeTextFile(path, content);
@@ -225,9 +226,23 @@ export function EditorScreen() {
         }
         return updateTab(prev, tabId, (item) => withSaved({ ...item, path }));
       });
+      return true;
     } catch (error) {
       toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
+      return false;
     }
+  }
+
+  /** 有路径则保存，未命名则另存为 */
+  async function saveTabOrAs(tabId: string): Promise<boolean> {
+    const tab = tabsRef.current.find((item) => item.id === tabId);
+    if (!tab) {
+      return false;
+    }
+    if (tab.path === null) {
+      return await saveTabAs(tabId);
+    }
+    return await saveTab(tabId, { requireReadyToast: true });
   }
 
   async function saveDirtyTabs() {
@@ -237,6 +252,17 @@ export function EditorScreen() {
     for (const id of dirtyIds) {
       await saveTab(id);
     }
+  }
+
+  /** 退出前保存全部脏标签（含未命名）；任一取消/失败则 false */
+  async function saveAllDirtyTabs(): Promise<boolean> {
+    const dirtyIds = tabsRef.current.filter((tab) => tab.dirty).map((tab) => tab.id);
+    for (const id of dirtyIds) {
+      if (!(await saveTabOrAs(id))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   async function handleSave() {
@@ -290,6 +316,9 @@ export function EditorScreen() {
   function handleEditorReady(tabId: string, editorView: EditorView) {
     editorViewsRef.current.set(tabId, editorView);
     refreshPreview(tabId);
+    if (tabId === activeId) {
+      editorView.focus();
+    }
   }
 
   function handleEditorDestroy(tabId: string) {
@@ -323,8 +352,21 @@ export function EditorScreen() {
       return;
     }
 
-    if (tab.dirty && !(await confirmDiscardChanges())) {
-      return;
+    if (tab.dirty) {
+      const title = tab.path === null
+        ? `${t('editor.untitled')}.${tab.untitledExt}`
+        : fileName(tab.path);
+      const result = await confirm({
+        message: t('dialog.discardChanges', { title }),
+        primaryLabel: t('dialog.save'),
+        secondaryLabel: t('dialog.discard'),
+      });
+      if (result === 'cancel') {
+        return;
+      }
+      if (result === 'primary' && !(await saveTabOrAs(id))) {
+        return;
+      }
     }
 
     removeTab(id);
@@ -425,7 +467,20 @@ export function EditorScreen() {
     tabs.map((tab) => tab.path).filter((path): path is string => path !== null),
     handleDiskChange,
   );
-  useUnsavedCloseGuard(getDirtyTabCount);
+  useUnsavedCloseGuard(getDirtyTabCount, async (count) => {
+    const result = await confirm({
+      message: t('dialog.discardUnsavedTabs', { count }),
+      primaryLabel: t('dialog.save'),
+      secondaryLabel: t('dialog.discard'),
+    });
+    if (result === 'cancel') {
+      return false;
+    }
+    if (result === 'secondary') {
+      return true;
+    }
+    return await saveAllDirtyTabs();
+  });
   useAutoSaveOnBlur(saveDirtyTabs);
   useBlockBrowserShortcuts();
   useEditorHotkeys({
@@ -605,6 +660,7 @@ export function EditorScreen() {
           }}
         />
       </section>
+      {confirmDialog}
     </div>
   );
 }

@@ -1,9 +1,13 @@
 import { useEffect, useEffectEvent } from 'react';
-import { confirmDiscardUnsavedTabs, onWindowCloseRequested } from '../../lib/tauri/fs';
+import { destroyCurrentWindow, onWindowCloseRequested } from '../../lib/tauri/fs';
 
-/** 退出前若有未保存内容，弹一次确认；脏数量由调用方计算 */
-export function useUnsavedCloseGuard(getDirtyCount: () => number) {
+/** 退出前若有未保存内容，交由调用方决定是否关闭（true 则 destroy） */
+export function useUnsavedCloseGuard(
+  getDirtyCount: () => number,
+  decideClose: (count: number) => Promise<boolean>,
+) {
   const readDirtyCount = useEffectEvent(() => getDirtyCount());
+  const decide = useEffectEvent((count: number) => decideClose(count));
 
   useEffect(() => {
     const ready = onWindowCloseRequested(async (event) => {
@@ -12,9 +16,11 @@ export function useUnsavedCloseGuard(getDirtyCount: () => number) {
         return;
       }
 
-      const discard = await confirmDiscardUnsavedTabs(dirtyCount);
-      if (!discard) {
-        event.preventDefault();
+      // 自建弹窗异步；先拦住关闭，确认后再 destroy
+      event.preventDefault();
+      const shouldClose = await decide(dirtyCount);
+      if (shouldClose) {
+        await destroyCurrentWindow();
       }
     });
 
