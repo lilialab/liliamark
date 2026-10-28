@@ -3,17 +3,21 @@ import { sameFilePath } from './path';
 
 type TabPath = {
   id: string;
-  path: string;
+  path: string | null;
 };
 
-/** 从当前标签生成可持久化的会话（仅路径） */
+/** 从当前标签生成可持久化的会话（仅已落盘路径） */
 export function editorSessionFromTabs(
   tabs: TabPath[],
   activeId: string | null,
 ): EditorSession {
+  const paths = tabs
+    .map((tab) => tab.path)
+    .filter((path): path is string => path !== null);
+  const active = tabs.find((tab) => tab.id === activeId);
   return {
-    paths: tabs.map((tab) => tab.path),
-    activePath: tabs.find((tab) => tab.id === activeId)?.path ?? null,
+    paths,
+    activePath: active?.path ?? null,
   };
 }
 
@@ -23,7 +27,9 @@ export function resolveActiveTabId(
   activePath: string | null,
 ): string | null {
   if (activePath !== null) {
-    const match = tabs.find((tab) => sameFilePath(tab.path, activePath));
+    const match = tabs.find(
+      (tab) => tab.path !== null && sameFilePath(tab.path, activePath),
+    );
     if (match) {
       return match.id;
     }

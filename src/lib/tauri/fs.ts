@@ -3,7 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import type { DragDropEvent } from '@tauri-apps/api/webview';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { ask, open } from '@tauri-apps/plugin-dialog';
+import { ask, open, save } from '@tauri-apps/plugin-dialog';
 import i18n from '../../i18n';
 import type { DiskFileChanged } from '../../types/diskFileChanged';
 import type { OpenedTextFile } from '../../types/textFile';
@@ -42,6 +42,14 @@ export async function pickTextFile(): Promise<string | null> {
 
   const path = Array.isArray(selected) ? selected[0] : selected;
   return path ?? null;
+}
+
+/** 另存为：选择保存路径；取消时返回 null */
+export async function pickSaveTextFile(defaultPath: string): Promise<string | null> {
+  const selected = await save({
+    defaultPath,
+  });
+  return selected ?? null;
 }
 
 /** 确认是否丢弃未保存更改 */

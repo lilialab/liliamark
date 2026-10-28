@@ -42,7 +42,9 @@ export function editorHotkeyHintSections(
     {
       title: t('hotkeys.sectionApp'),
       hints: [
+        { keys: `${mod}+N`, description: t('hotkeys.new') },
         { keys: `${mod}+S`, description: t('hotkeys.save') },
+        { keys: `${mod}+Shift+S`, description: t('hotkeys.saveAs') },
         { keys: `${mod}+E`, description: t('hotkeys.preview') },
         { keys: `${mod}+W`, description: t('hotkeys.closeTab') },
         { keys: `${mod}+Q`, description: t('hotkeys.closeWindow') },

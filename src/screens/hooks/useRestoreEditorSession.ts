@@ -3,6 +3,7 @@ import { loadEditorSession } from '../../lib/tauri/storage';
 import type { EditorTab } from '../../types/editorTab';
 import { createTabId } from '../../utils/editorTab';
 import { reportStartupTiming, startupMark } from '../../utils/startupTiming';
+import { DEFAULT_UNTITLED_EXT } from '../../utils/untitled';
 
 type ApplyRestoredTabs = (tabs: EditorTab[], activePath: string | null) => void;
 
@@ -23,6 +24,7 @@ export function useRestoreEditorSession(applyRestoredTabs: ApplyRestoredTabs): b
       const restored: EditorTab[] = session.paths.map((path) => ({
         id: createTabId(),
         path,
+        untitledExt: DEFAULT_UNTITLED_EXT,
         dirty: false,
         diskChange: null,
         docEpoch: 0,

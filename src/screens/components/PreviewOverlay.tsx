@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
+import { supportsHtmlBrowserOpen, supportsMarkdownPreview } from '../../editor/languageRegistry';
 import { cn } from '../../utils/cn';
 import './PreviewOverlay.css';
 
@@ -13,32 +14,32 @@ const MarkdownPreview = lazy(async () => {
 
 type PreviewOverlayProps = {
   open: boolean;
-  /** 应用内 Markdown 预览 */
-  markdownPreview: boolean;
-  /** HTML：不内嵌预览，提供浏览器打开 */
-  htmlBrowserOpen: boolean;
+  /** 判类型用（已落盘为真实 path，未命名为 untitled.ext） */
+  languagePath: string;
+  /** 磁盘路径；未命名为 null，供 HTML「用浏览器打开」 */
+  filePath: string | null;
   source: string;
   onOpenInBrowser: () => void | Promise<void>;
 };
 
 type PreviewBodyProps = {
-  markdownPreview: boolean;
-  htmlBrowserOpen: boolean;
+  languagePath: string;
+  filePath: string | null;
   source: string;
   opening: boolean;
   onOpenInBrowser: () => void;
 };
 
 function PreviewBody({
-  markdownPreview,
-  htmlBrowserOpen,
+  languagePath,
+  filePath,
   source,
   opening,
   onOpenInBrowser,
 }: PreviewBodyProps) {
   const { t } = useTranslation();
 
-  if (markdownPreview) {
+  if (supportsMarkdownPreview(languagePath)) {
     return (
       <Suspense
         fallback={<p className={cn('p-4 text-sm text-(--app-muted)')}>{t('preview.loading')}</p>}
@@ -48,7 +49,7 @@ function PreviewBody({
     );
   }
 
-  if (htmlBrowserOpen) {
+  if (filePath !== null && supportsHtmlBrowserOpen(filePath)) {
     return (
       <div className={cn('flex flex-col items-start gap-3 p-6')}>
         <p className={cn('text-sm text-(--app-fg)')}>{t('preview.htmlNoInline')}</p>
@@ -63,11 +64,11 @@ function PreviewBody({
   return <p className={cn('p-4 text-sm text-(--app-muted)')}>{t('preview.unsupported')}</p>;
 }
 
-/** 预览覆盖层；透明度 + 内容位移/缩放，可打断。 */
+/** 预览覆盖层；按 languagePath / filePath 后缀自行选择模式。 */
 export function PreviewOverlay({
   open,
-  markdownPreview,
-  htmlBrowserOpen,
+  languagePath,
+  filePath,
   source,
   onOpenInBrowser,
 }: PreviewOverlayProps) {
@@ -134,8 +135,8 @@ export function PreviewOverlay({
         <div className={cn('h-1 shrink-0 bg-(--ctp-mauve)')} aria-hidden />
         <div className={cn('min-h-0 flex-1 overflow-auto')}>
           <PreviewBody
-            markdownPreview={markdownPreview}
-            htmlBrowserOpen={htmlBrowserOpen}
+            languagePath={languagePath}
+            filePath={filePath}
             source={source}
             opening={opening}
             onOpenInBrowser={() => {

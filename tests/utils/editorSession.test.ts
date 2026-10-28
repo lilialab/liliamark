@@ -29,6 +29,21 @@ describe('editorSessionFromTabs', () => {
       activePath: null,
     });
   });
+
+  it('omits untitled tabs from persisted paths', () => {
+    expect(
+      editorSessionFromTabs(
+        [
+          { id: '1', path: null },
+          { id: '2', path: 'a.md' },
+        ],
+        '1',
+      ),
+    ).toEqual({
+      paths: ['a.md'],
+      activePath: null,
+    });
+  });
 });
 
 describe('resolveActiveTabId', () => {

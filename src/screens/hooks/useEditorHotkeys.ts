@@ -1,7 +1,9 @@
 import { useEffect, useEffectEvent } from 'react';
 
 type EditorHotkeys = {
+  onNew: () => void;
   onSave: () => void | Promise<void>;
+  onSaveAs: () => void | Promise<void>;
   onTogglePreview: () => void;
   onCloseTab: () => void | Promise<void>;
   onCloseWindow: () => void | Promise<void>;
@@ -25,16 +27,24 @@ function shouldKeepNativeSelectAll(target: EventTarget | null): boolean {
   return false;
 }
 
-/** Ctrl/Cmd+S 保存；E 预览；W 关标签；Q 关窗口；A 在编辑区外时回编辑器全选 */
+/** Ctrl/Cmd+N 新建；S 保存；Shift+S 另存为；E 预览；W 关标签；Q 关窗口；A 在编辑区外时回编辑器全选 */
 export function useEditorHotkeys({
+  onNew,
   onSave,
+  onSaveAs,
   onTogglePreview,
   onCloseTab,
   onCloseWindow,
   onSelectAllInEditor,
 }: EditorHotkeys) {
+  const createNew = useEffectEvent(() => {
+    onNew();
+  });
   const save = useEffectEvent(() => {
     void onSave();
+  });
+  const saveAs = useEffectEvent(() => {
+    void onSaveAs();
   });
   const togglePreview = useEffectEvent(() => {
     onTogglePreview();
@@ -58,6 +68,16 @@ export function useEditorHotkeys({
       const key = event.key.toLowerCase();
       const code = event.code;
 
+      if (key === 'n' || code === 'KeyN') {
+        event.preventDefault();
+        createNew();
+        return;
+      }
+      if ((key === 's' || code === 'KeyS') && event.shiftKey) {
+        event.preventDefault();
+        saveAs();
+        return;
+      }
       if (key === 's' || code === 'KeyS') {
         event.preventDefault();
         save();

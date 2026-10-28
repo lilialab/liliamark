@@ -1,20 +1,24 @@
 {
   "menu": {
     "aria": "Menu",
+    "new": "New",
     "open": "Open",
+    "saveAs": "Save As…",
     "settings": "Settings",
     "markdownCheatSheet": "Markdown reference",
     "shortcuts": "Keyboard shortcuts",
     "startupTiming": "Startup timing"
   },
   "empty": {
-    "hint": "Open a file to start editing ({{mod}}+S save · {{mod}}+E preview · Shift+scroll for horizontal scroll)"
+    "hint": "New or open a file to start ({{mod}}+N new · {{mod}}+S save · {{mod}}+E preview)"
   },
   "editor": {
     "ariaSource": "Source",
     "ariaTabList": "Open files",
     "closeTab": "Close {{title}}",
-    "diskChanged": "Changed on disk"
+    "diskChanged": "Changed on disk",
+    "untitled": "Untitled",
+    "untitledExt": "File type"
   },
   "toast": {
     "openFailed": "Could not open",
@@ -28,7 +32,7 @@
     "saveFailedWithReason": "Could not save: {{reason}}"
   },
   "dialog": {
-    "discardChanges": "You have unsaved changes. Continue anyway?",
+    "discardChanges": "You have unsaved changes. Close anyway?",
     "discardUnsavedTabs": "You have {{count}} unsaved file(s). Quit anyway?"
   },
   "drag": {
@@ -155,7 +159,9 @@
     "sectionCursor": "Caret & selection",
     "sectionLine": "Lines",
     "sectionView": "View",
-    "save": "Save current file",
+    "new": "New untitled tab (Markdown by default)",
+    "save": "Save; Save As when untitled",
+    "saveAs": "Save As (current tab switches to the new path)",
     "preview": "Toggle Markdown preview / HTML “open in browser”",
     "closeTab": "Close current tab",
     "closeWindow": "Close window (confirms if unsaved)",

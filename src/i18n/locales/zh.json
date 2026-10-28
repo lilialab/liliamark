@@ -1,20 +1,24 @@
 {
   "menu": {
     "aria": "菜单",
+    "new": "新建",
     "open": "打开",
+    "saveAs": "另存为…",
     "settings": "设置",
     "markdownCheatSheet": "Markdown 标记",
     "shortcuts": "快捷键",
     "startupTiming": "启动耗时"
   },
   "empty": {
-    "hint": "打开一个文件开始编辑（{{mod}}+S 保存 · {{mod}}+E 切换预览 · Shift+滚轮横向滚动）"
+    "hint": "新建或打开文件开始编辑（{{mod}}+N 新建 · {{mod}}+S 保存 · {{mod}}+E 预览）"
   },
   "editor": {
     "ariaSource": "源码",
     "ariaTabList": "已打开文件",
     "closeTab": "关闭 {{title}}",
-    "diskChanged": "磁盘已变更"
+    "diskChanged": "磁盘已变更",
+    "untitled": "未命名",
+    "untitledExt": "文件类型"
   },
   "toast": {
     "openFailed": "打开失败",
@@ -28,7 +32,7 @@
     "saveFailedWithReason": "保存失败：{{reason}}"
   },
   "dialog": {
-    "discardChanges": "有未保存的更改，确定继续吗？",
+    "discardChanges": "有未保存的更改，确定关闭吗？",
     "discardUnsavedTabs": "有 {{count}} 个未保存的文件，确定退出吗？"
   },
   "drag": {
@@ -155,7 +159,9 @@
     "sectionCursor": "光标与选区",
     "sectionLine": "行",
     "sectionView": "视图",
-    "save": "保存当前文件",
+    "new": "新建未命名标签（默认 Markdown）",
+    "save": "保存；未命名时另存为",
+    "saveAs": "另存为（当前标签切到新路径）",
     "preview": "切换 Markdown 预览 / HTML「用浏览器打开」",
     "closeTab": "关闭当前标签",
     "closeWindow": "关闭窗口（有未保存改动时会确认）",

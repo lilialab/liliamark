@@ -2,10 +2,13 @@ import { useEffect, useRef } from 'react';
 import { saveEditorSession } from '../../lib/tauri/storage';
 import type { EditorTab } from '../../types/editorTab';
 
-/** 标签增删或切换激活时写入会话；跳过首次挂载以免冲掉待恢复数据 */
+/** 标签增删或切换激活时写入会话；跳过首次挂载以免冲掉待恢复数据；未命名不入会话 */
 export function usePersistEditorSession(tabs: EditorTab[], activeId: string | null) {
   const skipFirst = useRef(true);
-  const pathsKey = tabs.map((tab) => tab.path).join('\0');
+  const pathsKey = tabs
+    .map((tab) => tab.path)
+    .filter((path): path is string => path !== null)
+    .join('\0');
   const activePath = tabs.find((tab) => tab.id === activeId)?.path ?? null;
 
   useEffect(() => {

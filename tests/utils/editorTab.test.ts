@@ -13,6 +13,7 @@ function tab(overrides: Partial<EditorTab> = {}): EditorTab {
   return {
     id: 'a',
     path: 'C:\\Docs\\note.md',
+    untitledExt: 'md',
     dirty: false,
     diskChange: null,
     docEpoch: 0,
@@ -66,5 +67,11 @@ describe('withDiskChange', () => {
     const next = withDiskChange(tabs, 'c:/Docs/note.md', 'modify');
     expect(next[0]?.diskChange).toBe('modify');
     expect(next[1]?.diskChange).toBeNull();
+  });
+
+  it('skips untitled tabs', () => {
+    const tabs = [tab({ id: 'a', path: null })];
+    const next = withDiskChange(tabs, 'C:\\Docs\\note.md', 'modify');
+    expect(next[0]?.diskChange).toBeNull();
   });
 });

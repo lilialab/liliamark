@@ -36,11 +36,13 @@ export function withoutDiskChange(tab: EditorTab): EditorTab {
   return { ...tab, diskChange: null };
 }
 
-/** 给匹配路径的 tab 打上磁盘变更 */
+/** 给匹配路径的 tab 打上磁盘变更（跳过未命名） */
 export function withDiskChange(
   tabs: EditorTab[],
   path: string,
   kind: DiskChangeKind,
 ): EditorTab[] {
-  return tabs.map((tab) => (sameFilePath(tab.path, path) ? { ...tab, diskChange: kind } : tab));
+  return tabs.map((tab) =>
+    tab.path !== null && sameFilePath(tab.path, path) ? { ...tab, diskChange: kind } : tab
+  );
 }

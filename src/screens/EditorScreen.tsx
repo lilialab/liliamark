@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
-import { supportsHtmlBrowserOpen, supportsMarkdownPreview } from '../editor/languageRegistry';
 import {
   closeCurrentWindow,
   confirmDiscardChanges,
+  pickSaveTextFile,
   pickTextFile,
   writeTextFile,
 } from '../lib/tauri/fs';
@@ -28,6 +28,7 @@ import {
 } from '../utils/editorTab';
 import { fileName, sameFilePath } from '../utils/path';
 import { markStartupUiReady } from '../utils/startupTiming';
+import { DEFAULT_UNTITLED_EXT, tabLanguagePath } from '../utils/untitled';
 import { AppMenu } from './components/AppMenu';
 import { DiskChangeBanner } from './components/DiskChangeBanner';
 import { EditorTabBar } from './components/EditorTabBar';
@@ -37,6 +38,7 @@ import { PreviewOverlay } from './components/PreviewOverlay';
 import { SettingsOverlay } from './components/SettingsOverlay';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { StartupTimingOverlay } from './components/StartupTimingOverlay';
+import { UntitledExtPicker } from './components/UntitledExtPicker';
 import { modifierKeyLabel } from './help/editorHotkeyHints';
 import { useAutoSaveOnBlur } from './hooks/useAutoSaveOnBlur';
 import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
@@ -117,7 +119,7 @@ export function EditorScreen() {
   /* -------------------------------------------------------------------------- */
 
   function focusOrOpenTab(path: string) {
-    const existing = tabs.find((tab) => sameFilePath(tab.path, path));
+    const existing = tabs.find((tab) => tab.path !== null && sameFilePath(tab.path, path));
     if (existing) {
       setActiveId(existing.id);
       return;
@@ -126,6 +128,20 @@ export function EditorScreen() {
     const tab: EditorTab = {
       id: createTabId(),
       path,
+      untitledExt: DEFAULT_UNTITLED_EXT,
+      dirty: false,
+      diskChange: null,
+      docEpoch: 0,
+    };
+    setTabs((prev) => [...prev, tab]);
+    setActiveId(tab.id);
+  }
+
+  function handleNew() {
+    const tab: EditorTab = {
+      id: createTabId(),
+      path: null,
+      untitledExt: DEFAULT_UNTITLED_EXT,
       dirty: false,
       diskChange: null,
       docEpoch: 0,
@@ -150,10 +166,10 @@ export function EditorScreen() {
     }
   }
 
-  /** 保存指定标签；写盘期间若正文又变了则保持 dirty */
+  /** 保存指定已落盘标签；写盘期间若正文又变了则保持 dirty */
   async function saveTab(tabId: string, options?: { requireReadyToast?: boolean }) {
     const tab = tabsRef.current.find((item) => item.id === tabId);
-    if (!tab?.dirty) {
+    if (!tab?.dirty || tab.path === null) {
       return;
     }
 
@@ -179,8 +195,45 @@ export function EditorScreen() {
     }
   }
 
+  /** 另存为：选路径写入；当前标签切到新路径（未命名即晋升） */
+  async function saveTabAs(tabId: string) {
+    const tab = tabsRef.current.find((item) => item.id === tabId);
+    if (!tab) {
+      return;
+    }
+
+    const content = readDoc(tabId);
+    if (content === null) {
+      toast.error(t('toast.saveFailed'), { description: t('toast.editorNotReady') });
+      return;
+    }
+
+    try {
+      const defaultName = tab.path === null
+        ? `${t('editor.untitled')}.${tab.untitledExt}`
+        : fileName(tab.path);
+      const path = await pickSaveTextFile(defaultName);
+      if (!path) {
+        return;
+      }
+
+      await writeTextFile(path, content);
+      setTabs((prev) => {
+        const latest = readDoc(tabId);
+        if (latest !== null && latest !== content) {
+          return updateTab(prev, tabId, (item) => ({ ...item, path }));
+        }
+        return updateTab(prev, tabId, (item) => withSaved({ ...item, path }));
+      });
+    } catch (error) {
+      toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
+    }
+  }
+
   async function saveDirtyTabs() {
-    const dirtyIds = tabsRef.current.filter((tab) => tab.dirty).map((tab) => tab.id);
+    const dirtyIds = tabsRef.current
+      .filter((tab) => tab.dirty && tab.path !== null)
+      .map((tab) => tab.id);
     for (const id of dirtyIds) {
       await saveTab(id);
     }
@@ -190,7 +243,28 @@ export function EditorScreen() {
     if (!activeId) {
       return;
     }
+    const tab = tabsRef.current.find((item) => item.id === activeId);
+    if (!tab) {
+      return;
+    }
+    if (tab.path === null) {
+      await saveTabAs(activeId);
+      return;
+    }
     await saveTab(activeId, { requireReadyToast: true });
+  }
+
+  async function handleSaveAs() {
+    if (!activeId) {
+      return;
+    }
+    await saveTabAs(activeId);
+  }
+
+  function handleUntitledExtChange(tabId: string, ext: string) {
+    setTabs((prev) =>
+      updateTab(prev, tabId, (tab) => tab.path === null ? { ...tab, untitledExt: ext } : tab)
+    );
   }
 
   function handleDirty(tabId: string) {
@@ -203,6 +277,13 @@ export function EditorScreen() {
     });
     if (tabId === activeId) {
       refreshPreview(tabId);
+    }
+  }
+
+  function handleEditorBlur(tabId: string) {
+    const current = tabsRef.current.find((item) => item.id === tabId);
+    if (current?.path !== null) {
+      void saveTab(tabId);
     }
   }
 
@@ -250,14 +331,17 @@ export function EditorScreen() {
   }
 
   function handleTogglePreview() {
-    if (!previewOpen && activeId !== null) {
+    if (activeId === null) {
+      return;
+    }
+    if (!previewOpen) {
       setPreviewSource(readDoc(activeId) ?? '');
     }
     setPreviewOpen((open) => !open);
   }
 
   async function handleOpenHtmlInBrowser() {
-    if (!activeTab) {
+    if (!activeTab?.path) {
       toast.error(t('toast.cannotOpen'), { description: t('toast.invalidPath') });
       return;
     }
@@ -320,7 +404,11 @@ export function EditorScreen() {
   }, []);
 
   useEffect(() => {
-    if (!previewOpen || activeId === null) {
+    if (activeId === null) {
+      setPreviewOpen(false);
+      return;
+    }
+    if (!previewOpen) {
       return;
     }
     const doc = editorViewsRef.current.get(activeId)?.state.doc.toString();
@@ -334,14 +422,16 @@ export function EditorScreen() {
   useExternalOpenFile(loadFile, sessionReady);
   usePersistEditorSession(tabs, activeId);
   useDiskWatch(
-    tabs.map((tab) => tab.path),
+    tabs.map((tab) => tab.path).filter((path): path is string => path !== null),
     handleDiskChange,
   );
   useUnsavedCloseGuard(getDirtyTabCount);
   useAutoSaveOnBlur(saveDirtyTabs);
   useBlockBrowserShortcuts();
   useEditorHotkeys({
+    onNew: handleNew,
     onSave: handleSave,
+    onSaveAs: handleSaveAs,
     onTogglePreview: handleTogglePreview,
     onCloseTab: handleCloseTabHotkey,
     onCloseWindow: handleCloseWindowHotkey,
@@ -358,7 +448,9 @@ export function EditorScreen() {
       <EditorTabBar
         tabs={tabs.map((tab) => ({
           id: tab.id,
-          title: fileName(tab.path),
+          title: tab.path === null
+            ? `${t('editor.untitled')}.${tab.untitledExt}`
+            : fileName(tab.path),
           dirty: tab.dirty,
           diskChange: tab.diskChange !== null,
         }))}
@@ -372,10 +464,22 @@ export function EditorScreen() {
           <AppMenu
             items={[
               {
+                id: 'new',
+                label: t('menu.new'),
+                onSelect: handleNew,
+              },
+              {
                 id: 'open',
                 label: t('menu.open'),
                 onSelect: () => {
                   void handleOpen();
+                },
+              },
+              {
+                id: 'save-as',
+                label: t('menu.saveAs'),
+                onSelect: () => {
+                  void handleSaveAs();
                 },
               },
               {
@@ -428,55 +532,54 @@ export function EditorScreen() {
         className={cn('relative min-h-0 min-w-0 flex-1 overflow-hidden bg-(--app-bg)')}
         aria-label={t('editor.ariaSource')}
       >
-        {tabs.length === 0
-          ? (
-            <p className={cn('p-4 text-sm text-(--app-muted)')}>
-              {t('empty.hint', { mod: modKey })}
-            </p>
-          )
-          : tabs.map((tab) => {
-            const active = tab.id === activeId;
-            return (
-              <div
-                key={tab.id}
-                className={cn(
-                  'absolute inset-0 min-h-0 overflow-auto',
-                  active ? 'z-10' : 'pointer-events-none invisible z-0',
-                )}
-                aria-hidden={!active}
-              >
-                <CodeEditor
-                  key={tab.docEpoch}
-                  path={tab.path}
-                  onDirty={() => {
-                    handleDirty(tab.id);
-                  }}
-                  onBlur={() => {
-                    void saveTab(tab.id);
-                  }}
-                  onReady={(editorView) => {
-                    handleEditorReady(tab.id, editorView);
-                  }}
-                  onDestroy={() => {
-                    handleEditorDestroy(tab.id);
-                  }}
-                  onLoadError={(error) => {
-                    handleLoadError(tab.id, error);
-                  }}
-                  onPathResolved={(path) => {
-                    handlePathResolved(tab.id, path);
-                  }}
-                />
-              </div>
-            );
-          })}
-        <PreviewOverlay
-          open={previewOpen}
-          markdownPreview={activeTab !== null && supportsMarkdownPreview(activeTab.path)}
-          htmlBrowserOpen={activeTab !== null && supportsHtmlBrowserOpen(activeTab.path)}
-          source={previewSource}
-          onOpenInBrowser={handleOpenHtmlInBrowser}
-        />
+        {tabs.length === 0 && (
+          <p className={cn('p-4 text-sm text-(--app-muted)')}>
+            {t('empty.hint', { mod: modKey })}
+          </p>
+        )}
+        {tabs.map((tab) => {
+          const active = tab.id === activeId;
+          return (
+            <div
+              key={tab.id}
+              className={cn(
+                'absolute inset-0 min-h-0 overflow-auto',
+                active ? 'z-10' : 'pointer-events-none invisible z-0',
+              )}
+              aria-hidden={!active}
+            >
+              <CodeEditor
+                key={`${tab.id}:${tab.docEpoch}`}
+                tabId={tab.id}
+                path={tab.path}
+                languagePath={tabLanguagePath(tab)}
+                onDirty={handleDirty}
+                onBlur={handleEditorBlur}
+                onReady={handleEditorReady}
+                onDestroy={handleEditorDestroy}
+                onLoadError={handleLoadError}
+                onPathResolved={handlePathResolved}
+              />
+            </div>
+          );
+        })}
+        {activeTab?.path === null && (
+          <UntitledExtPicker
+            ext={activeTab.untitledExt}
+            onChange={(ext) => {
+              handleUntitledExtChange(activeTab.id, ext);
+            }}
+          />
+        )}
+        {activeTab !== null && (
+          <PreviewOverlay
+            open={previewOpen}
+            languagePath={tabLanguagePath(activeTab)}
+            filePath={activeTab.path}
+            source={previewSource}
+            onOpenInBrowser={handleOpenHtmlInBrowser}
+          />
+        )}
         <SettingsOverlay
           open={settingsOpen}
           onClose={() => {
