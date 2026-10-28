@@ -27,11 +27,6 @@
     "active": true,
     "targets": "all",
     "publisher": "LiliaMark",
-    "windows": {
-      "nsis": {
-        "installerHooks": "windows/nsis-hooks.nsh"
-      }
-    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
