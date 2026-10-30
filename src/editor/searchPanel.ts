@@ -22,9 +22,8 @@ import {
   WholeWord,
   X,
 } from 'lucide-react';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import i18n from '../i18n';
+import { setButtonIcon } from './lucideDom';
 import { locateSearchMatches } from './searchPanelMatch';
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -49,20 +48,6 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-function lucideMarkup(Icon: LucideIcon, size: number): string {
-  return renderToStaticMarkup(
-    createElement(Icon, {
-      size,
-      strokeWidth: 2,
-      'aria-hidden': true,
-    }),
-  );
-}
-
-function setButtonIcon(button: HTMLButtonElement, Icon: LucideIcon, size = 14) {
-  button.innerHTML = lucideMarkup(Icon, size);
-}
-
 function makeIconButton(
   className: string,
   Icon: LucideIcon,
@@ -78,6 +63,21 @@ function makeIconButton(
     onClick();
   });
   return button;
+}
+
+function makeSearchInput(
+  name: string,
+  attrs: Record<string, string | boolean | undefined> = {},
+): HTMLInputElement {
+  return el('input', {
+    type: 'text',
+    class: 'lm-search-input',
+    name,
+    size: '1',
+    autocomplete: 'off',
+    spellcheck: 'false',
+    ...attrs,
+  }) as HTMLInputElement;
 }
 
 function setToggle(button: HTMLButtonElement, on: boolean) {
@@ -114,9 +114,6 @@ class VscodeSearchPanel implements Panel {
   private readonly replaceNextBtn: HTMLButtonElement;
   private readonly replaceAllBtn: HTMLButtonElement;
 
-  private caseOn: boolean;
-  private wordOn: boolean;
-  private reOn: boolean;
   private replaceOpen = false;
   private query: SearchQuery;
 
@@ -128,52 +125,60 @@ class VscodeSearchPanel implements Panel {
   constructor(view: EditorView) {
     this.view = view;
     this.query = getSearchQuery(view.state);
-    this.caseOn = this.query.caseSensitive;
-    this.wordOn = this.query.wholeWord;
-    this.reOn = this.query.regexp;
 
-    this.searchField = el('input', {
-      type: 'text',
-      class: 'lm-search-input',
-      name: 'search',
-      size: '1',
-      'main-field': 'true',
-      autocomplete: 'off',
-      spellcheck: 'false',
-    }) as HTMLInputElement;
+    this.searchField = makeSearchInput('search', { 'main-field': 'true' });
     this.searchField.value = this.query.search;
 
-    this.replaceField = el('input', {
-      type: 'text',
-      class: 'lm-search-input',
-      name: 'replace',
-      size: '1',
-      autocomplete: 'off',
-      spellcheck: 'false',
-    }) as HTMLInputElement;
+    this.replaceField = makeSearchInput('replace');
     this.replaceField.value = this.query.replace;
 
     this.countEl = el('span', { class: 'lm-search-count' });
 
     this.expandBtn = makeIconButton(
-      'lm-search-expand',
+      'lm-search-btn lm-search-expand',
       ChevronRight,
       () => this.setReplaceOpen(!this.replaceOpen),
     );
     this.expandBtn.setAttribute('aria-expanded', 'false');
 
-    this.caseBtn = makeIconButton('lm-search-toggle', CaseSensitive, () => this.toggle('case'));
-    this.wordBtn = makeIconButton('lm-search-toggle', WholeWord, () => this.toggle('word'));
-    this.reBtn = makeIconButton('lm-search-toggle', Regex, () => this.toggle('re'));
-    setToggle(this.caseBtn, this.caseOn);
-    setToggle(this.wordBtn, this.wordOn);
-    setToggle(this.reBtn, this.reOn);
+    this.caseBtn = makeIconButton(
+      'lm-search-btn lm-search-toggle',
+      CaseSensitive,
+      () => this.toggle('case'),
+    );
+    this.wordBtn = makeIconButton(
+      'lm-search-btn lm-search-toggle',
+      WholeWord,
+      () => this.toggle('word'),
+    );
+    this.reBtn = makeIconButton('lm-search-btn lm-search-toggle', Regex, () => this.toggle('re'));
+    this.syncToggles();
 
-    this.prevBtn = makeIconButton('lm-search-icon', ChevronUp, () => findPrevious(this.view));
-    this.nextBtn = makeIconButton('lm-search-icon', ChevronDown, () => findNext(this.view));
-    this.closeBtn = makeIconButton('lm-search-icon', X, () => closeSearchPanel(this.view));
-    this.replaceNextBtn = makeIconButton('lm-search-icon', Replace, () => replaceNext(this.view));
-    this.replaceAllBtn = makeIconButton('lm-search-icon', ReplaceAll, () => replaceAll(this.view));
+    this.prevBtn = makeIconButton(
+      'lm-search-btn lm-search-icon',
+      ChevronUp,
+      () => findPrevious(this.view),
+    );
+    this.nextBtn = makeIconButton(
+      'lm-search-btn lm-search-icon',
+      ChevronDown,
+      () => findNext(this.view),
+    );
+    this.closeBtn = makeIconButton(
+      'lm-search-btn lm-search-icon',
+      X,
+      () => closeSearchPanel(this.view),
+    );
+    this.replaceNextBtn = makeIconButton(
+      'lm-search-btn lm-search-icon',
+      Replace,
+      () => replaceNext(this.view),
+    );
+    this.replaceAllBtn = makeIconButton(
+      'lm-search-btn lm-search-icon',
+      ReplaceAll,
+      () => replaceAll(this.view),
+    );
 
     const findField = el('div', { class: 'lm-search-field' }, [
       this.searchField,
@@ -216,6 +221,7 @@ class VscodeSearchPanel implements Panel {
     let queryChanged = false;
     for (const tr of update.transactions) {
       for (const effect of tr.effects) {
+        // 自己 commit 时已先写入 this.query，eq 为 true，避免回写 input 打断光标
         if (effect.is(setSearchQuery) && !effect.value.eq(this.query)) {
           this.applyQuery(effect.value);
           queryChanged = true;
@@ -270,32 +276,38 @@ class VscodeSearchPanel implements Panel {
   }
 
   private toggle(kind: 'case' | 'word' | 're') {
-    if (kind === 'case') {
-      this.caseOn = !this.caseOn;
-      setToggle(this.caseBtn, this.caseOn);
-    } else if (kind === 'word') {
-      this.wordOn = !this.wordOn;
-      setToggle(this.wordBtn, this.wordOn);
-    } else {
-      this.reOn = !this.reOn;
-      setToggle(this.reBtn, this.reOn);
-    }
-    this.commit();
+    const q = this.query;
+    this.commitQuery(
+      new SearchQuery({
+        search: this.searchField.value,
+        replace: this.replaceField.value,
+        caseSensitive: kind === 'case' ? !q.caseSensitive : q.caseSensitive,
+        wholeWord: kind === 'word' ? !q.wholeWord : q.wholeWord,
+        regexp: kind === 're' ? !q.regexp : q.regexp,
+      }),
+    );
   }
 
   private commit() {
-    const next = new SearchQuery({
-      search: this.searchField.value,
-      replace: this.replaceField.value,
-      caseSensitive: this.caseOn,
-      wholeWord: this.wordOn,
-      regexp: this.reOn,
-    });
+    this.commitQuery(
+      new SearchQuery({
+        search: this.searchField.value,
+        replace: this.replaceField.value,
+        caseSensitive: this.query.caseSensitive,
+        wholeWord: this.query.wholeWord,
+        regexp: this.query.regexp,
+      }),
+    );
+  }
+
+  /** 写入 query；先更新本地再 dispatch，避免 update 回写 input */
+  private commitQuery(next: SearchQuery) {
     if (next.eq(this.query)) {
       this.syncInvalid();
       return;
     }
     this.query = next;
+    this.syncToggles();
     this.view.dispatch({ effects: setSearchQuery.of(next) });
     this.syncInvalid();
     this.refreshCount();
@@ -303,15 +315,16 @@ class VscodeSearchPanel implements Panel {
 
   private applyQuery(query: SearchQuery) {
     this.query = query;
-    this.caseOn = query.caseSensitive;
-    this.wordOn = query.wholeWord;
-    this.reOn = query.regexp;
     this.searchField.value = query.search;
     this.replaceField.value = query.replace;
-    setToggle(this.caseBtn, this.caseOn);
-    setToggle(this.wordBtn, this.wordOn);
-    setToggle(this.reBtn, this.reOn);
+    this.syncToggles();
     this.syncInvalid();
+  }
+
+  private syncToggles() {
+    setToggle(this.caseBtn, this.query.caseSensitive);
+    setToggle(this.wordBtn, this.query.wholeWord);
+    setToggle(this.reBtn, this.query.regexp);
   }
 
   private syncInvalid() {

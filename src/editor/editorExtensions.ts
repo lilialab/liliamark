@@ -1,11 +1,12 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { foldKeymap, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { search, searchKeymap } from '@codemirror/search';
 import type { Extension } from '@codemirror/state';
 import { highlightSpecialChars, keymap, lineNumbers } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { catppuccinEditorTheme } from '../theme/flavor';
 import { highlightActiveLineExclusive } from './activeLineHighlight';
+import { editorFoldGutter } from './foldGutter';
 import { indentKeymap } from './indent';
 import { markdownBoldKeymap } from './markdownBold';
 import { markdownTaskKeymap } from './markdownTask';
@@ -29,9 +30,10 @@ const markdownHighlight = syntaxHighlighting(
   ]),
 );
 
-/** 编辑器静态装配：行号 / 主题 / Markdown 语义色 / 搜索 / keymap（不含语言） */
+/** 编辑器静态装配：行号 / 折叠 / 主题 / Markdown 语义色 / 搜索 / keymap（不含语言） */
 export const baseExtensions: Extension[] = [
   lineNumbers(),
+  editorFoldGutter,
   highlightSpecialChars(),
   history(),
   catppuccinEditorTheme(),
@@ -43,6 +45,7 @@ export const baseExtensions: Extension[] = [
     ...markdownBoldKeymap,
     ...markdownTaskKeymap,
     ...searchKeymap,
+    ...foldKeymap,
     ...defaultKeymap,
     ...historyKeymap,
   ]),

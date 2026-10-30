@@ -5,6 +5,7 @@
 ### Added
 
 - 源码查找 / 替换（`Ctrl/Cmd+F` 打开 VS Code 风格面板；`Ctrl/Cmd+G` / F3 下一处）
+- 代码折叠（行号旁 lucide gutter；JSON 等按语法树）
 
 ## [0.1.2] — 2026-10-28
 

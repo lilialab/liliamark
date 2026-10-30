@@ -34,6 +34,7 @@
 ## 使用
 
 - `Ctrl/Cmd+S` 保存 · `Ctrl/Cmd+E` 预览 · `Ctrl/Cmd+F` 查找 / 替换 · `Ctrl/Cmd+W` 关标签 · `Ctrl/Cmd+Q` 关窗口
+- 代码折叠（行号旁 gutter；JSON 等按语法）
 - `Shift+滚轮` 横向滚动（编辑区不自动换行）
 - 更多说明见应用内菜单「快捷键」「Markdown 标记」
 

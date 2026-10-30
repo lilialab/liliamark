@@ -42,6 +42,28 @@
   color: var(--ctp-green);
 }
 
+/* 折叠 gutter：lucide 标记 */
+.code-editor .cm-foldGutter .cm-gutterElement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ctp-overlay0);
+}
+
+.code-editor .cm-foldGutter .cm-gutterElement:hover {
+  color: var(--ctp-subtext0);
+}
+
+.code-editor .lm-fold-marker {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.code-editor .lm-fold-marker svg {
+  display: block;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Find widget（对齐 VS Code：悬浮、同宽输入、开关在查找框内） */
 /* -------------------------------------------------------------------------- */
@@ -57,6 +79,8 @@
 
 /* CM 会给 Panel.dom 加上 .cm-panel；透明规则不能压过 .lm-search 背景 */
 .code-editor .lm-search {
+  --lm-search-expand-w: 20px;
+  --lm-search-actions-w: 72px;
   position: absolute;
   top: 8px;
   right: 14px;
@@ -78,7 +102,7 @@
 /* 展开 | 输入框（同宽） | 操作 */
 .code-editor .lm-search-row {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 72px;
+  grid-template-columns: var(--lm-search-expand-w) minmax(0, 1fr) var(--lm-search-actions-w);
   align-items: center;
   column-gap: 4px;
   min-width: 0;
@@ -86,27 +110,8 @@
 
 .code-editor .lm-search-expand,
 .code-editor .lm-search-expand-spacer {
-  width: 20px;
+  width: var(--lm-search-expand-w);
   height: 24px;
-}
-
-.code-editor .lm-search-expand {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  border: none;
-  border-radius: 3px;
-  background: transparent;
-  color: var(--ctp-subtext0);
-  line-height: 0;
-  cursor: pointer;
-}
-
-.code-editor .lm-search-expand:hover {
-  background: var(--ctp-surface0);
-  color: var(--app-fg);
 }
 
 .code-editor .lm-search-field {
@@ -179,17 +184,12 @@
   align-items: center;
   justify-content: flex-end;
   gap: 2px;
-  width: 72px;
-  min-width: 72px;
 }
 
-.code-editor .lm-search-toggle,
-.code-editor .lm-search-icon {
+.code-editor .lm-search-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
   margin: 0;
   padding: 0;
   border: 1px solid transparent;
@@ -200,18 +200,23 @@
   cursor: pointer;
 }
 
-.code-editor .lm-search-expand svg,
-.code-editor .lm-search-toggle svg,
-.code-editor .lm-search-icon svg {
+.code-editor .lm-search-btn svg {
   display: block;
-  width: 14px;
-  height: 14px;
 }
 
-.code-editor .lm-search-toggle:hover,
-.code-editor .lm-search-icon:hover {
+.code-editor .lm-search-btn:hover {
   background: var(--ctp-surface0);
   color: var(--app-fg);
+}
+
+.code-editor .lm-search-expand {
+  border: none;
+}
+
+.code-editor .lm-search-toggle,
+.code-editor .lm-search-icon {
+  width: 22px;
+  height: 22px;
 }
 
 .code-editor .lm-search-toggle.is-on {
