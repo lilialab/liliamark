@@ -1,5 +1,6 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { search, searchKeymap } from '@codemirror/search';
 import type { Extension } from '@codemirror/state';
 import { highlightSpecialChars, keymap, lineNumbers } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
@@ -8,6 +9,7 @@ import { highlightActiveLineExclusive } from './activeLineHighlight';
 import { indentKeymap } from './indent';
 import { markdownBoldKeymap } from './markdownBold';
 import { markdownTaskKeymap } from './markdownTask';
+import { createVscodeSearchPanel } from './searchPanel';
 
 /**
  * Markdown 语义挂稳定 class，样式走 CSS（特异性高于主题 StyleModule，
@@ -27,7 +29,7 @@ const markdownHighlight = syntaxHighlighting(
   ]),
 );
 
-/** 编辑器静态装配：行号 / 主题 / Markdown 语义色 / keymap（不含语言） */
+/** 编辑器静态装配：行号 / 主题 / Markdown 语义色 / 搜索 / keymap（不含语言） */
 export const baseExtensions: Extension[] = [
   lineNumbers(),
   highlightSpecialChars(),
@@ -35,10 +37,12 @@ export const baseExtensions: Extension[] = [
   catppuccinEditorTheme(),
   markdownHighlight,
   highlightActiveLineExclusive(),
+  search({ top: true, createPanel: createVscodeSearchPanel }),
   keymap.of([
     ...indentKeymap,
     ...markdownBoldKeymap,
     ...markdownTaskKeymap,
+    ...searchKeymap,
     ...defaultKeymap,
     ...historyKeymap,
   ]),

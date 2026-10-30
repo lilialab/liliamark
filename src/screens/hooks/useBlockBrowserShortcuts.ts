@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
 
-/** Ctrl/Cmd + 这些键：刷新 / 打印 / 查找 / 源码 / 书签 / 缩放 */
-const BLOCKED_KEYS = new Set(['r', 'p', 'f', 'u', 'd', '+', '=', '-', '_', '0']);
+/** Ctrl/Cmd + 这些键：刷新 / 打印 / 源码 / 书签 / 缩放（查找交给编辑器） */
+const BLOCKED_KEYS = new Set(['r', 'p', 'u', 'd', '+', '=', '-', '_', '0']);
 const BLOCKED_CODES = new Set([
   'KeyR',
   'KeyP',
-  'KeyF',
   'KeyU',
   'KeyD',
-  'Equal',
+  'equal',
   'Minus',
   'Digit0',
   'NumpadAdd',

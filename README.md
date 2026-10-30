@@ -33,7 +33,7 @@ Builds are **unsigned** by default: Windows may show SmartScreen; on macOS you m
 
 ## Usage
 
-- `Ctrl/Cmd+S` save · `Ctrl/Cmd+E` preview · `Ctrl/Cmd+W` close tab · `Ctrl/Cmd+Q` quit
+- `Ctrl/Cmd+S` save · `Ctrl/Cmd+E` preview · `Ctrl/Cmd+F` find / replace · `Ctrl/Cmd+W` close tab · `Ctrl/Cmd+Q` quit
 - `Shift+scroll` horizontal scroll (editor does not soft-wrap)
 - More details in the in-app **Keyboard shortcuts** and **Markdown reference** menus
 

@@ -41,3 +41,190 @@
 .code-editor .cm-md-code {
   color: var(--ctp-green);
 }
+
+/* -------------------------------------------------------------------------- */
+/* Find widget（对齐 VS Code：悬浮、同宽输入、开关在查找框内） */
+/* -------------------------------------------------------------------------- */
+
+.code-editor .cm-panels.cm-panels-top {
+  position: relative;
+  height: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+  z-index: 10;
+}
+
+/* CM 会给 Panel.dom 加上 .cm-panel；透明规则不能压过 .lm-search 背景 */
+.code-editor .lm-search {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  z-index: 11;
+  display: flex;
+  width: min(320px, calc(100% - 28px));
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 2px;
+  background-color: var(--ctp-mantle);
+  color: var(--app-fg);
+  font-size: 13px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--ctp-crust) 50%, transparent);
+}
+
+/* 展开 | 输入框（同宽） | 操作 */
+.code-editor .lm-search-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 72px;
+  align-items: center;
+  column-gap: 4px;
+  min-width: 0;
+}
+
+.code-editor .lm-search-expand,
+.code-editor .lm-search-expand-spacer {
+  width: 20px;
+  height: 24px;
+}
+
+.code-editor .lm-search-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ctp-subtext0);
+  line-height: 0;
+  cursor: pointer;
+}
+
+.code-editor .lm-search-expand:hover {
+  background: var(--ctp-surface0);
+  color: var(--app-fg);
+}
+
+.code-editor .lm-search-field {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 4px 0 8px;
+  border: 1px solid var(--ctp-surface2);
+  border-radius: 2px;
+  background-color: var(--ctp-base);
+}
+
+.code-editor .lm-search-field:focus-within {
+  border-color: var(--ctp-blue);
+}
+
+.code-editor .lm-search-field.is-invalid {
+  border-color: var(--ctp-red);
+}
+
+.code-editor .lm-search-input {
+  /* width:0 + flex:1：在窄格子里仍占满剩余，不被 size=20 默认撑爆/挤没 */
+  flex: 1 1 0;
+  width: 0;
+  min-width: 2.5rem;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  background: transparent;
+  color: var(--app-fg);
+  padding: 0;
+  font: inherit;
+  outline: none;
+}
+
+.code-editor .lm-search-input::placeholder {
+  color: var(--ctp-overlay0);
+}
+
+.code-editor .lm-search-toggles {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 1px;
+}
+
+.code-editor .lm-search-count {
+  flex: 0 0 auto;
+  max-width: 4.5em;
+  padding: 0 4px;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  color: var(--ctp-subtext0);
+  white-space: nowrap;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.code-editor .lm-search-count.is-empty {
+  color: var(--ctp-red);
+}
+
+.code-editor .lm-search-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 72px;
+  min-width: 72px;
+}
+
+.code-editor .lm-search-toggle,
+.code-editor .lm-search-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ctp-subtext0);
+  line-height: 0;
+  cursor: pointer;
+}
+
+.code-editor .lm-search-expand svg,
+.code-editor .lm-search-toggle svg,
+.code-editor .lm-search-icon svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.code-editor .lm-search-toggle:hover,
+.code-editor .lm-search-icon:hover {
+  background: var(--ctp-surface0);
+  color: var(--app-fg);
+}
+
+.code-editor .lm-search-toggle.is-on {
+  background: color-mix(in srgb, var(--ctp-blue) 22%, var(--ctp-surface0));
+  border-color: color-mix(in srgb, var(--ctp-blue) 40%, transparent);
+  color: var(--app-fg);
+}
+
+/* 命中高亮 */
+.code-editor .cm-searchMatch {
+  background-color: color-mix(in srgb, var(--ctp-yellow) 35%, transparent);
+}
+
+.code-editor .cm-searchMatch-selected {
+  background-color: color-mix(in srgb, var(--ctp-peach) 45%, transparent);
+}

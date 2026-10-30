@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- 源码查找 / 替换（`Ctrl/Cmd+F` 打开 VS Code 风格面板；`Ctrl/Cmd+G` / F3 下一处）
+
 ## [0.1.2] — 2026-10-28
 
 ### Added

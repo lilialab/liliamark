@@ -157,6 +157,23 @@
       "meaning": "进程启动到可用"
     }
   },
+  "searchPanel": {
+    "find": "查找",
+    "replace": "替换",
+    "expandReplace": "展开替换",
+    "collapseReplace": "收起替换",
+    "matchCase": "区分大小写",
+    "wholeWord": "全字匹配",
+    "regexp": "使用正则表达式",
+    "previous": "上一个",
+    "next": "下一个",
+    "close": "关闭",
+    "replaceOne": "替换",
+    "replaceAll": "全部替换",
+    "noResults": "无结果",
+    "invalid": "表达式无效",
+    "matchCount": "{{current}} / {{total}}"
+  },
   "hotkeys": {
     "sectionApp": "应用",
     "sectionEdit": "编辑",
@@ -178,6 +195,7 @@
     "deleteLine": "删除当前行",
     "selectAll": "全选（编辑区外触发时会先聚焦编辑器）",
     "toggleComment": "切换行注释",
+    "find": "查找 / 替换（源码）",
     "wordMove": "按词移动；加 Shift 扩展选区",
     "wordSelect": "按词扩展选区",
     "wordSelectMac": "按词扩展选区（等同 ⌥+Shift+方向）",

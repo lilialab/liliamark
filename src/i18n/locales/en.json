@@ -157,6 +157,23 @@
       "meaning": "Process start until ready"
     }
   },
+  "searchPanel": {
+    "find": "Find",
+    "replace": "Replace",
+    "expandReplace": "Toggle Replace",
+    "collapseReplace": "Toggle Replace",
+    "matchCase": "Match Case",
+    "wholeWord": "Match Whole Word",
+    "regexp": "Use Regular Expression",
+    "previous": "Previous Match",
+    "next": "Next Match",
+    "close": "Close",
+    "replaceOne": "Replace",
+    "replaceAll": "Replace All",
+    "noResults": "No results",
+    "invalid": "Invalid expression",
+    "matchCount": "{{current}} of {{total}}"
+  },
   "hotkeys": {
     "sectionApp": "App",
     "sectionEdit": "Editing",
@@ -178,6 +195,7 @@
     "deleteLine": "Delete current line",
     "selectAll": "Select all (focuses editor first if focus is outside)",
     "toggleComment": "Toggle line comment",
+    "find": "Find / replace in source",
     "wordMove": "Move by word; hold Shift to extend selection",
     "wordSelect": "Extend selection by word",
     "wordSelectMac": "Extend selection by word (same as ⌥+Shift+arrows)",

@@ -1,7 +1,7 @@
 /**
  * 快捷键说明结构（只读）。
  * 应用级对齐 `useEditorHotkeys` / `markdownBoldKeymap` / `markdownTaskKeymap` / `indentKeymap`；
- * 编辑器级摘自 CodeMirror `defaultKeymap` / `historyKeymap`（非整表）。
+ * 编辑器级摘自 CodeMirror `defaultKeymap` / `historyKeymap` / `searchKeymap`（非整表）。
  * 文案键在 i18n `hotkeys.*`。
  */
 
@@ -62,6 +62,7 @@ export function editorHotkeyHintSections(
         { keys: `${mod}+Shift+K`, description: t('hotkeys.deleteLine') },
         { keys: `${mod}+A`, description: t('hotkeys.selectAll') },
         { keys: `${mod}+/`, description: t('hotkeys.toggleComment') },
+        { keys: `${mod}+F`, description: t('hotkeys.find') },
       ],
     },
     {
