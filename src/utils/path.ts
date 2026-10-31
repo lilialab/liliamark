@@ -23,3 +23,13 @@ export function fileName(path: string): string {
   const parts = path.split(/[/\\]/);
   return parts.at(-1) || path;
 }
+
+/** 小写扩展名（无点）；无扩展名或仅前导点（如 `.gitignore`）返回空串 */
+export function fileExtension(path: string): string {
+  const name = fileName(path);
+  const dot = name.lastIndexOf('.');
+  if (dot <= 0) {
+    return '';
+  }
+  return name.slice(dot + 1).toLowerCase();
+}

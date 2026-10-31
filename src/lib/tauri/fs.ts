@@ -63,18 +63,14 @@ export async function destroyCurrentWindow(): Promise<void> {
   await getCurrentWindow().destroy();
 }
 
-/** 监听窗口焦点变化；payload 为是否聚焦 */
-export function onWindowFocusChanged(
-  handler: (focused: boolean) => void,
-) {
-  return getCurrentWindow().onFocusChanged(({ payload: focused }) => {
-    handler(focused);
-  });
-}
-
 /** 关闭当前窗口（会走 onCloseRequested / 未保存确认） */
 export async function closeCurrentWindow(): Promise<void> {
   await getCurrentWindow().close();
+}
+
+/** 聚焦主窗口（拖放后 WebView 常丢焦点，需显式拉回） */
+export async function focusCurrentWindow(): Promise<void> {
+  await getCurrentWindow().setFocus();
 }
 
 /** 取出启动时由系统传入的待打开路径（一次性） */

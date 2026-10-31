@@ -1,19 +1,10 @@
 import { LanguageDescription } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import type { Extension } from '@codemirror/state';
-import { fileName } from '../utils/path';
+import { fileExtension, fileName } from '../utils/path';
 
 const markdownExtensions = new Set(['md', 'markdown']);
 const htmlExtensions = new Set(['html', 'htm']);
-
-function fileExtension(path: string): string {
-  const name = fileName(path);
-  const dot = name.lastIndexOf('.');
-  if (dot <= 0) {
-    return '';
-  }
-  return name.slice(dot + 1).toLowerCase();
-}
 
 /** 当前是否提供 Markdown 预览（仅 .md / .markdown） */
 export function supportsMarkdownPreview(path: string): boolean {

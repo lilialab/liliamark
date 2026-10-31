@@ -1,7 +1,7 @@
 import { SearchQuery } from '@codemirror/search';
 import { EditorState } from '@codemirror/state';
 import { describe, expect, it } from 'vitest';
-import { locateSearchMatches } from '../../src/editor/searchPanelMatch';
+import { locateSearchMatches } from '../../../src/editor/search/searchPanelMatch';
 
 function stateWith(doc: string, head: number) {
   return EditorState.create({

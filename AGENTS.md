@@ -28,11 +28,11 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 | 桌面 IO 封装 | `src/lib/tauri/`（唯一裸 `invoke` 出口） |
 | 共享类型 | `src/types/` |
 | 纯函数 | `src/utils/`（无 I/O，不依赖 Tauri / DOM） |
-| Rust 命令 | `src-tauri/src/`（读、写、监听文件） |
+| Rust 命令 | `src-tauri/src/`（文件 IO；耗时计算如文档 format + diff） |
 | 单测 | `tests/` 镜像 `src/`；**不**在 `src/` 内 co-locate |
 
 - 有预览语义的纯函数放 `src/preview/`，不要塞进 `src/utils/`。
-- Rust 只做文件 IO。Markdown 解析留在 `src/preview/`，预览成为瓶颈之前不要搬进 Rust。
+- **耗时工作优先放 Rust**（阻塞池 / async command + 前端 loading）：不卡 WebView 主线程，用户仍可感知进度。文件 IO 与「格式化文档」（JSON / Markdown 的 format + diff）已按此做。轻量、强交互、或预览链路仍留前端；预览用的 Markdown→HTML 在 `src/preview/`，未成瓶颈前不要搬进 Rust。
 
 ## 任务入口
 
@@ -44,7 +44,7 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 | 主界面、预览覆盖、脏状态 | `src/screens/EditorScreen.tsx` |
 | 源码高亮 | `src/editor/` |
 | Markdown 渲染、图片路径 | `src/preview/` |
-| 打开 / 保存 / 监听 / 设置 | `src/lib/tauri/`，再进 `src-tauri/src/` |
+| 打开 / 保存 / 监听 / 设置 / 格式化 | `src/lib/tauri/`，再进 `src-tauri/src/` |
 | 纯函数单测 | `tests/` 里与源文件对应的用例 |
 
 ## 命令与环境
@@ -61,8 +61,8 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 | 共用 UI（`src/components/`） | 纯展示 | `invoke`、调 `lib/tauri`、解析 Markdown |
 | 业务模块（`src/editor/` 等）/ Screen / hook | 编排与域逻辑；IO 只经 `lib/tauri` | 裸 `invoke` |
 | `src/preview/` | 原文 → HTML | Tauri、DOM |
-| `src/lib/tauri/` | 打开、读取、保存、监听 | 业务分支、渲染 |
-| Rust 命令 | 文件 IO | 解析 Markdown、碰 UI |
+| `src/lib/tauri/` | 打开、读取、保存、监听、格式化等 invoke 封装 | 业务分支、渲染 |
+| Rust 命令 | 文件 IO；耗时计算（如文档 format + diff）；可加 loading | 预览 HTML、碰 UI |
 
 - 编辑是源码高亮，不是富文本。不要加格式化工具栏、选区装饰、ProseMirror / TipTap
 - CodeMirror 自拼精简 extensions（见 `src/editor/editorExtensions.ts`）+ `@codemirror/lang-markdown` 和一套主题；不要用整包 `basicSetup`，不要换 Monaco，也不要自己写高亮层

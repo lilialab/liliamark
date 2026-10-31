@@ -8,9 +8,9 @@ import { catppuccinEditorTheme } from '../theme/flavor';
 import { highlightActiveLineExclusive } from './activeLineHighlight';
 import { editorFoldGutter } from './foldGutter';
 import { indentKeymap } from './indent';
-import { markdownBoldKeymap } from './markdownBold';
-import { markdownTaskKeymap } from './markdownTask';
-import { createVscodeSearchPanel } from './searchPanel';
+import { markdownBoldKeymap } from './markdown/markdownBold';
+import { markdownTaskKeymap } from './markdown/markdownTask';
+import { createVscodeSearchPanel } from './search/searchPanel';
 
 /**
  * Markdown 语义挂稳定 class，样式走 CSS（特异性高于主题 StyleModule，

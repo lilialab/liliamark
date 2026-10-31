@@ -1,7 +1,7 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { toast } from 'sonner';
 import i18n from '../../i18n';
-import { classifyDropPaths, onDragDrop } from '../../lib/tauri/fs';
+import { classifyDropPaths, focusCurrentWindow, onDragDrop } from '../../lib/tauri/fs';
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -20,6 +20,10 @@ export function useFileDragOpen(loadFile: (path: string) => Promise<void>): bool
 
     async function handleDrop(paths: string[]) {
       try {
+        await focusCurrentWindow();
+        if (cancelled) {
+          return;
+        }
         const { files, hadDirectory } = await classifyDropPaths(paths);
         if (cancelled) {
           return;
@@ -65,6 +69,7 @@ export function useFileDragOpen(loadFile: (path: string) => Promise<void>): bool
 
     return () => {
       cancelled = true;
+      setFileDragActive(false);
       void ready.then((unlisten) => unlisten());
     };
   }, []);

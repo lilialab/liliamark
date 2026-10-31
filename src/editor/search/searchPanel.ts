@@ -22,8 +22,8 @@ import {
   WholeWord,
   X,
 } from 'lucide-react';
-import i18n from '../i18n';
-import { setButtonIcon } from './lucideDom';
+import i18n from '../../i18n';
+import { setButtonIcon } from '../lucideDom';
 import { locateSearchMatches } from './searchPanelMatch';
 
 function el<K extends keyof HTMLElementTagNameMap>(

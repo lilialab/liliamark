@@ -4,6 +4,7 @@
     "new": "New",
     "open": "Open",
     "saveAs": "Save As…",
+    "format": "Format Document",
     "settings": "Settings",
     "markdownCheatSheet": "Markdown reference",
     "shortcuts": "Keyboard shortcuts",
@@ -29,7 +30,12 @@
     "openWithSystemFailed": "The system could not open the file with the default app",
     "dropFilesOnly": "Please drop files",
     "fontSizeInvalid": "Font size must be an integer between {{min}} and {{max}}",
-    "saveFailedWithReason": "Could not save: {{reason}}"
+    "saveFailedWithReason": "Could not save: {{reason}}",
+    "formatFailed": "Could not format",
+    "formatUnsupported": "Formatting is only available for JSON and Markdown",
+    "formatting": "Formatting…",
+    "openingFile": "Opening…",
+    "saving": "Saving…"
   },
   "dialog": {
     "title": "Notice",
@@ -105,7 +111,7 @@
     },
     "task": {
       "name": "Task list",
-      "example": "- [ ] todo\n- [x] done"
+      "example": "- [ ] todo\n- [X] done"
     },
     "link": {
       "name": "Link",
@@ -187,7 +193,7 @@
     "closeTab": "Close current tab",
     "closeWindow": "Close window (confirms if unsaved)",
     "bold": "Bold: wrap/unwrap selection with **; insert **** with caret in the middle if empty",
-    "toggleTask": "Toggle task on the current line [ ] ↔ [x]",
+    "toggleTask": "Toggle task on the current line [ ] ↔ [X]",
     "tab": "Insert indent; indent selection when present",
     "shiftTab": "Outdent",
     "undo": "Undo",
@@ -196,6 +202,7 @@
     "selectAll": "Select all (focuses editor first if focus is outside)",
     "toggleComment": "Toggle line comment",
     "find": "Find / replace in source",
+    "format": "Format document (JSON / Markdown)",
     "wordMove": "Move by word; hold Shift to extend selection",
     "wordSelect": "Extend selection by word",
     "wordSelectMac": "Extend selection by word (same as ⌥+Shift+arrows)",

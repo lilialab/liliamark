@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { boldEditForRange } from '../../src/editor/markdownBold';
+import { boldEditForRange } from '../../../src/editor/markdown/markdownBold';
 
 describe('boldEditForRange', () => {
   it('inserts **** at empty caret', () => {

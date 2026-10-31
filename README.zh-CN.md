@@ -11,7 +11,7 @@
 - 打开、编辑、保存本地文本（Markdown、JSON、YAML、TOML、HTML 等）
 - CodeMirror 源码高亮；多标签，可拖拽排序
 - `Ctrl/Cmd+E` 预览：Markdown 应用内渲染；HTML 一键用系统浏览器打开（不内嵌执行脚本）
-- GFM 任务列表只读展示；失焦 / 窗口失焦自动保存
+- GFM 任务列表只读展示
 - 记住上次打开的文件；支持系统「打开方式」
 - 界面主题：Catppuccin Macchiato；界面语言跟随系统（可在设置中改为中文 / English）
 
@@ -35,6 +35,7 @@
 
 - `Ctrl/Cmd+S` 保存 · `Ctrl/Cmd+E` 预览 · `Ctrl/Cmd+F` 查找 / 替换 · `Ctrl/Cmd+W` 关标签 · `Ctrl/Cmd+Q` 关窗口
 - 代码折叠（行号旁 gutter；JSON 等按语法）
+- 格式化文档（`Shift+Alt+F`）：JSON / Markdown 走 Rust（有 loading 提示）
 - `Shift+滚轮` 横向滚动（编辑区不自动换行）
 - 更多说明见应用内菜单「快捷键」「Markdown 标记」
 

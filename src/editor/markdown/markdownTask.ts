@@ -1,20 +1,20 @@
 import type { EditorView, KeyBinding } from '@codemirror/view';
 
 export type TaskToggleEdit = {
-  /** 相对行首：`[ ]` / `[x]` 的起止 */
+  /** 相对行首：`[ ]` / `[X]` 的起止（与 markdown-ppp 输出对齐） */
   from: number;
   to: number;
   insert: string;
 };
 
-/** GFM 任务行：`- [ ]` / `1. [x]` 等；返回框内切换编辑，否则 null */
+/** GFM 任务行：`- [ ]` / `1. [X]` 等；返回框内切换编辑，否则 null */
 export function taskToggleEditForLine(lineText: string): TaskToggleEdit | null {
   const match = /^(\s*(?:[-*+]|\d+\.)\s+)\[([ xX])\](.*)$/.exec(lineText);
   if (match === null) return null;
 
   const prefix = match[1];
   const mark = match[2];
-  const next = mark === ' ' ? 'x' : ' ';
+  const next = mark === ' ' ? 'X' : ' ';
   return {
     from: prefix.length,
     to: prefix.length + 3,
@@ -46,7 +46,7 @@ function toggleTask(view: EditorView): boolean {
   return true;
 }
 
-/** Alt-Enter：当前行任务 `[ ]` ↔ `[x]`；非任务行不接管 */
+/** Alt-Enter：当前行任务 `[ ]` ↔ `[X]`；非任务行不接管 */
 export const markdownTaskKeymap: KeyBinding[] = [
   { key: 'Alt-Enter', run: toggleTask },
 ];

@@ -63,6 +63,7 @@ export function editorHotkeyHintSections(
         { keys: `${mod}+A`, description: t('hotkeys.selectAll') },
         { keys: `${mod}+/`, description: t('hotkeys.toggleComment') },
         { keys: `${mod}+F`, description: t('hotkeys.find') },
+        { keys: 'Shift+Alt+F', description: t('hotkeys.format') },
       ],
     },
     {

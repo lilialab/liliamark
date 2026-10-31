@@ -1,17 +1,16 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../components/Button';
-import { supportsHtmlBrowserOpen, supportsMarkdownPreview } from '../../editor/languageRegistry';
-import { cn } from '../../utils/cn';
+import { Button } from '../../../components/Button';
+import { supportsHtmlBrowserOpen, supportsMarkdownPreview } from '../../../editor/languageRegistry';
+import { cn } from '../../../utils/cn';
 import './PreviewOverlay.css';
 
 const PREVIEW_MOTION_MS = 200;
 
 const MarkdownPreview = lazy(async () => {
-  const mod = await import('../../preview/MarkdownPreview');
+  const mod = await import('../../../preview/MarkdownPreview');
   return { default: mod.MarkdownPreview };
 });
-
 type PreviewOverlayProps = {
   open: boolean;
   /** 判类型用（已落盘为真实 path，未命名为 untitled.ext） */
@@ -77,7 +76,7 @@ export function PreviewOverlay({
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
-    void import('../../preview/MarkdownPreview');
+    void import('../../../preview/MarkdownPreview');
   }, []);
 
   useEffect(() => {

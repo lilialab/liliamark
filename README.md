@@ -11,7 +11,7 @@ Cross-platform local Markdown / text editor. Edit with syntax highlighting, togg
 - Open, edit, and save local text (Markdown, JSON, YAML, TOML, HTML, and more)
 - CodeMirror syntax highlighting; multi-tab with drag-and-drop reorder
 - `Ctrl/Cmd+E` preview: in-app Markdown; HTML opens in the system browser (no in-app script execution)
-- Read-only GFM task lists; auto-save on editor blur and window blur
+- Read-only GFM task lists
 - Restore last opened files; supports OS “Open with”
 - UI theme: Catppuccin Macchiato; UI language follows the system (override to Chinese / English in Settings)
 
@@ -35,6 +35,7 @@ Builds are **unsigned** by default: Windows may show SmartScreen; on macOS you m
 
 - `Ctrl/Cmd+S` save · `Ctrl/Cmd+E` preview · `Ctrl/Cmd+F` find / replace · `Ctrl/Cmd+W` close tab · `Ctrl/Cmd+Q` quit
 - Code folding via the gutter (JSON and other structured languages)
+- Format Document (`Shift+Alt+F`): JSON / Markdown via Rust (shows a loading toast)
 - `Shift+scroll` horizontal scroll (editor does not soft-wrap)
 - More details in the in-app **Keyboard shortcuts** and **Markdown reference** menus
 

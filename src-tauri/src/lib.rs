@@ -1,11 +1,13 @@
 mod commands;
 mod file_watch;
+mod format_doc;
 mod navigation_guard;
 mod open_file;
 mod startup_timing;
 
 use tauri::Manager;
 
+use commands::format::format_document_text;
 use commands::fs::{classify_drop_paths, read_text_file, write_text_file};
 use commands::launch::take_pending_open_path;
 use commands::session::{load_editor_session, save_editor_session};
@@ -86,7 +88,8 @@ pub fn run() {
             save_editor_session,
             load_app_settings,
             save_app_settings,
-            get_native_startup_timing
+            get_native_startup_timing,
+            format_document_text,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

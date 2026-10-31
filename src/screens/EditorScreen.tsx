@@ -5,12 +5,20 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
-import { closeCurrentWindow, pickSaveTextFile, pickTextFile, writeTextFile } from '../lib/tauri/fs';
+import { formatEditorDocument, supportsDocumentFormat } from '../editor/formatDocument';
+import {
+  closeCurrentWindow,
+  focusCurrentWindow,
+  pickSaveTextFile,
+  pickTextFile,
+  writeTextFile,
+} from '../lib/tauri/fs';
 import { openLocalPath } from '../lib/tauri/opener';
 import { useAppSettingsStore } from '../stores/appSettingsStore';
 import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
+import { createDelayedShow } from '../utils/delayedShow';
 import { resolveActiveTabId } from '../utils/editorSession';
 import {
   createTabId,
@@ -34,7 +42,6 @@ import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { StartupTimingOverlay } from './components/StartupTimingOverlay';
 import { UntitledExtPicker } from './components/UntitledExtPicker';
 import { modifierKeyLabel } from './help/editorHotkeyHints';
-import { useAutoSaveOnBlur } from './hooks/useAutoSaveOnBlur';
 import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
 import { useConfirmDialog } from './hooks/useConfirmDialog';
 import { useDiskWatch } from './hooks/useDiskWatch';
@@ -66,6 +73,7 @@ export function EditorScreen() {
   const [startupTimingOpen, setStartupTimingOpen] = useState(false);
 
   const editorViewsRef = useRef(new Map<string, EditorView>());
+  const formattingTabIdsRef = useRef(new Set<string>());
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
 
@@ -180,6 +188,12 @@ export function EditorScreen() {
       return false;
     }
 
+    const cancelLoading = createDelayedShow(() => {
+      const loadingId = toast.loading(t('toast.saving'));
+      return () => {
+        toast.dismiss(loadingId);
+      };
+    });
     try {
       await writeTextFile(tab.path, content);
       setTabs((prev) => {
@@ -193,6 +207,8 @@ export function EditorScreen() {
     } catch (error) {
       toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
       return false;
+    } finally {
+      cancelLoading();
     }
   }
 
@@ -218,15 +234,25 @@ export function EditorScreen() {
         return false;
       }
 
-      await writeTextFile(path, content);
-      setTabs((prev) => {
-        const latest = readDoc(tabId);
-        if (latest !== null && latest !== content) {
-          return updateTab(prev, tabId, (item) => ({ ...item, path }));
-        }
-        return updateTab(prev, tabId, (item) => withSaved({ ...item, path }));
+      const cancelLoading = createDelayedShow(() => {
+        const loadingId = toast.loading(t('toast.saving'));
+        return () => {
+          toast.dismiss(loadingId);
+        };
       });
-      return true;
+      try {
+        await writeTextFile(path, content);
+        setTabs((prev) => {
+          const latest = readDoc(tabId);
+          if (latest !== null && latest !== content) {
+            return updateTab(prev, tabId, (item) => ({ ...item, path }));
+          }
+          return updateTab(prev, tabId, (item) => withSaved({ ...item, path }));
+        });
+        return true;
+      } finally {
+        cancelLoading();
+      }
     } catch (error) {
       toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
       return false;
@@ -243,15 +269,6 @@ export function EditorScreen() {
       return await saveTabAs(tabId);
     }
     return await saveTab(tabId, { requireReadyToast: true });
-  }
-
-  async function saveDirtyTabs() {
-    const dirtyIds = tabsRef.current
-      .filter((tab) => tab.dirty && tab.path !== null)
-      .map((tab) => tab.id);
-    for (const id of dirtyIds) {
-      await saveTab(id);
-    }
   }
 
   /** 退出前保存全部脏标签（含未命名）；任一取消/失败则 false */
@@ -306,19 +323,21 @@ export function EditorScreen() {
     }
   }
 
-  function handleEditorBlur(tabId: string) {
-    const current = tabsRef.current.find((item) => item.id === tabId);
-    if (current?.path !== null) {
-      void saveTab(tabId);
-    }
-  }
-
   function handleEditorReady(tabId: string, editorView: EditorView) {
     editorViewsRef.current.set(tabId, editorView);
     refreshPreview(tabId);
-    if (tabId === activeId) {
-      editorView.focus();
+    if (tabId !== activeId) {
+      return;
     }
+
+    async function focusEditor() {
+      await focusCurrentWindow();
+      if (editorViewsRef.current.get(tabId) === editorView) {
+        editorView.focus();
+      }
+    }
+
+    void focusEditor();
   }
 
   function handleEditorDestroy(tabId: string) {
@@ -429,6 +448,47 @@ export function EditorScreen() {
     selectAll(editorView);
   }
 
+  async function handleFormatDocument() {
+    if (activeTab === null) {
+      return;
+    }
+    const tabId = activeTab.id;
+    if (formattingTabIdsRef.current.has(tabId)) {
+      return;
+    }
+    const languagePath = tabLanguagePath(activeTab);
+    if (!supportsDocumentFormat(languagePath)) {
+      toast.error(t('toast.formatUnsupported'));
+      return;
+    }
+    const editorView = editorViewsRef.current.get(tabId);
+    if (!editorView) {
+      toast.error(t('toast.formatFailed'), { description: t('toast.editorNotReady') });
+      return;
+    }
+    const { indentStyle, indentSize } = useAppSettingsStore.getState().settings;
+    formattingTabIdsRef.current.add(tabId);
+    const cancelLoading = createDelayedShow(() => {
+      const loadingId = toast.loading(t('toast.formatting'));
+      return () => {
+        toast.dismiss(loadingId);
+      };
+    });
+    try {
+      await formatEditorDocument(editorView, {
+        languagePath,
+        indentStyle,
+        indentSize,
+      });
+      refreshPreview(tabId);
+    } catch (error) {
+      toast.error(t('toast.formatFailed'), { description: errorMessage(error) });
+    } finally {
+      formattingTabIdsRef.current.delete(tabId);
+      cancelLoading();
+    }
+  }
+
   function handleReorderTabs(draggedId: string, overId: string) {
     setTabs((prev) => {
       const from = prev.findIndex((tab) => tab.id === draggedId);
@@ -459,8 +519,8 @@ export function EditorScreen() {
     }
   }, [activeId, previewOpen]);
 
-  const fileDragActive = useFileDragOpen(loadFile);
   const sessionReady = useRestoreEditorSession(applyRestoredSession);
+  const fileDragActive = useFileDragOpen(loadFile);
   useExternalOpenFile(loadFile, sessionReady);
   usePersistEditorSession(tabs, activeId);
   useDiskWatch(
@@ -481,7 +541,6 @@ export function EditorScreen() {
     }
     return await saveAllDirtyTabs();
   });
-  useAutoSaveOnBlur(saveDirtyTabs);
   useBlockBrowserShortcuts();
   useEditorHotkeys({
     onNew: handleNew,
@@ -491,6 +550,7 @@ export function EditorScreen() {
     onCloseTab: handleCloseTabHotkey,
     onCloseWindow: handleCloseWindowHotkey,
     onSelectAllInEditor: handleSelectAllInEditor,
+    onFormatDocument: handleFormatDocument,
   });
 
   /* -------------------------------------------------------------------------- */
@@ -535,6 +595,13 @@ export function EditorScreen() {
                 label: t('menu.saveAs'),
                 onSelect: () => {
                   void handleSaveAs();
+                },
+              },
+              {
+                id: 'format',
+                label: t('menu.format'),
+                onSelect: () => {
+                  void handleFormatDocument();
                 },
               },
               {
@@ -609,7 +676,6 @@ export function EditorScreen() {
                 path={tab.path}
                 languagePath={tabLanguagePath(tab)}
                 onDirty={handleDirty}
-                onBlur={handleEditorBlur}
                 onReady={handleEditorReady}
                 onDestroy={handleEditorDestroy}
                 onLoadError={handleLoadError}

@@ -1,13 +1,17 @@
 import { Compartment, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useEffect, useEffectEvent, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { openTextPath } from '../lib/tauri/fs';
 import { useAppSettingsStore } from '../stores/appSettingsStore';
 import { cn } from '../utils/cn';
+import { createDelayedShow } from '../utils/delayedShow';
 import { sameFilePath } from '../utils/path';
 import { baseExtensions } from './editorExtensions';
 import { indentExtensions } from './indent';
 import { loadLanguageExtension } from './languageRegistry';
+import { bindEditableCompartment, setViewUserEditable } from './viewEditable';
 import './codeEditor.css';
 
 type CodeEditorProps = {
@@ -18,8 +22,6 @@ type CodeEditorProps = {
   /** 语言 / 高亮用路径（未命名时为 untitled.ext） */
   languagePath: string;
   onDirty: (tabId: string) => void;
-  /** 编辑器 DOM 失焦（点到菜单、预览、其它控件等） */
-  onBlur: (tabId: string) => void;
   /** 就绪后调用（读盘成功或未命名空文档） */
   onReady: (tabId: string, editorView: EditorView) => void;
   onDestroy: (tabId: string) => void;
@@ -34,13 +36,13 @@ export function CodeEditor({
   path,
   languagePath,
   onDirty,
-  onBlur,
   onReady,
   onDestroy,
   onLoadError,
   onPathResolved,
   className,
 }: CodeEditorProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const indentCompartmentRef = useRef<Compartment | null>(null);
@@ -51,9 +53,6 @@ export function CodeEditor({
 
   const reportDirty = useEffectEvent(() => {
     onDirty(tabId);
-  });
-  const reportBlur = useEffectEvent(() => {
-    onBlur(tabId);
   });
   const notifyReady = useEffectEvent((editorView: EditorView) => {
     onReady(tabId, editorView);
@@ -68,7 +67,11 @@ export function CodeEditor({
     onPathResolved(tabId, resolvedPath);
   });
 
-  const hydrateFromDisk = useEffectEvent(async (editorView: EditorView, filePath: string) => {
+  const hydrateFromDisk = useEffectEvent(async (
+    editorView: EditorView,
+    filePath: string,
+    cancelLoading: () => void,
+  ) => {
     try {
       const file = await openTextPath(filePath);
       if (!isCurrentView(editorView)) {
@@ -85,11 +88,14 @@ export function CodeEditor({
       if (!sameFilePath(filePath, file.path)) {
         notifyPathResolved(file.path);
       }
+      setViewUserEditable(editorView, true);
       notifyReady(editorView);
     } catch (error) {
       if (isCurrentView(editorView)) {
         notifyLoadError(error);
       }
+    } finally {
+      cancelLoading();
     }
   });
 
@@ -104,6 +110,7 @@ export function CodeEditor({
 
     const languageCompartment = new Compartment();
     const indentCompartment = new Compartment();
+    const editableCompartment = new Compartment();
     languageCompartmentRef.current = languageCompartment;
     indentCompartmentRef.current = indentCompartment;
 
@@ -114,29 +121,34 @@ export function CodeEditor({
         ...baseExtensions,
         indentCompartment.of(indentExtensions(style, size)),
         languageCompartment.of([]),
+        editableCompartment.of([]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged && !hydratingRef.current) {
             reportDirty();
           }
         }),
-        EditorView.domEventHandlers({
-          blur: () => {
-            reportBlur();
-            return false;
-          },
-        }),
       ],
       parent: containerRef.current,
     });
+    bindEditableCompartment(editorView, editableCompartment);
     editorViewRef.current = editorView;
 
+    let cancelHydrateLoading = () => {};
     if (path === null) {
       notifyReady(editorView);
     } else {
-      void hydrateFromDisk(editorView, path);
+      setViewUserEditable(editorView, false);
+      cancelHydrateLoading = createDelayedShow(() => {
+        const loadingId = toast.loading(t('toast.openingFile'));
+        return () => {
+          toast.dismiss(loadingId);
+        };
+      });
+      void hydrateFromDisk(editorView, path, cancelHydrateLoading);
     }
 
     return () => {
+      cancelHydrateLoading();
       notifyDestroy();
       editorView.destroy();
       editorViewRef.current = null;

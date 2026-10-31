@@ -4,6 +4,7 @@
     "new": "新建",
     "open": "打开",
     "saveAs": "另存为…",
+    "format": "格式化文档",
     "settings": "设置",
     "markdownCheatSheet": "Markdown 标记",
     "shortcuts": "快捷键",
@@ -29,7 +30,12 @@
     "openWithSystemFailed": "系统未能用默认应用打开该文件",
     "dropFilesOnly": "请拖入文件",
     "fontSizeInvalid": "字号须为 {{min}}–{{max}} 的整数",
-    "saveFailedWithReason": "保存失败：{{reason}}"
+    "saveFailedWithReason": "保存失败：{{reason}}",
+    "formatFailed": "格式化失败",
+    "formatUnsupported": "仅支持格式化 JSON 与 Markdown",
+    "formatting": "正在格式化…",
+    "openingFile": "正在打开…",
+    "saving": "正在保存…"
   },
   "dialog": {
     "title": "提示",
@@ -105,7 +111,7 @@
     },
     "task": {
       "name": "任务列表",
-      "example": "- [ ] 待办\n- [x] 已完成"
+      "example": "- [ ] 待办\n- [X] 已完成"
     },
     "link": {
       "name": "链接",
@@ -187,7 +193,7 @@
     "closeTab": "关闭当前标签",
     "closeWindow": "关闭窗口（有未保存改动时会确认）",
     "bold": "加粗：选区包/解 **；无选区插入 **** 并置于中间",
-    "toggleTask": "切换当前行任务状态 [ ] ↔ [x]",
+    "toggleTask": "切换当前行任务状态 [ ] ↔ [X]",
     "tab": "插入缩进；有选区时整块增加缩进",
     "shiftTab": "减少缩进",
     "undo": "撤销",
@@ -196,6 +202,7 @@
     "selectAll": "全选（编辑区外触发时会先聚焦编辑器）",
     "toggleComment": "切换行注释",
     "find": "查找 / 替换（源码）",
+    "format": "格式化文档（JSON / Markdown）",
     "wordMove": "按词移动；加 Shift 扩展选区",
     "wordSelect": "按词扩展选区",
     "wordSelectMac": "按词扩展选区（等同 ⌥+Shift+方向）",

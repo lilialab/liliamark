@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fileName, sameFilePath } from '../../src/utils/path';
+import { fileExtension, fileName, sameFilePath } from '../../src/utils/path';
 
 describe('sameFilePath', () => {
   it('treats Windows paths as case-insensitive and separator-insensitive', () => {
@@ -20,5 +20,17 @@ describe('fileName', () => {
 
   it('returns the input when there is no separator', () => {
     expect(fileName('note.md')).toBe('note.md');
+  });
+});
+
+describe('fileExtension', () => {
+  it('returns lowercase extension without the dot', () => {
+    expect(fileExtension('C:\\Docs\\Note.MD')).toBe('md');
+    expect(fileExtension('/Users/me/a.json')).toBe('json');
+  });
+
+  it('returns empty for no extension or leading-dot names', () => {
+    expect(fileExtension('Makefile')).toBe('');
+    expect(fileExtension('.gitignore')).toBe('');
   });
 });
