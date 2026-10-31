@@ -7,6 +7,10 @@
 - 源码查找 / 替换（`Ctrl/Cmd+F` 打开 VS Code 风格面板；`Ctrl/Cmd+G` / F3 下一处）
 - 代码折叠（行号旁 lucide gutter；JSON 等按语法树）
 
+### Changed
+
+- 设置：无文件或坏 JSON 时整份写入默认；去掉旧 proseFont/monoFont 迁移
+
 ## [0.1.2] — 2026-10-28
 
 ### Added

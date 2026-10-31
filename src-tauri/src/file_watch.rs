@@ -28,7 +28,7 @@ pub struct DiskFileChangedPayload {
     pub kind: DiskChangeKind,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq)]
 struct FileFingerprint {
     modified: SystemTime,
     len: u64,
@@ -70,9 +70,9 @@ impl FileWatchState {
     }
 }
 
+/// 按当前平台规则收路径（分隔符、`.` 等），不把 `/` 强行改成 `\`。
 fn normalize_path(path: &Path) -> PathBuf {
-    let raw = path.to_string_lossy().replace('/', "\\");
-    PathBuf::from(raw)
+    path.components().collect()
 }
 
 fn file_fingerprint(path: &Path) -> Option<FileFingerprint> {
@@ -149,40 +149,45 @@ fn ensure_debouncer(app: &AppHandle, state: &FileWatchState) -> Result<(), Strin
                 return;
             };
 
-            let Ok(shared) = shared.lock() else {
-                return;
-            };
-
-            let mut emitted: HashSet<(String, DiskChangeKind)> = HashSet::new();
-
-            for event in events {
-                let Some(event_kind) = classify_event(event.kind) else {
-                    continue;
+            let payloads = {
+                let Ok(shared) = shared.lock() else {
+                    return;
                 };
 
-                for event_path in &event.paths {
-                    let Some(watched) = opened_file(&shared.files, event_path).cloned() else {
-                        continue;
-                    };
-                    let Some(emit_kind) =
-                        kind_to_emit(event_kind, &watched, &shared.last_self_write)
-                    else {
+                let mut emitted: HashSet<(String, DiskChangeKind)> = HashSet::new();
+                let mut payloads = Vec::new();
+
+                for event in events {
+                    let Some(event_kind) = classify_event(event.kind) else {
                         continue;
                     };
 
-                    let path = watched.to_string_lossy().replace('/', "\\");
-                    if !emitted.insert((path.clone(), emit_kind)) {
-                        continue;
-                    }
+                    for event_path in &event.paths {
+                        let Some(watched) = opened_file(&shared.files, event_path).cloned() else {
+                            continue;
+                        };
+                        let Some(emit_kind) =
+                            kind_to_emit(event_kind, &watched, &shared.last_self_write)
+                        else {
+                            continue;
+                        };
 
-                    let _ = app_handle.emit(
-                        EVENT_NAME,
-                        DiskFileChangedPayload {
+                        let path = watched.to_string_lossy().into_owned();
+                        if !emitted.insert((path.clone(), emit_kind)) {
+                            continue;
+                        }
+                        payloads.push(DiskFileChangedPayload {
                             path,
                             kind: emit_kind,
-                        },
-                    );
+                        });
+                    }
                 }
+
+                payloads
+            };
+
+            for payload in payloads {
+                let _ = app_handle.emit(EVENT_NAME, payload);
             }
         },
     )

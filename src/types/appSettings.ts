@@ -12,6 +12,6 @@ export type AppSettings = {
   indentStyle: IndentStyle;
   /** 空格个数 / 制表符显示宽度；默认 4（设置页暂不暴露） */
   indentSize: number;
-  /** 界面语言 */
+  /** 界面语言；磁盘由 Rust 保证完整，缺文件 / 坏 JSON 会整份写默认 */
   locale: AppLocalePreference;
 };

@@ -1,0 +1,2 @@
+# 工作区与仓库统一 LF，避免 Windows 下个别文件 CRLF/LF 来回脏
+* text=auto eol=lf

@@ -46,7 +46,7 @@ pub fn run() {
         builder = builder
             .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
                 if let Some(path) = paths_from_args(args).into_iter().next() {
-                    open_path_in_running_app(&app, path);
+                    open_path_in_running_app(app, path);
                     return;
                 }
 

@@ -54,7 +54,7 @@ pub(crate) fn remember_open_path(app: &AppHandle, path: PathBuf) {
 /// 应用已在运行时打开文件：写入待取路径、通知前端并聚焦主窗口。
 pub(crate) fn open_path_in_running_app(app: &AppHandle, path: PathBuf) {
     let path_string = path.to_string_lossy().into_owned();
-    remember_open_path(app, path);
+    app.state::<PendingOpenPath>().set(path_string.clone());
     let _ = app.emit("open-file", &path_string);
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.set_focus();

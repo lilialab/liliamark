@@ -10,7 +10,7 @@ pub struct StartupTiming {
     window_visible_ms: Mutex<Option<u64>>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NativeStartupTiming {
     pub process_started_ms: u64,
