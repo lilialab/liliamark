@@ -37,6 +37,8 @@ struct FileFingerprint {
 struct WatchShared {
     /// Frontend path strings we care about (display / match key).
     files: HashSet<PathBuf>,
+    /// 正在由本应用写入的路径，期间忽略全部监视事件。
+    self_writing: HashSet<PathBuf>,
     /// 本应用刚写入后的 mtime + size，用于忽略自保存回声。
     last_self_write: HashMap<PathBuf, FileFingerprint>,
 }
@@ -52,6 +54,7 @@ impl FileWatchState {
         Self {
             shared: Arc::new(Mutex::new(WatchShared {
                 files: HashSet::new(),
+                self_writing: HashSet::new(),
                 last_self_write: HashMap::new(),
             })),
             debouncer: Mutex::new(None),
@@ -59,13 +62,21 @@ impl FileWatchState {
         }
     }
 
-    pub fn note_self_write(&self, path: &str) {
+    pub fn begin_self_write(&self, path: &str) {
         let key = normalize_path(Path::new(path));
-        let Some(fingerprint) = file_fingerprint(&key) else {
-            return;
-        };
         if let Ok(mut shared) = self.shared.lock() {
-            shared.last_self_write.insert(key, fingerprint);
+            shared.self_writing.insert(key);
+        }
+    }
+
+    /// 结束自写：移出 self_writing；若文件仍在则记下指纹挡回声。
+    pub fn end_self_write(&self, path: &str) {
+        let key = normalize_path(Path::new(path));
+        if let Ok(mut shared) = self.shared.lock() {
+            shared.self_writing.remove(&key);
+            if let Some(fingerprint) = file_fingerprint(&key) {
+                shared.last_self_write.insert(key, fingerprint);
+            }
         }
     }
 }
@@ -95,6 +106,10 @@ fn paths_match(a: &Path, b: &Path) -> bool {
     {
         left == right
     }
+}
+
+fn set_contains_path(set: &HashSet<PathBuf>, path: &Path) -> bool {
+    set.iter().any(|entry| paths_match(entry, path))
 }
 
 /// 操作系统事件收成「内容变了」或「文件没了」。其它事件（例如只读打开）忽略。
@@ -166,6 +181,9 @@ fn ensure_debouncer(app: &AppHandle, state: &FileWatchState) -> Result<(), Strin
                         let Some(watched) = opened_file(&shared.files, event_path).cloned() else {
                             continue;
                         };
+                        if set_contains_path(&shared.self_writing, &watched) {
+                            continue;
+                        }
                         let Some(emit_kind) =
                             kind_to_emit(event_kind, &watched, &shared.last_self_write)
                         else {
@@ -221,6 +239,9 @@ pub(crate) fn sync_watched_files(
         shared
             .last_self_write
             .retain(|path, _| next_files.contains(path));
+        shared
+            .self_writing
+            .retain(|path| next_files.contains(path));
         shared.files = next_files;
     }
 

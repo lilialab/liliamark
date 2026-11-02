@@ -19,7 +19,10 @@
     "closeTab": "Close {{title}}",
     "diskChanged": "Changed on disk",
     "untitled": "Untitled",
-    "untitledExt": "File type"
+    "untitledExt": "File type",
+    "busyOpening": "Opening…",
+    "busyFormatting": "Formatting…",
+    "busySaving": "Saving…"
   },
   "toast": {
     "openFailed": "Could not open",
@@ -32,10 +35,7 @@
     "fontSizeInvalid": "Font size must be an integer between {{min}} and {{max}}",
     "saveFailedWithReason": "Could not save: {{reason}}",
     "formatFailed": "Could not format",
-    "formatUnsupported": "Formatting is only available for JSON and Markdown",
-    "formatting": "Formatting…",
-    "openingFile": "Opening…",
-    "saving": "Saving…"
+    "formatUnsupported": "Formatting is only available for JSON and Markdown"
   },
   "dialog": {
     "title": "Notice",

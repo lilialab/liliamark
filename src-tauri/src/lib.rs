@@ -1,6 +1,7 @@
 mod commands;
 mod file_watch;
 mod format_doc;
+mod ipc_bytes;
 mod navigation_guard;
 mod open_file;
 mod startup_timing;

@@ -6,20 +6,22 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import type { DiskFileChanged } from '../../types/diskFileChanged';
 import type { OpenedTextFile } from '../../types/textFile';
+import { decodeUtf8Buffer, encodePathContent } from './ipcBytes';
 
 export type DropPathsClassification = {
   files: string[];
   hadDirectory: boolean;
 };
 
-/** 读取本地文本文件内容 */
+/** 读取本地文本文件内容（响应为 UTF-8 Raw） */
 export async function readTextFile(path: string): Promise<string> {
-  return invoke<string>('read_text_file', { path });
+  const buffer = await invoke<ArrayBuffer>('read_text_file', { path });
+  return decodeUtf8Buffer(buffer);
 }
 
-/** 将文本写入本地文件 */
+/** 将文本写入本地文件（请求 body 为 path|content Raw） */
 export async function writeTextFile(path: string, content: string): Promise<void> {
-  await invoke('write_text_file', { path, content });
+  await invoke('write_text_file', encodePathContent(path, content));
 }
 
 /** 按路径读取文本文件（路径 + 内容） */

@@ -18,7 +18,6 @@ import { useAppSettingsStore } from '../stores/appSettingsStore';
 import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
-import { createDelayedShow } from '../utils/delayedShow';
 import { resolveActiveTabId } from '../utils/editorSession';
 import {
   createTabId,
@@ -73,9 +72,20 @@ export function EditorScreen() {
   const [startupTimingOpen, setStartupTimingOpen] = useState(false);
 
   const editorViewsRef = useRef(new Map<string, EditorView>());
-  const formattingTabIdsRef = useRef(new Set<string>());
+  const [formattingTabIds, setFormattingTabIds] = useState(() => new Set<string>());
+  const [savingTabIds, setSavingTabIds] = useState(() => new Set<string>());
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
+
+  function tabBusyMessage(tabId: string): string | null {
+    if (formattingTabIds.has(tabId)) {
+      return t('editor.busyFormatting');
+    }
+    if (savingTabIds.has(tabId)) {
+      return t('editor.busySaving');
+    }
+    return null;
+  }
 
   useEffect(() => {
     void useAppSettingsStore.getState().hydrate();
@@ -179,6 +189,9 @@ export function EditorScreen() {
     if (!tab?.dirty || tab.path === null) {
       return true;
     }
+    if (savingTabIds.has(tabId)) {
+      return false;
+    }
 
     const content = readDoc(tabId);
     if (content === null) {
@@ -188,12 +201,7 @@ export function EditorScreen() {
       return false;
     }
 
-    const cancelLoading = createDelayedShow(() => {
-      const loadingId = toast.loading(t('toast.saving'));
-      return () => {
-        toast.dismiss(loadingId);
-      };
-    });
+    setSavingTabIds((prev) => new Set(prev).add(tabId));
     try {
       await writeTextFile(tab.path, content);
       setTabs((prev) => {
@@ -208,7 +216,11 @@ export function EditorScreen() {
       toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
       return false;
     } finally {
-      cancelLoading();
+      setSavingTabIds((prev) => {
+        const next = new Set(prev);
+        next.delete(tabId);
+        return next;
+      });
     }
   }
 
@@ -218,6 +230,9 @@ export function EditorScreen() {
     if (!tab) {
       return false;
     }
+    if (savingTabIds.has(tabId)) {
+      return false;
+    }
 
     const content = readDoc(tabId);
     if (content === null) {
@@ -225,6 +240,7 @@ export function EditorScreen() {
       return false;
     }
 
+    setSavingTabIds((prev) => new Set(prev).add(tabId));
     try {
       const defaultName = tab.path === null
         ? `${t('editor.untitled')}.${tab.untitledExt}`
@@ -234,28 +250,24 @@ export function EditorScreen() {
         return false;
       }
 
-      const cancelLoading = createDelayedShow(() => {
-        const loadingId = toast.loading(t('toast.saving'));
-        return () => {
-          toast.dismiss(loadingId);
-        };
+      await writeTextFile(path, content);
+      setTabs((prev) => {
+        const latest = readDoc(tabId);
+        if (latest !== null && latest !== content) {
+          return updateTab(prev, tabId, (item) => ({ ...item, path }));
+        }
+        return updateTab(prev, tabId, (item) => withSaved({ ...item, path }));
       });
-      try {
-        await writeTextFile(path, content);
-        setTabs((prev) => {
-          const latest = readDoc(tabId);
-          if (latest !== null && latest !== content) {
-            return updateTab(prev, tabId, (item) => ({ ...item, path }));
-          }
-          return updateTab(prev, tabId, (item) => withSaved({ ...item, path }));
-        });
-        return true;
-      } finally {
-        cancelLoading();
-      }
+      return true;
     } catch (error) {
       toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
       return false;
+    } finally {
+      setSavingTabIds((prev) => {
+        const next = new Set(prev);
+        next.delete(tabId);
+        return next;
+      });
     }
   }
 
@@ -453,7 +465,7 @@ export function EditorScreen() {
       return;
     }
     const tabId = activeTab.id;
-    if (formattingTabIdsRef.current.has(tabId)) {
+    if (formattingTabIds.has(tabId)) {
       return;
     }
     const languagePath = tabLanguagePath(activeTab);
@@ -467,13 +479,7 @@ export function EditorScreen() {
       return;
     }
     const { indentStyle, indentSize } = useAppSettingsStore.getState().settings;
-    formattingTabIdsRef.current.add(tabId);
-    const cancelLoading = createDelayedShow(() => {
-      const loadingId = toast.loading(t('toast.formatting'));
-      return () => {
-        toast.dismiss(loadingId);
-      };
-    });
+    setFormattingTabIds((prev) => new Set(prev).add(tabId));
     try {
       await formatEditorDocument(editorView, {
         languagePath,
@@ -484,8 +490,11 @@ export function EditorScreen() {
     } catch (error) {
       toast.error(t('toast.formatFailed'), { description: errorMessage(error) });
     } finally {
-      formattingTabIdsRef.current.delete(tabId);
-      cancelLoading();
+      setFormattingTabIds((prev) => {
+        const next = new Set(prev);
+        next.delete(tabId);
+        return next;
+      });
     }
   }
 
@@ -675,6 +684,7 @@ export function EditorScreen() {
                 tabId={tab.id}
                 path={tab.path}
                 languagePath={tabLanguagePath(tab)}
+                busyMessage={tabBusyMessage(tab.id)}
                 onDirty={handleDirty}
                 onReady={handleEditorReady}
                 onDestroy={handleEditorDestroy}

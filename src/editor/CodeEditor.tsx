@@ -1,17 +1,15 @@
 import { Compartment, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useEffect, useEffectEvent, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 import { openTextPath } from '../lib/tauri/fs';
 import { useAppSettingsStore } from '../stores/appSettingsStore';
 import { cn } from '../utils/cn';
-import { createDelayedShow } from '../utils/delayedShow';
 import { sameFilePath } from '../utils/path';
+import { EditorBusyOverlay } from './EditorBusyOverlay';
 import { baseExtensions } from './editorExtensions';
 import { indentExtensions } from './indent';
 import { loadLanguageExtension } from './languageRegistry';
-import { bindEditableCompartment, setViewUserEditable } from './viewEditable';
 import './codeEditor.css';
 
 type CodeEditorProps = {
@@ -21,6 +19,8 @@ type CodeEditorProps = {
   path: string | null;
   /** 语言 / 高亮用路径（未命名时为 untitled.ext） */
   languagePath: string;
+  /** 外部忙碌文案（如格式化）；优先于打开中蒙版 */
+  busyMessage?: string | null;
   onDirty: (tabId: string) => void;
   /** 就绪后调用（读盘成功或未命名空文档） */
   onReady: (tabId: string, editorView: EditorView) => void;
@@ -35,6 +35,7 @@ export function CodeEditor({
   tabId,
   path,
   languagePath,
+  busyMessage = null,
   onDirty,
   onReady,
   onDestroy,
@@ -48,6 +49,7 @@ export function CodeEditor({
   const indentCompartmentRef = useRef<Compartment | null>(null);
   const languageCompartmentRef = useRef<Compartment | null>(null);
   const hydratingRef = useRef(false);
+  const [opening, setOpening] = useState(path !== null);
 
   const isCurrentView = (view: EditorView) => editorViewRef.current === view;
 
@@ -67,11 +69,7 @@ export function CodeEditor({
     onPathResolved(tabId, resolvedPath);
   });
 
-  const hydrateFromDisk = useEffectEvent(async (
-    editorView: EditorView,
-    filePath: string,
-    cancelLoading: () => void,
-  ) => {
+  const hydrateFromDisk = useEffectEvent(async (editorView: EditorView, filePath: string) => {
     try {
       const file = await openTextPath(filePath);
       if (!isCurrentView(editorView)) {
@@ -88,14 +86,15 @@ export function CodeEditor({
       if (!sameFilePath(filePath, file.path)) {
         notifyPathResolved(file.path);
       }
-      setViewUserEditable(editorView, true);
       notifyReady(editorView);
     } catch (error) {
       if (isCurrentView(editorView)) {
         notifyLoadError(error);
       }
     } finally {
-      cancelLoading();
+      if (isCurrentView(editorView)) {
+        setOpening(false);
+      }
     }
   });
 
@@ -110,7 +109,6 @@ export function CodeEditor({
 
     const languageCompartment = new Compartment();
     const indentCompartment = new Compartment();
-    const editableCompartment = new Compartment();
     languageCompartmentRef.current = languageCompartment;
     indentCompartmentRef.current = indentCompartment;
 
@@ -121,7 +119,6 @@ export function CodeEditor({
         ...baseExtensions,
         indentCompartment.of(indentExtensions(style, size)),
         languageCompartment.of([]),
-        editableCompartment.of([]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged && !hydratingRef.current) {
             reportDirty();
@@ -130,25 +127,17 @@ export function CodeEditor({
       ],
       parent: containerRef.current,
     });
-    bindEditableCompartment(editorView, editableCompartment);
     editorViewRef.current = editorView;
 
-    let cancelHydrateLoading = () => {};
     if (path === null) {
+      setOpening(false);
       notifyReady(editorView);
     } else {
-      setViewUserEditable(editorView, false);
-      cancelHydrateLoading = createDelayedShow(() => {
-        const loadingId = toast.loading(t('toast.openingFile'));
-        return () => {
-          toast.dismiss(loadingId);
-        };
-      });
-      void hydrateFromDisk(editorView, path, cancelHydrateLoading);
+      setOpening(true);
+      void hydrateFromDisk(editorView, path);
     }
 
     return () => {
-      cancelHydrateLoading();
       notifyDestroy();
       editorView.destroy();
       editorViewRef.current = null;
@@ -194,10 +183,33 @@ export function CodeEditor({
     });
   }, [indentStyle, indentSize]);
 
+  const overlayMessage = busyMessage ?? (opening ? t('editor.busyOpening') : null);
+  const wasBusyRef = useRef(false);
+
+  useEffect(() => {
+    const view = editorViewRef.current;
+    if (!view) {
+      return;
+    }
+    if (overlayMessage) {
+      wasBusyRef.current = true;
+      view.contentDOM.blur();
+      return;
+    }
+    if (wasBusyRef.current) {
+      wasBusyRef.current = false;
+      view.focus();
+    }
+  }, [overlayMessage]);
+
   return (
-    <div
-      ref={containerRef}
-      className={cn('code-editor h-full', className)}
-    />
+    <div className={cn('relative h-full', className)}>
+      <div
+        ref={containerRef}
+        className={cn('code-editor h-full')}
+        inert={overlayMessage ? true : undefined}
+      />
+      {overlayMessage && <EditorBusyOverlay message={overlayMessage} />}
+    </div>
   );
 }

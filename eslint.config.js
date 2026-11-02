@@ -7,7 +7,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['dist/**', 'src-tauri/**', 'node_modules/**']),
+  globalIgnores(['dist/**', 'src-tauri/**', 'node_modules/**', '.scratch/**']),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   react.configs.flat['jsx-runtime'],

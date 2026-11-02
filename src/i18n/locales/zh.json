@@ -19,7 +19,10 @@
     "closeTab": "关闭 {{title}}",
     "diskChanged": "磁盘已变更",
     "untitled": "未命名",
-    "untitledExt": "文件类型"
+    "untitledExt": "文件类型",
+    "busyOpening": "正在打开…",
+    "busyFormatting": "正在格式化…",
+    "busySaving": "正在保存…"
   },
   "toast": {
     "openFailed": "打开失败",
@@ -32,10 +35,7 @@
     "fontSizeInvalid": "字号须为 {{min}}–{{max}} 的整数",
     "saveFailedWithReason": "保存失败：{{reason}}",
     "formatFailed": "格式化失败",
-    "formatUnsupported": "仅支持格式化 JSON 与 Markdown",
-    "formatting": "正在格式化…",
-    "openingFile": "正在打开…",
-    "saving": "正在保存…"
+    "formatUnsupported": "仅支持格式化 JSON 与 Markdown"
   },
   "dialog": {
     "title": "提示",
