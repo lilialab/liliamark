@@ -11,6 +11,7 @@ export function defaultAppSettings(): AppSettings {
     fontSize: 16,
     indentStyle: 'space',
     indentSize: 4,
+    formatOnSave: false,
     locale: 'system',
   };
 }

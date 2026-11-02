@@ -14,7 +14,8 @@ pub enum IndentStyle {
     Tab,
 }
 
-/// 应用设置；磁盘上始终是完整一份（缺文件 / 坏 JSON 时整份写默认）。
+/// 应用设置。加载时：磁盘有的字段保留，缺的用 `Default` 补齐并写回完整 JSON；
+/// 无文件或坏 JSON 则整份默认后写回。
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
@@ -22,6 +23,7 @@ pub struct AppSettings {
     pub font_size: u32,
     pub indent_style: IndentStyle,
     pub indent_size: u32,
+    pub format_on_save: bool,
     /// 界面语言：system / zh / en
     pub locale: String,
 }
@@ -33,6 +35,7 @@ impl Default for AppSettings {
             font_size: 16,
             indent_style: IndentStyle::Space,
             indent_size: 4,
+            format_on_save: false,
             locale: "system".into(),
         }
     }
@@ -46,9 +49,16 @@ fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join(SETTINGS_FILE))
 }
 
-/// 完整合法 JSON → Some；缺字段或坏 JSON → None。
+/// 合法 JSON 对象 → 与默认合并后的设置；语法坏 / 非对象 / 字段类型不对 → None。
 fn parse_settings_json(text: &str) -> Option<AppSettings> {
-    serde_json::from_str(text).ok()
+    let parsed: serde_json::Value = serde_json::from_str(text).ok()?;
+    let obj = parsed.as_object()?;
+    let mut merged = serde_json::to_value(AppSettings::default()).ok()?;
+    let merged_obj = merged.as_object_mut()?;
+    for (key, value) in obj {
+        merged_obj.insert(key.clone(), value.clone());
+    }
+    serde_json::from_value(merged).ok()
 }
 
 fn write_settings_file(path: &Path, settings: &AppSettings) -> Result<(), String> {
@@ -59,20 +69,16 @@ fn write_settings_file(path: &Path, settings: &AppSettings) -> Result<(), String
     fs::write(path, text).map_err(|error| error.to_string())
 }
 
-/// 读取设置；无文件或无法解析时写入默认并返回默认。
+/// 读取设置；合并缺省后始终写回完整文件。
 #[tauri::command]
 pub(crate) fn load_app_settings(app: AppHandle) -> Result<AppSettings, String> {
     let path = settings_path(&app)?;
-
-    if let Ok(text) = fs::read_to_string(&path) {
-        if let Some(settings) = parse_settings_json(&text) {
-            return Ok(settings);
-        }
-    }
-
-    let defaults = AppSettings::default();
-    write_settings_file(&path, &defaults)?;
-    Ok(defaults)
+    let settings = match fs::read_to_string(&path) {
+        Ok(text) => parse_settings_json(&text).unwrap_or_default(),
+        Err(_) => AppSettings::default(),
+    };
+    write_settings_file(&path, &settings)?;
+    Ok(settings)
 }
 
 /// 将设置写入应用配置目录。
@@ -87,6 +93,22 @@ mod tests {
 
     #[test]
     fn parse_valid_settings() {
+        let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18,"indentStyle":"tab","indentSize":2,"formatOnSave":true,"locale":"zh"}"#;
+        assert_eq!(
+            parse_settings_json(json),
+            Some(AppSettings {
+                font_family: "Consolas, monospace".into(),
+                font_size: 18,
+                indent_style: IndentStyle::Tab,
+                indent_size: 2,
+                format_on_save: true,
+                locale: "zh".into(),
+            })
+        );
+    }
+
+    #[test]
+    fn missing_fields_merge_defaults() {
         let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18,"indentStyle":"tab","indentSize":2,"locale":"zh"}"#;
         assert_eq!(
             parse_settings_json(json),
@@ -95,20 +117,24 @@ mod tests {
                 font_size: 18,
                 indent_style: IndentStyle::Tab,
                 indent_size: 2,
+                format_on_save: false,
                 locale: "zh".into(),
             })
         );
+
+        let partial = parse_settings_json(r#"{"fontSize":20}"#).expect("partial should merge");
+        assert_eq!(partial.font_size, 20);
+        assert_eq!(partial.indent_size, AppSettings::default().indent_size);
+        assert_eq!(partial.font_family, AppSettings::default().font_family);
+        assert!(!partial.format_on_save);
     }
 
     #[test]
-    fn parse_incomplete_or_invalid_is_none() {
+    fn parse_invalid_is_none() {
         assert_eq!(parse_settings_json(""), None);
         assert_eq!(parse_settings_json("{"), None);
         assert_eq!(parse_settings_json("null"), None);
-        assert_eq!(
-            parse_settings_json(r#"{"fontFamily":"Consolas","fontSize":18}"#),
-            None
-        );
+        assert_eq!(parse_settings_json(r#"{"fontSize":"x"}"#), None);
     }
 
     #[test]
@@ -118,6 +144,7 @@ mod tests {
         assert_eq!(defaults.indent_size, 4);
         assert_eq!(defaults.indent_style, IndentStyle::Space);
         assert_eq!(defaults.locale, "system");
+        assert!(!defaults.format_on_save);
         assert!(!defaults.font_family.is_empty());
     }
 }

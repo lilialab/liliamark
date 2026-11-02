@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-11-02
+
+### Added
+
+- 设置：可选「保存时格式化」（默认关；仅 JSON / Markdown；约 1MB 以上跳过；菜单/快捷键手动格式化不受影响）
+
+### Changed
+
+- 设置加载：缺字段与默认合并后写回完整文件；无文件或坏 JSON 仍整份默认
+- 应用菜单：分组与部分项图标；设置单独成组；去掉「格式化文档」菜单项（`Shift+Alt+F` 仍可用）
+
+### Notes
+
+- GitHub release workflow：升级 `actions/checkout`、`actions/setup-node`、`pnpm/action-setup` 主版本，消除 Actions Node 20 弃用警告
+- 版本号同步为 `0.2.1`（`package.json` / Tauri / Cargo）
+
 ## [0.2.0] — 2026-10-31
 
 ### Added

@@ -32,6 +32,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
   const [fontFamily, setFontFamily] = useState(defaults.fontFamily);
   const [fontSize, setFontSize] = useState(String(defaults.fontSize));
   const [indentStyle, setIndentStyle] = useState<IndentStyle>(defaults.indentStyle);
+  const [formatOnSave, setFormatOnSave] = useState(defaults.formatOnSave);
   const [locale, setLocale] = useState<AppLocalePreference>(defaults.locale);
   const [saving, setSaving] = useState(false);
 
@@ -42,6 +43,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
     setFontFamily(stored.fontFamily);
     setFontSize(String(stored.fontSize));
     setIndentStyle(stored.indentStyle);
+    setFormatOnSave(stored.formatOnSave);
     setLocale(stored.locale);
   }, [open, stored]);
 
@@ -59,6 +61,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
       fontSize: parsedSize,
       indentStyle,
       indentSize: stored.indentSize,
+      formatOnSave,
       locale,
     };
     setSaving(true);
@@ -172,6 +175,23 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
               {t('settings.tab')}
             </label>
           </fieldset>
+        </div>
+
+        <div className={cn('mb-4 border-t border-(--app-border) pt-3')}>
+          <label className={cn('flex items-center gap-2 text-sm text-(--app-fg)')}>
+            <input
+              type="checkbox"
+              checked={formatOnSave}
+              disabled={saving}
+              onChange={(event) => {
+                setFormatOnSave(event.target.checked);
+              }}
+            />
+            {t('settings.formatOnSave')}
+          </label>
+          <p className={cn('mt-2 text-xs text-(--app-muted)')}>
+            {t('settings.formatOnSaveHint')}
+          </p>
         </div>
 
         <div className={cn('mb-4 border-t border-(--app-border) pt-3')}>

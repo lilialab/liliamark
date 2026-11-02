@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react';
+import { Menu, type LucideIcon } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
@@ -8,11 +8,24 @@ export type AppMenuItem = {
   id: string;
   label: string;
   onSelect: () => void;
+  /** 有语义再加；无图标仍占位，保证文字对齐 */
+  icon?: LucideIcon;
 };
 
-type AppMenuProps = {
-  items: AppMenuItem[];
+export type AppMenuSeparator = {
+  id: string;
+  separator: true;
 };
+
+export type AppMenuEntry = AppMenuItem | AppMenuSeparator;
+
+type AppMenuProps = {
+  items: AppMenuEntry[];
+};
+
+function isSeparator(entry: AppMenuEntry): entry is AppMenuSeparator {
+  return 'separator' in entry && entry.separator;
+}
 
 /** 应用菜单；图标触发，absolute 浮层右对齐 */
 export function AppMenu({ items }: AppMenuProps) {
@@ -68,23 +81,39 @@ export function AppMenu({ items }: AppMenuProps) {
           id={menuId}
           role="menu"
           className={cn(
-            'absolute top-full right-0 z-40 mt-1 min-w-36 overflow-hidden rounded-md',
+            'absolute top-full right-0 z-40 mt-1 min-w-40 overflow-hidden rounded-md',
             'border border-(--app-border) bg-(--app-bg-raised) py-1 shadow-lg',
           )}
         >
-          {items.map((item) => (
-            <Button
-              key={item.id}
-              variant="menu"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false);
-                item.onSelect();
-              }}
-            >
-              {item.label}
-            </Button>
-          ))}
+          {items.map((entry) => {
+            if (isSeparator(entry)) {
+              return (
+                <div
+                  key={entry.id}
+                  role="separator"
+                  className={cn('my-1 border-t border-(--app-border)')}
+                />
+              );
+            }
+            const Icon = entry.icon;
+            return (
+              <Button
+                key={entry.id}
+                variant="menu"
+                role="menuitem"
+                className={cn('flex items-center gap-2')}
+                onClick={() => {
+                  setOpen(false);
+                  entry.onSelect();
+                }}
+              >
+                <span className={cn('flex size-4 shrink-0 items-center justify-center')}>
+                  {Icon && <Icon className={cn('size-4')} aria-hidden />}
+                </span>
+                <span className={cn('min-w-0 flex-1')}>{entry.label}</span>
+              </Button>
+            );
+          })}
         </div>
       )}
     </div>

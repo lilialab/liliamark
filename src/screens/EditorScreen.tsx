@@ -1,11 +1,16 @@
 import { selectAll } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
 import { arrayMove } from '@dnd-kit/sortable';
+import { FilePlus, FolderOpen, Keyboard, Save, Settings } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
-import { formatEditorDocument, supportsDocumentFormat } from '../editor/formatDocument';
+import {
+  FORMAT_ON_SAVE_MAX_LENGTH,
+  formatEditorDocument,
+  supportsDocumentFormat,
+} from '../editor/formatDocument';
 import {
   closeCurrentWindow,
   focusCurrentWindow,
@@ -180,6 +185,45 @@ export function EditorScreen() {
     }
   }
 
+  /** 设置开启且体积未超限时，保存前格式化缓冲区；失败只 toast，仍继续存 */
+  async function formatTabBeforeSave(tab: EditorTab): Promise<void> {
+    const tabId = tab.id;
+    if (formattingTabIds.has(tabId)) {
+      return;
+    }
+    const editorView = editorViewsRef.current.get(tabId);
+    if (!editorView) {
+      return;
+    }
+    const { formatOnSave, indentStyle, indentSize } = useAppSettingsStore.getState().settings;
+    const languagePath = tabLanguagePath(tab);
+    if (
+      !formatOnSave
+      || !supportsDocumentFormat(languagePath)
+      || editorView.state.doc.length > FORMAT_ON_SAVE_MAX_LENGTH
+    ) {
+      return;
+    }
+
+    setFormattingTabIds((prev) => new Set(prev).add(tabId));
+    try {
+      await formatEditorDocument(editorView, {
+        languagePath,
+        indentStyle,
+        indentSize,
+      });
+      refreshPreview(tabId);
+    } catch (error) {
+      toast.error(t('toast.formatFailed'), { description: errorMessage(error) });
+    } finally {
+      setFormattingTabIds((prev) => {
+        const next = new Set(prev);
+        next.delete(tabId);
+        return next;
+      });
+    }
+  }
+
   /** 保存指定已落盘标签；写盘期间若正文又变了则保持 dirty。成功 true */
   async function saveTab(
     tabId: string,
@@ -192,6 +236,8 @@ export function EditorScreen() {
     if (savingTabIds.has(tabId)) {
       return false;
     }
+
+    await formatTabBeforeSave(tab);
 
     const content = readDoc(tabId);
     if (content === null) {
@@ -233,6 +279,8 @@ export function EditorScreen() {
     if (savingTabIds.has(tabId)) {
       return false;
     }
+
+    await formatTabBeforeSave(tab);
 
     const content = readDoc(tabId);
     if (content === null) {
@@ -590,11 +638,13 @@ export function EditorScreen() {
               {
                 id: 'new',
                 label: t('menu.new'),
+                icon: FilePlus,
                 onSelect: handleNew,
               },
               {
                 id: 'open',
                 label: t('menu.open'),
+                icon: FolderOpen,
                 onSelect: () => {
                   void handleOpen();
                 },
@@ -602,22 +652,27 @@ export function EditorScreen() {
               {
                 id: 'save-as',
                 label: t('menu.saveAs'),
+                icon: Save,
                 onSelect: () => {
                   void handleSaveAs();
                 },
               },
-              {
-                id: 'format',
-                label: t('menu.format'),
-                onSelect: () => {
-                  void handleFormatDocument();
-                },
-              },
+              { id: 'sep-file', separator: true },
               {
                 id: 'settings',
                 label: t('menu.settings'),
+                icon: Settings,
                 onSelect: () => {
                   setSettingsOpen(true);
+                },
+              },
+              { id: 'sep-settings', separator: true },
+              {
+                id: 'shortcuts',
+                label: t('menu.shortcuts'),
+                icon: Keyboard,
+                onSelect: () => {
+                  setShortcutsOpen(true);
                 },
               },
               {
@@ -625,13 +680,6 @@ export function EditorScreen() {
                 label: t('menu.markdownCheatSheet'),
                 onSelect: () => {
                   setMarkdownCheatSheetOpen(true);
-                },
-              },
-              {
-                id: 'shortcuts',
-                label: t('menu.shortcuts'),
-                onSelect: () => {
-                  setShortcutsOpen(true);
                 },
               },
               {
