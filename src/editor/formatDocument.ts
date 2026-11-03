@@ -7,9 +7,6 @@ export type FormatKind = 'json' | 'markdown';
 
 export type FormatDocumentResult = 'formatted' | 'unchanged' | 'unsupported';
 
-/** 保存时格式化体积上限（编辑器字符数；约 1 MiB ASCII） */
-export const FORMAT_ON_SAVE_MAX_LENGTH = 1024 * 1024;
-
 type FormatDocumentOptions = {
   languagePath: string;
   indentStyle: IndentStyle;

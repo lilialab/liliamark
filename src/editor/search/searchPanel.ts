@@ -23,6 +23,7 @@ import {
   X,
 } from 'lucide-react';
 import i18n from '../../i18n';
+import { LARGE_DOC_MAX_LENGTH } from '../../utils/docLimits';
 import { setButtonIcon } from '../lucideDom';
 import { locateSearchMatches } from './searchPanelMatch';
 
@@ -334,7 +335,10 @@ class VscodeSearchPanel implements Panel {
 
   private refreshCount() {
     const t = i18n.t.bind(i18n);
-    if (this.searchField.value.length === 0) {
+    if (
+      this.searchField.value.length === 0
+      || this.view.state.doc.length > LARGE_DOC_MAX_LENGTH
+    ) {
       this.countEl.textContent = '';
       this.countEl.classList.remove('is-empty');
       this.countEl.hidden = true;

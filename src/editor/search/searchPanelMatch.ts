@@ -14,7 +14,7 @@ const DEFAULT_LIMIT = 9999;
 
 /**
  * 统计查询匹配，并定位光标落在第几个（用于面板「3 / 12」）。
- * 大文档触顶后 `capped` 为 true。
+ * 大文档触顶后 `capped` 为 true。大文件应由调用方按 `LARGE_DOC_MAX_LENGTH` 跳过。
  */
 export function locateSearchMatches(
   state: EditorState,

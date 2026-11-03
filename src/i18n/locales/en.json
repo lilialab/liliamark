@@ -7,7 +7,8 @@
     "settings": "Settings",
     "markdownCheatSheet": "Markdown reference",
     "shortcuts": "Keyboard shortcuts",
-    "startupTiming": "Startup timing"
+    "startupTiming": "Startup timing",
+    "checkUpdate": "Check for updates"
   },
   "empty": {
     "hint": "New or open a file to start ({{mod}}+N new · {{mod}}+S save · {{mod}}+E preview)"
@@ -34,7 +35,12 @@
     "fontSizeInvalid": "Font size must be an integer between {{min}} and {{max}}",
     "saveFailedWithReason": "Could not save: {{reason}}",
     "formatFailed": "Could not format",
-    "formatUnsupported": "Formatting is only available for JSON and Markdown"
+    "formatUnsupported": "Formatting is only available for JSON and Markdown",
+    "updateAvailable": "Update available: {{version}}",
+    "updateAvailableHint": "Download the installer from the GitHub release page.",
+    "updateOpen": "Open download page",
+    "updateUpToDate": "You're up to date ({{version}})",
+    "updateCheckFailed": "Could not check for updates"
   },
   "dialog": {
     "title": "Notice",
@@ -66,6 +72,7 @@
   },
   "settings": {
     "aria": "Settings",
+    "title": "Settings",
     "fonts": "Fonts",
     "fontsHint": "Shared by editor and preview. Leave font-family empty for the default; size {{min}}–{{max}} (px). Applies after save.",
     "fontFamily": "font-family",
@@ -81,7 +88,8 @@
     "languageZh": "中文",
     "languageEn": "English",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "version": "Version {{version}}"
   },
   "shortcuts": {
     "aria": "Keyboard shortcuts",

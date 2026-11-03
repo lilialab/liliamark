@@ -1,4 +1,4 @@
-import { Menu, type LucideIcon } from 'lucide-react';
+import { type LucideIcon, Menu } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';

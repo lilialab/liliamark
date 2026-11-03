@@ -6,11 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
-import {
-  FORMAT_ON_SAVE_MAX_LENGTH,
-  formatEditorDocument,
-  supportsDocumentFormat,
-} from '../editor/formatDocument';
+import { formatEditorDocument, supportsDocumentFormat } from '../editor/formatDocument';
 import {
   closeCurrentWindow,
   focusCurrentWindow,
@@ -23,6 +19,7 @@ import { useAppSettingsStore } from '../stores/appSettingsStore';
 import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
+import { LARGE_DOC_MAX_LENGTH } from '../utils/docLimits';
 import { resolveActiveTabId } from '../utils/editorSession';
 import {
   createTabId,
@@ -35,7 +32,7 @@ import {
 import { fileName, sameFilePath } from '../utils/path';
 import { markStartupUiReady } from '../utils/startupTiming';
 import { DEFAULT_UNTITLED_EXT, tabLanguagePath } from '../utils/untitled';
-import { AppMenu } from './components/AppMenu';
+import { AppMenu, type AppMenuEntry } from './components/AppMenu';
 import { DiskChangeBanner } from './components/DiskChangeBanner';
 import { EditorTabBar } from './components/EditorTabBar';
 import { FileDragOverlay } from './components/FileDragOverlay';
@@ -46,6 +43,7 @@ import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { StartupTimingOverlay } from './components/StartupTimingOverlay';
 import { UntitledExtPicker } from './components/UntitledExtPicker';
 import { modifierKeyLabel } from './help/editorHotkeyHints';
+import { useAppUpdateCheck } from './hooks/useAppUpdateCheck';
 import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
 import { useConfirmDialog } from './hooks/useConfirmDialog';
 import { useDiskWatch } from './hooks/useDiskWatch';
@@ -67,6 +65,7 @@ export function EditorScreen() {
 
   const { t } = useTranslation();
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
+  const { checkForUpdates } = useAppUpdateCheck();
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -200,7 +199,7 @@ export function EditorScreen() {
     if (
       !formatOnSave
       || !supportsDocumentFormat(languagePath)
-      || editorView.state.doc.length > FORMAT_ON_SAVE_MAX_LENGTH
+      || editorView.state.doc.length > LARGE_DOC_MAX_LENGTH
     ) {
       return;
     }
@@ -611,6 +610,74 @@ export function EditorScreen() {
   });
 
   /* -------------------------------------------------------------------------- */
+  /* App menu */
+  /* -------------------------------------------------------------------------- */
+
+  function appMenuItems(): AppMenuEntry[] {
+    return [
+      {
+        id: 'new',
+        label: t('menu.new'),
+        icon: FilePlus,
+        onSelect: handleNew,
+      },
+      {
+        id: 'open',
+        label: t('menu.open'),
+        icon: FolderOpen,
+        onSelect: () => {
+          void handleOpen();
+        },
+      },
+      {
+        id: 'save-as',
+        label: t('menu.saveAs'),
+        icon: Save,
+        onSelect: () => {
+          void handleSaveAs();
+        },
+      },
+      { id: 'sep-file', separator: true },
+      {
+        id: 'settings',
+        label: t('menu.settings'),
+        icon: Settings,
+        onSelect: () => {
+          setSettingsOpen(true);
+        },
+      },
+      { id: 'sep-settings', separator: true },
+      {
+        id: 'shortcuts',
+        label: t('menu.shortcuts'),
+        icon: Keyboard,
+        onSelect: () => {
+          setShortcutsOpen(true);
+        },
+      },
+      {
+        id: 'markdown-cheat-sheet',
+        label: t('menu.markdownCheatSheet'),
+        onSelect: () => {
+          setMarkdownCheatSheetOpen(true);
+        },
+      },
+      {
+        id: 'startup-timing',
+        label: t('menu.startupTiming'),
+        onSelect: () => {
+          setStartupTimingOpen(true);
+        },
+      },
+      {
+        id: 'check-update',
+        label: t('menu.checkUpdate'),
+        onSelect: checkForUpdates,
+      },
+    ];
+  }
+
+  /* -------------------------------------------------------------------------- */
   /* Render */
   /* -------------------------------------------------------------------------- */
 
@@ -632,66 +699,7 @@ export function EditorScreen() {
           void handleCloseTab(id);
         }}
         onReorder={handleReorderTabs}
-        trailing={
-          <AppMenu
-            items={[
-              {
-                id: 'new',
-                label: t('menu.new'),
-                icon: FilePlus,
-                onSelect: handleNew,
-              },
-              {
-                id: 'open',
-                label: t('menu.open'),
-                icon: FolderOpen,
-                onSelect: () => {
-                  void handleOpen();
-                },
-              },
-              {
-                id: 'save-as',
-                label: t('menu.saveAs'),
-                icon: Save,
-                onSelect: () => {
-                  void handleSaveAs();
-                },
-              },
-              { id: 'sep-file', separator: true },
-              {
-                id: 'settings',
-                label: t('menu.settings'),
-                icon: Settings,
-                onSelect: () => {
-                  setSettingsOpen(true);
-                },
-              },
-              { id: 'sep-settings', separator: true },
-              {
-                id: 'shortcuts',
-                label: t('menu.shortcuts'),
-                icon: Keyboard,
-                onSelect: () => {
-                  setShortcutsOpen(true);
-                },
-              },
-              {
-                id: 'markdown-cheat-sheet',
-                label: t('menu.markdownCheatSheet'),
-                onSelect: () => {
-                  setMarkdownCheatSheetOpen(true);
-                },
-              },
-              {
-                id: 'startup-timing',
-                label: t('menu.startupTiming'),
-                onSelect: () => {
-                  setStartupTimingOpen(true);
-                },
-              },
-            ]}
-          />
-        }
+        trailing={<AppMenu items={appMenuItems()} />}
       />
 
       {activeTab && (
@@ -759,31 +767,32 @@ export function EditorScreen() {
             onOpenInBrowser={handleOpenHtmlInBrowser}
           />
         )}
-        <SettingsOverlay
-          open={settingsOpen}
-          onClose={() => {
-            setSettingsOpen(false);
-          }}
-        />
-        <MarkdownCheatSheetOverlay
-          open={markdownCheatSheetOpen}
-          onClose={() => {
-            setMarkdownCheatSheetOpen(false);
-          }}
-        />
-        <ShortcutsOverlay
-          open={shortcutsOpen}
-          onClose={() => {
-            setShortcutsOpen(false);
-          }}
-        />
-        <StartupTimingOverlay
-          open={startupTimingOpen}
-          onClose={() => {
-            setStartupTimingOpen(false);
-          }}
-        />
       </section>
+
+      <SettingsOverlay
+        open={settingsOpen}
+        onClose={() => {
+          setSettingsOpen(false);
+        }}
+      />
+      <MarkdownCheatSheetOverlay
+        open={markdownCheatSheetOpen}
+        onClose={() => {
+          setMarkdownCheatSheetOpen(false);
+        }}
+      />
+      <ShortcutsOverlay
+        open={shortcutsOpen}
+        onClose={() => {
+          setShortcutsOpen(false);
+        }}
+      />
+      <StartupTimingOverlay
+        open={startupTimingOpen}
+        onClose={() => {
+          setStartupTimingOpen(false);
+        }}
+      />
       {confirmDialog}
     </div>
   );

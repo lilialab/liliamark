@@ -49,10 +49,20 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 
 ## 命令与环境
 
-- 沙箱只放行工作区写入：pnpm 加 `COREPACK_HOME=/tmp/corepack`，dprint 加 `DPRINT_CACHE_DIR=/tmp/dprint-cache`（默认 `~/.cache` 会被拦）
+- 沙箱只放行工作区写入：pnpm 加 `COREPACK_HOME=/tmp/corepack`，dprint 加 `DPRINT_CACHE_DIR=/tmp/dprint-cache`（默认 `~/.cache` 会被拦）；Windows 可用 `%LOCALAPPDATA%\Temp\…` 等价路径
 - 命令：`pnpm format`、`pnpm lint`、`pnpm test:run`、`pnpm tauri dev`、`pnpm tauri build`
 - dprint 插件用 `node_modules` 里的 wasm（见 `dprint.json`）。Windows 上 `npm:@dprint/...` 会因路径里的 `:` 解析失败，不要改回
 - 边界：签名密钥和系统 WebView 依赖由用户自己装；代理只跑上面列出的命令
+
+### 改完验收
+
+每轮改完业务代码（含 hook / 样式 / i18n / Rust 命令等），在收工前必须：
+
+1. `pnpm format`
+2. `pnpm lint`（失败则修好再结束；不要留给用户）
+3. 若动了纯函数（`src/preview/`、`src/utils/` 等）或其测试：跑对应 `pnpm test:run …`
+
+纯问答、只改文档（如仅 `AGENTS.md` / `CHANGELOG.md`）且无代码变动时，可不跑上述命令。
 
 ## 分层
 
@@ -72,7 +82,7 @@ Grep / Glob 定位 → 再 Read。按下方「任务入口」定点读；禁止�
 
 ## 代码风格
 
-- 格式：[`dprint.json`](dprint.json)（改完 `pnpm format`）。冲突时可读性优先。
+- 格式：[`dprint.json`](dprint.json)。改完跑 format / lint，见上方「改完验收」。冲突时可读性优先。
 - 分层见「代码导航」，此处不重复。
 - **可读性优先于防御性**：难读比偶发错误更糟。不为「万一」加多余分支、mirror state、双重解析、重复校验；边界校验只放在真正边界（Tauri 命令、文件对话框、外部路径），内层信任上游。能用类型、命名、单测表达的，不用运行时 `if` 堆砌。
 - 用户对代码风格 / 实现提出异议或质疑时（如「这样写有问题吗」「我不太喜欢」「为什么不…」）：优先对照社区主流做法与共识强弱（主流约定 / 常见偏好 / 有争议）来评估，再说明本仓库现有约定。不要默认维护现状或只给个人偏好；本仓与社区冲突时先讲清差异，再让用户决定跟谁。

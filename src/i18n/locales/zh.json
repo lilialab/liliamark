@@ -7,7 +7,8 @@
     "settings": "设置",
     "markdownCheatSheet": "Markdown 标记",
     "shortcuts": "快捷键",
-    "startupTiming": "启动耗时"
+    "startupTiming": "启动耗时",
+    "checkUpdate": "检查更新"
   },
   "empty": {
     "hint": "新建或打开文件开始编辑（{{mod}}+N 新建 · {{mod}}+S 保存 · {{mod}}+E 预览）"
@@ -34,7 +35,12 @@
     "fontSizeInvalid": "字号须为 {{min}}–{{max}} 的整数",
     "saveFailedWithReason": "保存失败：{{reason}}",
     "formatFailed": "格式化失败",
-    "formatUnsupported": "仅支持格式化 JSON 与 Markdown"
+    "formatUnsupported": "仅支持格式化 JSON 与 Markdown",
+    "updateAvailable": "发现新版本 {{version}}",
+    "updateAvailableHint": "可前往 GitHub Release 下载安装包。",
+    "updateOpen": "打开下载页",
+    "updateUpToDate": "已是最新版本（{{version}}）",
+    "updateCheckFailed": "检查更新失败"
   },
   "dialog": {
     "title": "提示",
@@ -66,6 +72,7 @@
   },
   "settings": {
     "aria": "设置",
+    "title": "设置",
     "fonts": "字体",
     "fontsHint": "编辑器与预览共用。font-family 留空则用默认；字号 {{min}}–{{max}}（px）。保存后生效。",
     "fontFamily": "font-family",
@@ -81,7 +88,8 @@
     "languageZh": "中文",
     "languageEn": "English",
     "cancel": "取消",
-    "save": "保存"
+    "save": "保存",
+    "version": "版本 {{version}}"
   },
   "shortcuts": {
     "aria": "快捷键",
