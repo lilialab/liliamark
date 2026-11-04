@@ -2,13 +2,27 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 // @ts-expect-error type error without @types/node package
 import process from 'node:process';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vitest/config';
 
 const host = process.env.TAURI_DEV_HOST;
+const analyze = process.env.ANALYZE === '1';
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    analyze
+      ? visualizer({
+        filename: 'dist/stats.html',
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap',
+      })
+      : null,
+  ],
 
   // React + CodeMirror core sit in the main chunk; 500 kB warning is noisy for a desktop shell.
   build: {

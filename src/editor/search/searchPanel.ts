@@ -10,7 +10,7 @@ import {
 } from '@codemirror/search';
 import type { EditorView, Panel, ViewUpdate } from '@codemirror/view';
 import { runScopeHandlers } from '@codemirror/view';
-import type { LucideIcon } from 'lucide-react';
+import type { IconNode } from 'lucide';
 import {
   CaseSensitive,
   ChevronDown,
@@ -21,7 +21,7 @@ import {
   ReplaceAll,
   WholeWord,
   X,
-} from 'lucide-react';
+} from 'lucide';
 import i18n from '../../i18n';
 import { LARGE_DOC_MAX_LENGTH } from '../../utils/docLimits';
 import { setButtonIcon } from '../lucideDom';
@@ -51,14 +51,14 @@ function el<K extends keyof HTMLElementTagNameMap>(
 
 function makeIconButton(
   className: string,
-  Icon: LucideIcon,
+  icon: IconNode,
   onClick: () => void,
 ): HTMLButtonElement {
   const button = el('button', {
     type: 'button',
     class: className,
   }) as HTMLButtonElement;
-  setButtonIcon(button, Icon);
+  setButtonIcon(button, icon);
   button.addEventListener('click', (event) => {
     event.preventDefault();
     onClick();

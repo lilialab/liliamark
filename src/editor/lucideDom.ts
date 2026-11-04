@@ -1,23 +1,20 @@
-import type { LucideIcon } from 'lucide-react';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { createElement, type IconNode } from 'lucide';
 
-/** lucide → 静态 SVG 字符串（给非 React DOM 用） */
-export function lucideMarkup(Icon: LucideIcon, size: number, strokeWidth = 2): string {
-  return renderToStaticMarkup(
-    createElement(Icon, {
-      size,
-      strokeWidth,
-      'aria-hidden': true,
-    }),
-  );
+/** lucide IconNode → SVG 元素（给非 React DOM 用） */
+export function lucideSvg(icon: IconNode, size = 16, strokeWidth = 2): SVGElement {
+  return createElement(icon, {
+    width: size,
+    height: size,
+    'stroke-width': strokeWidth,
+    'aria-hidden': 'true',
+  });
 }
 
 /** 把按钮内容换成 lucide 图标 */
 export function setButtonIcon(
   button: HTMLButtonElement,
-  Icon: LucideIcon,
+  icon: IconNode,
   size = 16,
 ): void {
-  button.innerHTML = lucideMarkup(Icon, size);
+  button.replaceChildren(lucideSvg(icon, size));
 }

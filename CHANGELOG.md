@@ -2,11 +2,23 @@
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-11-04
+
 ### Added
 
+- Windows NSIS 安装包：内置简体中文 / 英文（跟随系统语言）
 - 更新提示：启动后检查 GitHub Latest Release；菜单「检查更新」；有新版本 toast 并可打开下载页（不自动安装）
-- 设置页底部显示当前应用版本
-- 通用 `AppModal`（`createPortal` 到 `document.body`；标题 + 右上角关闭）；设置 / 快捷键 / Markdown 标记 / 启动耗时 / 确认框共用；设置底栏钉住取消/保存
+- 设置页展示当前应用版本
+- 通用 `AppModal`（`createPortal` 到 `document.body`；标题 + 右上角关闭）；设置 / 快捷键 / Markdown 标记 / 启动耗时 / 确认框共用
+
+### Changed
+
+- 大文档约 1MB 阈值合并为 `LARGE_DOC_MAX_LENGTH`（保存时格式化与搜索匹配计数共用）
+- 大文件搜索不再全量统计匹配数（避免卡顿）
+
+### Notes
+
+- 版本号同步为 `0.2.2`（`package.json` / Tauri / Cargo）
 
 ## [0.2.1] — 2026-11-02
 
