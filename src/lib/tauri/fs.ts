@@ -60,6 +60,13 @@ export function onWindowCloseRequested(
   return getCurrentWindow().onCloseRequested(handler);
 }
 
+/** 监听窗口焦点变化；`focused === false` 表示失焦 */
+export function onWindowFocusChanged(handler: (focused: boolean) => void) {
+  return getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+    handler(focused);
+  });
+}
+
 /** 销毁当前窗口（不再走 onCloseRequested） */
 export async function destroyCurrentWindow(): Promise<void> {
   await getCurrentWindow().destroy();

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- 设置：可选「失焦时自动保存」（默认开；已落盘且 dirty 的标签；未命名与约 1MB 以上跳过）
+
+### Changed
+
+- CodeMirror 折叠 / 搜索面板图标改用 `lucide`（非 React），去掉 `react-dom/server`，主包约小 200KB
+- 应用设置默认值只保留 Rust；启动时先 hydrate 再挂载 React
+- 空工作区提示在会话恢复完成后再显示，避免启动闪字
+- 设置页「缩进方式」标题整理（去掉 fieldset legend 换行）
+
 ## [0.2.2] — 2026-11-04
 
 ### Added

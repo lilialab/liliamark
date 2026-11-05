@@ -3,7 +3,7 @@ import { EditorView } from '@codemirror/view';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { openTextPath } from '../lib/tauri/fs';
-import { useAppSettingsStore } from '../stores/appSettingsStore';
+import { useAppSettings } from '../stores/appSettingsStore';
 import { cn } from '../utils/cn';
 import { sameFilePath } from '../utils/path';
 import { EditorBusyOverlay } from './EditorBusyOverlay';
@@ -98,8 +98,7 @@ export function CodeEditor({
     }
   });
 
-  const indentStyle = useAppSettingsStore((state) => state.settings.indentStyle);
-  const indentSize = useAppSettingsStore((state) => state.settings.indentSize);
+  const { indentStyle, indentSize } = useAppSettings();
 
   // 挂载空 EditorView；未命名直接就绪，否则读盘
   useEffect(() => {
@@ -112,12 +111,11 @@ export function CodeEditor({
     languageCompartmentRef.current = languageCompartment;
     indentCompartmentRef.current = indentCompartment;
 
-    const { indentStyle: style, indentSize: size } = useAppSettingsStore.getState().settings;
     const editorView = new EditorView({
       doc: '',
       extensions: [
         ...baseExtensions,
-        indentCompartment.of(indentExtensions(style, size)),
+        indentCompartment.of(indentExtensions(indentStyle, indentSize)),
         languageCompartment.of([]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged && !hydratingRef.current) {

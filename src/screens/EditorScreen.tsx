@@ -15,7 +15,7 @@ import {
   writeTextFile,
 } from '../lib/tauri/fs';
 import { openLocalPath } from '../lib/tauri/opener';
-import { useAppSettingsStore } from '../stores/appSettingsStore';
+import { getAppSettings } from '../stores/appSettingsStore';
 import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
@@ -52,6 +52,7 @@ import { useExternalOpenFile } from './hooks/useExternalOpenFile';
 import { useFileDragOpen } from './hooks/useFileDragOpen';
 import { usePersistEditorSession } from './hooks/usePersistEditorSession';
 import { useRestoreEditorSession } from './hooks/useRestoreEditorSession';
+import { useSaveOnBlur } from './hooks/useSaveOnBlur';
 import { useUnsavedCloseGuard } from './hooks/useUnsavedCloseGuard';
 
 function errorMessage(error: unknown): string {
@@ -90,10 +91,6 @@ export function EditorScreen() {
     }
     return null;
   }
-
-  useEffect(() => {
-    void useAppSettingsStore.getState().hydrate();
-  }, []);
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? null;
   const dirty = activeTab?.dirty ?? false;
@@ -194,7 +191,7 @@ export function EditorScreen() {
     if (!editorView) {
       return;
     }
-    const { formatOnSave, indentStyle, indentSize } = useAppSettingsStore.getState().settings;
+    const { formatOnSave, indentStyle, indentSize } = getAppSettings();
     const languagePath = tabLanguagePath(tab);
     if (
       !formatOnSave
@@ -525,7 +522,7 @@ export function EditorScreen() {
       toast.error(t('toast.formatFailed'), { description: t('toast.editorNotReady') });
       return;
     }
-    const { indentStyle, indentSize } = useAppSettingsStore.getState().settings;
+    const { indentStyle, indentSize } = getAppSettings();
     setFormattingTabIds((prev) => new Set(prev).add(tabId));
     try {
       await formatEditorDocument(editorView, {
@@ -596,6 +593,23 @@ export function EditorScreen() {
       return true;
     }
     return await saveAllDirtyTabs();
+  });
+  useSaveOnBlur(async () => {
+    if (!getAppSettings().saveOnBlur) {
+      return;
+    }
+    const ids = tabsRef.current
+      .filter((tab) => {
+        if (!tab.dirty || tab.path === null) {
+          return false;
+        }
+        const doc = readDoc(tab.id);
+        return doc !== null && doc.length <= LARGE_DOC_MAX_LENGTH;
+      })
+      .map((tab) => tab.id);
+    for (const id of ids) {
+      await saveTab(id);
+    }
   });
   useBlockBrowserShortcuts();
   useEditorHotkeys({
@@ -719,7 +733,7 @@ export function EditorScreen() {
         className={cn('relative min-h-0 min-w-0 flex-1 overflow-hidden bg-(--app-bg)')}
         aria-label={t('editor.ariaSource')}
       >
-        {tabs.length === 0 && (
+        {sessionReady && tabs.length === 0 && (
           <p className={cn('p-4 text-sm text-(--app-muted)')}>
             {t('empty.hint', { mod: modKey })}
           </p>

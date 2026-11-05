@@ -24,6 +24,8 @@ pub struct AppSettings {
     pub indent_style: IndentStyle,
     pub indent_size: u32,
     pub format_on_save: bool,
+    /// 窗口失焦时自动保存已落盘脏标签；超大文档与未命名跳过
+    pub save_on_blur: bool,
     /// 界面语言：system / zh / en
     pub locale: String,
 }
@@ -36,6 +38,7 @@ impl Default for AppSettings {
             indent_style: IndentStyle::Space,
             indent_size: 4,
             format_on_save: false,
+            save_on_blur: true,
             locale: "system".into(),
         }
     }
@@ -102,6 +105,7 @@ mod tests {
                 indent_style: IndentStyle::Tab,
                 indent_size: 2,
                 format_on_save: true,
+                save_on_blur: true,
                 locale: "zh".into(),
             })
         );
@@ -118,6 +122,7 @@ mod tests {
                 indent_style: IndentStyle::Tab,
                 indent_size: 2,
                 format_on_save: false,
+                save_on_blur: true,
                 locale: "zh".into(),
             })
         );
@@ -127,6 +132,7 @@ mod tests {
         assert_eq!(partial.indent_size, AppSettings::default().indent_size);
         assert_eq!(partial.font_family, AppSettings::default().font_family);
         assert!(!partial.format_on_save);
+        assert!(partial.save_on_blur);
     }
 
     #[test]
@@ -145,6 +151,7 @@ mod tests {
         assert_eq!(defaults.indent_style, IndentStyle::Space);
         assert_eq!(defaults.locale, "system");
         assert!(!defaults.format_on_save);
+        assert!(defaults.save_on_blur);
         assert!(!defaults.font_family.is_empty());
     }
 }

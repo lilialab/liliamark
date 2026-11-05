@@ -1,15 +1,20 @@
 import './theme/bootstrap';
 import './i18n';
-import './stores/appSettingsStore';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { useAppSettingsStore } from './stores/appSettingsStore';
 import { startupMark } from './utils/startupTiming';
 
 startupMark('script-start');
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+async function boot() {
+  await useAppSettingsStore.getState().hydrate();
+  ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+}
+
+void boot();

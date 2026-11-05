@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AppModal } from '../../components/AppModal';
 import { Button } from '../../components/Button';
-import { defaultAppSettings, useAppSettingsStore } from '../../stores/appSettingsStore';
+import { useAppSettings, useAppSettingsStore } from '../../stores/appSettingsStore';
 import { MAX_FONT_SIZE, MIN_FONT_SIZE, parseFontSizeInput } from '../../theme/fonts';
 import type { AppLocalePreference, AppSettings, IndentStyle } from '../../types/appSettings';
 import { cn } from '../../utils/cn';
@@ -24,18 +24,17 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-const defaults = defaultAppSettings();
-
 export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
   const { t } = useTranslation();
-  const stored = useAppSettingsStore((state) => state.settings);
+  const stored = useAppSettings();
   const commit = useAppSettingsStore((state) => state.commit);
 
-  const [fontFamily, setFontFamily] = useState(defaults.fontFamily);
-  const [fontSize, setFontSize] = useState(String(defaults.fontSize));
-  const [indentStyle, setIndentStyle] = useState<IndentStyle>(defaults.indentStyle);
-  const [formatOnSave, setFormatOnSave] = useState(defaults.formatOnSave);
-  const [locale, setLocale] = useState<AppLocalePreference>(defaults.locale);
+  const [fontFamily, setFontFamily] = useState(stored.fontFamily);
+  const [fontSize, setFontSize] = useState(String(stored.fontSize));
+  const [indentStyle, setIndentStyle] = useState<IndentStyle>(stored.indentStyle);
+  const [formatOnSave, setFormatOnSave] = useState(stored.formatOnSave);
+  const [saveOnBlur, setSaveOnBlur] = useState(stored.saveOnBlur);
+  const [locale, setLocale] = useState<AppLocalePreference>(stored.locale);
   const [saving, setSaving] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
 
@@ -47,6 +46,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
     setFontSize(String(stored.fontSize));
     setIndentStyle(stored.indentStyle);
     setFormatOnSave(stored.formatOnSave);
+    setSaveOnBlur(stored.saveOnBlur);
     setLocale(stored.locale);
   }, [open, stored]);
 
@@ -92,6 +92,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
       indentStyle,
       indentSize: stored.indentSize,
       formatOnSave,
+      saveOnBlur,
       locale,
     };
     setSaving(true);
@@ -140,7 +141,6 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
           type="text"
           className={fieldClass}
           value={fontFamily}
-          placeholder={defaults.fontFamily}
           disabled={saving}
           onChange={(event) => {
             setFontFamily(event.target.value);
@@ -160,7 +160,6 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
           step={1}
           className={fieldClass}
           value={fontSize}
-          placeholder={String(defaults.fontSize)}
           disabled={saving}
           onChange={(event) => {
             setFontSize(event.target.value);
@@ -170,12 +169,9 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
 
       <div className={cn('mb-4 border-t border-(--app-border) pt-3')}>
         <h3 className={cn('mb-2 text-sm font-medium text-(--app-fg)')}>
-          {t('settings.indent')}
+          {t('settings.indentStyle')}
         </h3>
         <fieldset className={cn('flex flex-col gap-2')} disabled={saving}>
-          <legend className={cn('mb-1 text-sm text-(--app-fg)')}>
-            {t('settings.indentStyle')}
-          </legend>
           <label className={cn('flex items-center gap-2 text-sm text-(--app-fg)')}>
             <input
               type="radio"
@@ -217,6 +213,20 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
         </label>
         <p className={cn('mt-2 text-xs text-(--app-muted)')}>
           {t('settings.formatOnSaveHint')}
+        </p>
+        <label className={cn('mt-3 flex items-center gap-2 text-sm text-(--app-fg)')}>
+          <input
+            type="checkbox"
+            checked={saveOnBlur}
+            disabled={saving}
+            onChange={(event) => {
+              setSaveOnBlur(event.target.checked);
+            }}
+          />
+          {t('settings.saveOnBlur')}
+        </label>
+        <p className={cn('mt-2 text-xs text-(--app-muted)')}>
+          {t('settings.saveOnBlurHint')}
         </p>
       </div>
 
