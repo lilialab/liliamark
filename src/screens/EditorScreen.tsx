@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CodeEditor } from '../editor/CodeEditor';
 import { formatEditorDocument, supportsDocumentFormat } from '../editor/formatDocument';
+import { languageDisplayName } from '../editor/languageRegistry';
 import {
   closeCurrentWindow,
   focusCurrentWindow,
@@ -15,12 +16,14 @@ import {
   writeTextFile,
 } from '../lib/tauri/fs';
 import { openLocalPath } from '../lib/tauri/opener';
-import { getAppSettings } from '../stores/appSettingsStore';
+import { getAppSettings, useAppSettings } from '../stores/appSettingsStore';
 import type { DiskChangeKind } from '../types/diskFileChanged';
 import type { EditorTab } from '../types/editorTab';
 import { cn } from '../utils/cn';
 import { LARGE_DOC_MAX_LENGTH } from '../utils/docLimits';
 import { resolveActiveTabId } from '../utils/editorSession';
+import type { EditorCaretStatus } from '../utils/editorStatus';
+import { readEditorCaretStatus } from '../utils/editorStatus';
 import {
   createTabId,
   updateTab,
@@ -34,6 +37,7 @@ import { markStartupUiReady } from '../utils/startupTiming';
 import { DEFAULT_UNTITLED_EXT, tabLanguagePath } from '../utils/untitled';
 import { AppMenu, type AppMenuEntry } from './components/AppMenu';
 import { DiskChangeBanner } from './components/DiskChangeBanner';
+import { EditorStatusBar } from './components/EditorStatusBar';
 import { EditorTabBar } from './components/EditorTabBar';
 import { FileDragOverlay } from './components/FileDragOverlay';
 import { MarkdownCheatSheetOverlay } from './components/MarkdownCheatSheetOverlay';
@@ -65,6 +69,7 @@ export function EditorScreen() {
   /* -------------------------------------------------------------------------- */
 
   const { t } = useTranslation();
+  const { indentSize } = useAppSettings();
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const { checkForUpdates } = useAppUpdateCheck();
   const [tabs, setTabs] = useState<EditorTab[]>([]);
@@ -75,12 +80,15 @@ export function EditorScreen() {
   const [markdownCheatSheetOpen, setMarkdownCheatSheetOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [startupTimingOpen, setStartupTimingOpen] = useState(false);
+  const [caretStatus, setCaretStatus] = useState<EditorCaretStatus | null>(null);
 
   const editorViewsRef = useRef(new Map<string, EditorView>());
   const [formattingTabIds, setFormattingTabIds] = useState(() => new Set<string>());
   const [savingTabIds, setSavingTabIds] = useState(() => new Set<string>());
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
+  const activeIdRef = useRef(activeId);
+  activeIdRef.current = activeId;
 
   function tabBusyMessage(tabId: string): string | null {
     if (formattingTabIds.has(tabId)) {
@@ -191,7 +199,7 @@ export function EditorScreen() {
     if (!editorView) {
       return;
     }
-    const { formatOnSave, indentStyle, indentSize } = getAppSettings();
+    const { formatOnSave, indentSize } = getAppSettings();
     const languagePath = tabLanguagePath(tab);
     if (
       !formatOnSave
@@ -205,7 +213,6 @@ export function EditorScreen() {
     try {
       await formatEditorDocument(editorView, {
         languagePath,
-        indentStyle,
         indentSize,
       });
       refreshPreview(tabId);
@@ -382,9 +389,11 @@ export function EditorScreen() {
   function handleEditorReady(tabId: string, editorView: EditorView) {
     editorViewsRef.current.set(tabId, editorView);
     refreshPreview(tabId);
-    if (tabId !== activeId) {
+    if (tabId !== activeIdRef.current) {
       return;
     }
+
+    setCaretStatus(readEditorCaretStatus(editorView.state));
 
     async function focusEditor() {
       await focusCurrentWindow();
@@ -398,7 +407,28 @@ export function EditorScreen() {
 
   function handleEditorDestroy(tabId: string) {
     editorViewsRef.current.delete(tabId);
+    if (tabId === activeIdRef.current) {
+      setCaretStatus(null);
+    }
   }
+
+  function handleCaretStatus(tabId: string, status: EditorCaretStatus) {
+    if (tabId !== activeIdRef.current) {
+      return;
+    }
+    setCaretStatus(status);
+  }
+
+  useEffect(() => {
+    if (activeId === null) {
+      setCaretStatus(null);
+      return;
+    }
+    const editorView = editorViewsRef.current.get(activeId);
+    setCaretStatus(
+      editorView ? readEditorCaretStatus(editorView.state) : null,
+    );
+  }, [activeId]);
 
   function handleLoadError(tabId: string, error: unknown) {
     toast.error(t('toast.openFailed'), { description: errorMessage(error) });
@@ -522,12 +552,11 @@ export function EditorScreen() {
       toast.error(t('toast.formatFailed'), { description: t('toast.editorNotReady') });
       return;
     }
-    const { indentStyle, indentSize } = getAppSettings();
+    const { indentSize } = getAppSettings();
     setFormattingTabIds((prev) => new Set(prev).add(tabId));
     try {
       await formatEditorDocument(editorView, {
         languagePath,
-        indentStyle,
         indentSize,
       });
       refreshPreview(tabId);
@@ -756,6 +785,7 @@ export function EditorScreen() {
                 languagePath={tabLanguagePath(tab)}
                 busyMessage={tabBusyMessage(tab.id)}
                 onDirty={handleDirty}
+                onCaretStatus={handleCaretStatus}
                 onReady={handleEditorReady}
                 onDestroy={handleEditorDestroy}
                 onLoadError={handleLoadError}
@@ -782,6 +812,14 @@ export function EditorScreen() {
           />
         )}
       </section>
+
+      {activeTab && caretStatus && (
+        <EditorStatusBar
+          languageName={languageDisplayName(tabLanguagePath(activeTab))}
+          indentSize={indentSize}
+          caret={caretStatus}
+        />
+      )}
 
       <SettingsOverlay
         open={settingsOpen}

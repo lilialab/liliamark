@@ -50,21 +50,18 @@ pub fn decode_path_content(buf: &[u8]) -> Result<(String, &[u8]), String> {
 /// 格式化请求解码结果。
 pub struct FormatRequest {
     pub path: String,
-    pub indent_style: String,
     pub indent_size: u32,
     pub content: String,
 }
 
-/// 格式化请求：`path | indent_style | indent_size(u32) | content`（字符串均为 `u32 len` + UTF-8，小端）。
+/// 格式化请求：`path | indent_size(u32) | content`（path 为 `u32 len` + UTF-8，小端）。
 pub fn decode_format_request(buf: &[u8]) -> Result<FormatRequest, String> {
     let mut pos = 0;
     let path = read_string(buf, &mut pos)?;
-    let indent_style = read_string(buf, &mut pos)?;
     let indent_size = read_u32(buf, &mut pos)?;
     let content = String::from_utf8(buf[pos..].to_vec()).map_err(|error| error.to_string())?;
     Ok(FormatRequest {
         path,
-        indent_style,
         indent_size,
         content,
     })
@@ -93,16 +90,9 @@ mod tests {
         out
     }
 
-    fn encode_format_request(
-        path: &str,
-        indent_style: &str,
-        indent_size: u32,
-        content: &str,
-    ) -> Vec<u8> {
-        let mut out =
-            Vec::with_capacity(4 + path.len() + 4 + indent_style.len() + 4 + content.len());
+    fn encode_format_request(path: &str, indent_size: u32, content: &str) -> Vec<u8> {
+        let mut out = Vec::with_capacity(4 + path.len() + 4 + content.len());
         push_str(&mut out, path);
-        push_str(&mut out, indent_style);
         push_u32(&mut out, indent_size);
         out.extend_from_slice(content.as_bytes());
         out
@@ -134,10 +124,9 @@ mod tests {
 
     #[test]
     fn format_request_roundtrip() {
-        let encoded = encode_format_request("a.json", "space", 2, "{\"a\":1}");
+        let encoded = encode_format_request("a.json", 2, "{\"a\":1}");
         let req = decode_format_request(&encoded).unwrap();
         assert_eq!(req.path, "a.json");
-        assert_eq!(req.indent_style, "space");
         assert_eq!(req.indent_size, 2);
         assert_eq!(req.content, "{\"a\":1}");
     }

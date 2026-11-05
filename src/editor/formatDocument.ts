@@ -1,6 +1,5 @@
 import type { EditorView } from '@codemirror/view';
 import { formatDocumentText } from '../lib/tauri/format';
-import type { IndentStyle } from '../types/appSettings';
 import { fileExtension } from '../utils/path';
 
 export type FormatKind = 'json' | 'markdown';
@@ -9,7 +8,6 @@ export type FormatDocumentResult = 'formatted' | 'unchanged' | 'unsupported';
 
 type FormatDocumentOptions = {
   languagePath: string;
-  indentStyle: IndentStyle;
   indentSize: number;
 };
 
@@ -43,10 +41,11 @@ export async function formatEditorDocument(
   }
 
   const before = view.state.doc.toString();
-  const { changes } = await formatDocumentText(options.languagePath, before, {
-    indentStyle: options.indentStyle,
-    indentSize: options.indentSize,
-  });
+  const { changes } = await formatDocumentText(
+    options.languagePath,
+    before,
+    options.indentSize,
+  );
 
   if (view.state.doc.toString() !== before) {
     return 'unchanged';

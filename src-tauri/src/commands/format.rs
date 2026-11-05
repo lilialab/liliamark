@@ -13,8 +13,7 @@ pub(crate) async fn format_document_text(request: Request<'_>) -> Result<Respons
     let kind = format_kind_for_path(&req.path).ok_or_else(|| "unsupported format".to_string())?;
 
     let changes = tauri::async_runtime::spawn_blocking(move || {
-        let (_formatted, changes) =
-            format_and_diff(kind, &req.content, &req.indent_style, req.indent_size)?;
+        let (_formatted, changes) = format_and_diff(kind, &req.content, req.indent_size)?;
         encode_text_changes(&changes)
     })
     .await

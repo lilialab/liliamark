@@ -18,13 +18,11 @@ describe('ipcBytes', () => {
   });
 
   it('encodeFormatRequest keeps content as trailing bytes', () => {
-    const encoded = encodeFormatRequest('a.json', 'space', 2, '{"a":1}');
+    const encoded = encodeFormatRequest('a.json', 2, '{"a":1}');
     const view = new DataView(encoded.buffer, encoded.byteOffset, encoded.byteLength);
     let offset = 0;
     const pathLen = view.getUint32(offset, true);
     offset += 4 + pathLen;
-    const styleLen = view.getUint32(offset, true);
-    offset += 4 + styleLen;
     expect(view.getUint32(offset, true)).toBe(2);
     offset += 4;
     expect(new TextDecoder().decode(encoded.subarray(offset))).toBe('{"a":1}');

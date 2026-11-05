@@ -24,6 +24,15 @@
     "busyFormatting": "正在格式化…",
     "busySaving": "正在保存…"
   },
+  "status": {
+    "aria": "编辑器状态",
+    "plainText": "纯文本",
+    "indentSpaces": "空格: {{size}}",
+    "selected": "已选 {{count}}",
+    "chars": "{{count}} 字符",
+    "lines": "{{count}} 行",
+    "lineCol": "Ln {{line}}, Col {{col}}"
+  },
   "toast": {
     "openFailed": "打开失败",
     "saveFailed": "保存失败",
@@ -77,9 +86,9 @@
     "fontsHint": "编辑器与预览共用。字号 {{min}}–{{max}}（px）。保存后生效。",
     "fontFamily": "font-family",
     "fontSize": "字号（px）",
-    "indentStyle": "缩进方式",
-    "space": "空格",
-    "tab": "制表符",
+    "indentSize": "缩进空格数",
+    "indentSizeHint": "仅使用空格。保存后生效。",
+    "indentSizeOption": "{{size}} 个空格",
     "formatOnSave": "保存时格式化",
     "formatOnSaveHint": "仅 JSON / Markdown。超过约 1MB 的文档会跳过；菜单或快捷键手动格式化不受影响。",
     "saveOnBlur": "失焦时自动保存",

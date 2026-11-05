@@ -30,6 +30,18 @@ export function hasEditorHighlight(path: string): boolean {
 }
 
 /**
+ * 底栏语言名：Markdown / language-data 的 name；无匹配为 Plain Text。
+ * 展示层可对 Plain Text 做 i18n。
+ */
+export function languageDisplayName(path: string): string {
+  if (supportsMarkdownPreview(path)) {
+    return 'Markdown';
+  }
+  const description = LanguageDescription.matchFilename(languages, fileName(path));
+  return description?.name ?? 'Plain Text';
+}
+
+/**
  * 按路径按需加载语言扩展。
  * Markdown 围栏走 `@codemirror/language-data` 的懒加载表；其它文件用同表按文件名匹配。
  */

@@ -12,12 +12,11 @@
   font-size: var(--md-text);
   line-height: var(--md-line);
   box-sizing: border-box;
-  /* 不软换行；由内容撑宽，横滑在 PreviewOverlay */
-  width: max-content;
-  min-width: 100%;
+  /* 正文随视口软换行；宽代码 / 表格仍可在预览层横滑 */
+  width: 100%;
   min-height: 100%;
   padding: 2.5rem 2.5rem;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 /* 与编辑器 Catppuccin 选区接近：overlay2 @ ~25% */
@@ -209,7 +208,7 @@
 .markdown-preview pre {
   margin: 0 0 var(--md-space);
   padding: 0.85em 1em;
-  overflow: visible;
+  overflow-x: auto;
   background: var(--md-bg-code);
   border: 1px solid var(--md-border);
   border-radius: 6px;
@@ -249,6 +248,6 @@
 }
 
 .markdown-preview img {
-  max-width: none;
+  max-width: 100%;
   height: auto;
 }

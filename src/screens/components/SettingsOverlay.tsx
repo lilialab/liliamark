@@ -6,7 +6,12 @@ import { AppModal } from '../../components/AppModal';
 import { Button } from '../../components/Button';
 import { useAppSettings, useAppSettingsStore } from '../../stores/appSettingsStore';
 import { MAX_FONT_SIZE, MIN_FONT_SIZE, parseFontSizeInput } from '../../theme/fonts';
-import type { AppLocalePreference, AppSettings, IndentStyle } from '../../types/appSettings';
+import {
+  type AppLocalePreference,
+  type AppSettings,
+  INDENT_SIZES,
+  type IndentSize,
+} from '../../types/appSettings';
 import { cn } from '../../utils/cn';
 
 type SettingsOverlayProps = {
@@ -31,7 +36,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
 
   const [fontFamily, setFontFamily] = useState(stored.fontFamily);
   const [fontSize, setFontSize] = useState(String(stored.fontSize));
-  const [indentStyle, setIndentStyle] = useState<IndentStyle>(stored.indentStyle);
+  const [indentSize, setIndentSize] = useState<IndentSize>(stored.indentSize);
   const [formatOnSave, setFormatOnSave] = useState(stored.formatOnSave);
   const [saveOnBlur, setSaveOnBlur] = useState(stored.saveOnBlur);
   const [locale, setLocale] = useState<AppLocalePreference>(stored.locale);
@@ -44,7 +49,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
     }
     setFontFamily(stored.fontFamily);
     setFontSize(String(stored.fontSize));
-    setIndentStyle(stored.indentStyle);
+    setIndentSize(stored.indentSize);
     setFormatOnSave(stored.formatOnSave);
     setSaveOnBlur(stored.saveOnBlur);
     setLocale(stored.locale);
@@ -85,12 +90,10 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
       );
       return;
     }
-
     const settings: AppSettings = {
       fontFamily,
       fontSize: parsedSize,
-      indentStyle,
-      indentSize: stored.indentSize,
+      indentSize,
       formatOnSave,
       saveOnBlur,
       locale,
@@ -169,33 +172,29 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
 
       <div className={cn('mb-4 border-t border-(--app-border) pt-3')}>
         <h3 className={cn('mb-2 text-sm font-medium text-(--app-fg)')}>
-          {t('settings.indentStyle')}
+          {t('settings.indentSize')}
         </h3>
+        <p className={cn('mb-2 text-xs text-(--app-muted)')}>
+          {t('settings.indentSizeHint')}
+        </p>
         <fieldset className={cn('flex flex-col gap-2')} disabled={saving}>
-          <label className={cn('flex items-center gap-2 text-sm text-(--app-fg)')}>
-            <input
-              type="radio"
-              name="indentStyle"
-              value="space"
-              checked={indentStyle === 'space'}
-              onChange={() => {
-                setIndentStyle('space');
-              }}
-            />
-            {t('settings.space')}
-          </label>
-          <label className={cn('flex items-center gap-2 text-sm text-(--app-fg)')}>
-            <input
-              type="radio"
-              name="indentStyle"
-              value="tab"
-              checked={indentStyle === 'tab'}
-              onChange={() => {
-                setIndentStyle('tab');
-              }}
-            />
-            {t('settings.tab')}
-          </label>
+          {INDENT_SIZES.map((size) => (
+            <label
+              key={size}
+              className={cn('flex items-center gap-2 text-sm text-(--app-fg)')}
+            >
+              <input
+                type="radio"
+                name="indentSize"
+                value={size}
+                checked={indentSize === size}
+                onChange={() => {
+                  setIndentSize(size);
+                }}
+              />
+              {t('settings.indentSizeOption', { size })}
+            </label>
+          ))}
         </fieldset>
       </div>
 

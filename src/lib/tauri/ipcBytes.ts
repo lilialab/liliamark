@@ -43,26 +43,21 @@ export function encodePathContent(path: string, content: string): Uint8Array {
   return out;
 }
 
-/** 格式化请求：`path | indent_style | indent_size | content` */
+/** 格式化请求：`path | indent_size | content` */
 export function encodeFormatRequest(
   path: string,
-  indentStyle: string,
   indentSize: number,
   content: string,
 ): Uint8Array {
   const pathBytes = textEncoder.encode(path);
-  const styleBytes = textEncoder.encode(indentStyle);
   const contentBytes = textEncoder.encode(content);
   const out = new Uint8Array(
-    U32_BYTES + pathBytes.length + U32_BYTES + styleBytes.length + U32_BYTES + contentBytes.length,
+    U32_BYTES + pathBytes.length + U32_BYTES + contentBytes.length,
   );
   const view = new DataView(out.buffer);
   let offset = writeUint32(view, 0, pathBytes.length);
   out.set(pathBytes, offset);
   offset += pathBytes.length;
-  offset = writeUint32(view, offset, styleBytes.length);
-  out.set(styleBytes, offset);
-  offset += styleBytes.length;
   offset = writeUint32(view, offset, indentSize);
   out.set(contentBytes, offset);
   return out;

@@ -24,6 +24,15 @@
     "busyFormatting": "Formatting…",
     "busySaving": "Saving…"
   },
+  "status": {
+    "aria": "Editor status",
+    "plainText": "Plain Text",
+    "indentSpaces": "Spaces: {{size}}",
+    "selected": "{{count}} selected",
+    "chars": "{{count}} chars",
+    "lines": "{{count}} lines",
+    "lineCol": "Ln {{line}}, Col {{col}}"
+  },
   "toast": {
     "openFailed": "Could not open",
     "saveFailed": "Could not save",
@@ -77,9 +86,9 @@
     "fontsHint": "Shared by editor and preview. Size {{min}}–{{max}} (px). Applies after save.",
     "fontFamily": "font-family",
     "fontSize": "Size (px)",
-    "indentStyle": "Indent style",
-    "space": "Spaces",
-    "tab": "Tabs",
+    "indentSize": "Indent spaces",
+    "indentSizeHint": "Spaces only. Applies after save.",
+    "indentSizeOption": "{{size}} spaces",
     "formatOnSave": "Format on save",
     "formatOnSaveHint": "JSON / Markdown only. Skips documents over about 1MB; manual Format Document is unaffected.",
     "saveOnBlur": "Save on window blur",

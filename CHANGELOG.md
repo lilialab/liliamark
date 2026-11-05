@@ -2,16 +2,27 @@
 
 ## [Unreleased]
 
+## [0.2.3] — 2026-11-05
+
 ### Added
 
+- 编辑器底栏：语言、缩进、选区字符数、字符数、行数、光标行列（纯展示）
 - 设置：可选「失焦时自动保存」（默认开；已落盘且 dirty 的标签；未命名与约 1MB 以上跳过）
 
 ### Changed
 
+- 设置：去掉 Tab 缩进；仅空格，单选 2 / 4（默认 2）
+- Markdown「格式化文档」改用 `dprint-plugin-markdown`（CommonMark 列表）；JSON 仍用流式 `jsonxf`（缩进跟设置）
+- Markdown 预览正文随视口软换行（代码块仍不折、可横滑；图片限制在内容宽内）
+- 滚动条：透明轨道、隐藏两端箭头（仅 `::-webkit-scrollbar*`，避免与 `scrollbar-width` 冲突）
 - CodeMirror 折叠 / 搜索面板图标改用 `lucide`（非 React），去掉 `react-dom/server`，主包约小 200KB
 - 应用设置默认值只保留 Rust；启动时先 hydrate 再挂载 React
 - 空工作区提示在会话恢复完成后再显示，避免启动闪字
 - 设置页「缩进方式」标题整理（去掉 fieldset legend 换行）
+
+### Notes
+
+- 版本号同步为 `0.2.3`（`package.json` / Tauri / Cargo）
 
 ## [0.2.2] — 2026-11-04
 

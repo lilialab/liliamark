@@ -6,14 +6,6 @@ use tauri::{AppHandle, Manager};
 
 const SETTINGS_FILE: &str = "settings.json";
 
-#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum IndentStyle {
-    #[default]
-    Space,
-    Tab,
-}
-
 /// 应用设置。加载时：磁盘有的字段保留，缺的用 `Default` 补齐并写回完整 JSON；
 /// 无文件或坏 JSON 则整份默认后写回。
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -21,7 +13,7 @@ pub enum IndentStyle {
 pub struct AppSettings {
     pub font_family: String,
     pub font_size: u32,
-    pub indent_style: IndentStyle,
+    /// 空格缩进宽度（仅 2 或 4）
     pub indent_size: u32,
     pub format_on_save: bool,
     /// 窗口失焦时自动保存已落盘脏标签；超大文档与未命名跳过
@@ -35,8 +27,7 @@ impl Default for AppSettings {
         Self {
             font_family: "Consolas, 'Courier New', monospace".into(),
             font_size: 16,
-            indent_style: IndentStyle::Space,
-            indent_size: 4,
+            indent_size: 2,
             format_on_save: false,
             save_on_blur: true,
             locale: "system".into(),
@@ -92,18 +83,17 @@ pub(crate) fn save_app_settings(app: AppHandle, settings: AppSettings) -> Result
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_settings_json, AppSettings, IndentStyle};
+    use super::{parse_settings_json, AppSettings};
 
     #[test]
     fn parse_valid_settings() {
-        let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18,"indentStyle":"tab","indentSize":2,"formatOnSave":true,"locale":"zh"}"#;
+        let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18,"indentSize":4,"formatOnSave":true,"locale":"zh"}"#;
         assert_eq!(
             parse_settings_json(json),
             Some(AppSettings {
                 font_family: "Consolas, monospace".into(),
                 font_size: 18,
-                indent_style: IndentStyle::Tab,
-                indent_size: 2,
+                indent_size: 4,
                 format_on_save: true,
                 save_on_blur: true,
                 locale: "zh".into(),
@@ -113,13 +103,12 @@ mod tests {
 
     #[test]
     fn missing_fields_merge_defaults() {
-        let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18,"indentStyle":"tab","indentSize":2,"locale":"zh"}"#;
+        let json = r#"{"fontFamily":"Consolas, monospace","fontSize":18,"indentSize":2,"locale":"zh"}"#;
         assert_eq!(
             parse_settings_json(json),
             Some(AppSettings {
                 font_family: "Consolas, monospace".into(),
                 font_size: 18,
-                indent_style: IndentStyle::Tab,
                 indent_size: 2,
                 format_on_save: false,
                 save_on_blur: true,
@@ -147,8 +136,7 @@ mod tests {
     fn default_settings_are_usable() {
         let defaults = AppSettings::default();
         assert_eq!(defaults.font_size, 16);
-        assert_eq!(defaults.indent_size, 4);
-        assert_eq!(defaults.indent_style, IndentStyle::Space);
+        assert_eq!(defaults.indent_size, 2);
         assert_eq!(defaults.locale, "system");
         assert!(!defaults.format_on_save);
         assert!(defaults.save_on_blur);

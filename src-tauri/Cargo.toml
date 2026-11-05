@@ -1,6 +1,6 @@
 [package]
 name = "liliamark"
-version = "0.2.2"
+version = "0.2.3"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2024"
@@ -28,7 +28,7 @@ notify = "8.2.0"
 notify-debouncer-full = "0.7.0"
 tauri-plugin-prevent-default = { version = "6", features = ["platform-windows"] }
 similar = "3"
-markdown-ppp = "2"
+dprint-plugin-markdown = "0.28"
 jsonxf = "1.1"
 
 

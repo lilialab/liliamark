@@ -1,11 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { decodeTextChanges, encodeFormatRequest } from './ipcBytes';
 
-export type FormatIndentOptions = {
-  indentStyle: string;
-  indentSize: number;
-};
-
 export type FormatTextChange = {
   from: number;
   to: number;
@@ -20,14 +15,9 @@ export type FormatDocumentResult = {
 export async function formatDocumentText(
   languagePath: string,
   content: string,
-  options: FormatIndentOptions,
+  indentSize: number,
 ): Promise<FormatDocumentResult> {
-  const payload = encodeFormatRequest(
-    languagePath,
-    options.indentStyle,
-    options.indentSize,
-    content,
-  );
+  const payload = encodeFormatRequest(languagePath, indentSize, content);
   const buffer = await invoke<ArrayBuffer>('format_document_text', payload);
   return { changes: decodeTextChanges(buffer) };
 }

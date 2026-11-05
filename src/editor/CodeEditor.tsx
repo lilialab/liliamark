@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { openTextPath } from '../lib/tauri/fs';
 import { useAppSettings } from '../stores/appSettingsStore';
 import { cn } from '../utils/cn';
+import type { EditorCaretStatus } from '../utils/editorStatus';
+import { readEditorCaretStatus } from '../utils/editorStatus';
 import { sameFilePath } from '../utils/path';
 import { EditorBusyOverlay } from './EditorBusyOverlay';
 import { baseExtensions } from './editorExtensions';
@@ -22,6 +24,8 @@ type CodeEditorProps = {
   /** 外部忙碌文案（如格式化）；优先于打开中蒙版 */
   busyMessage?: string | null;
   onDirty: (tabId: string) => void;
+  /** 文档或主选区变化时（含水合）；调用方按 active tab 过滤 */
+  onCaretStatus: (tabId: string, status: EditorCaretStatus) => void;
   /** 就绪后调用（读盘成功或未命名空文档） */
   onReady: (tabId: string, editorView: EditorView) => void;
   onDestroy: (tabId: string) => void;
@@ -37,6 +41,7 @@ export function CodeEditor({
   languagePath,
   busyMessage = null,
   onDirty,
+  onCaretStatus,
   onReady,
   onDestroy,
   onLoadError,
@@ -55,6 +60,9 @@ export function CodeEditor({
 
   const reportDirty = useEffectEvent(() => {
     onDirty(tabId);
+  });
+  const reportCaretStatus = useEffectEvent((status: EditorCaretStatus) => {
+    onCaretStatus(tabId, status);
   });
   const notifyReady = useEffectEvent((editorView: EditorView) => {
     onReady(tabId, editorView);
@@ -98,7 +106,7 @@ export function CodeEditor({
     }
   });
 
-  const { indentStyle, indentSize } = useAppSettings();
+  const { indentSize } = useAppSettings();
 
   // 挂载空 EditorView；未命名直接就绪，否则读盘
   useEffect(() => {
@@ -115,17 +123,21 @@ export function CodeEditor({
       doc: '',
       extensions: [
         ...baseExtensions,
-        indentCompartment.of(indentExtensions(indentStyle, indentSize)),
+        indentCompartment.of(indentExtensions(indentSize)),
         languageCompartment.of([]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged && !hydratingRef.current) {
             reportDirty();
+          }
+          if (update.docChanged || update.selectionSet) {
+            reportCaretStatus(readEditorCaretStatus(update.state));
           }
         }),
       ],
       parent: containerRef.current,
     });
     editorViewRef.current = editorView;
+    reportCaretStatus(readEditorCaretStatus(editorView.state));
 
     if (path === null) {
       setOpening(false);
@@ -177,9 +189,9 @@ export function CodeEditor({
       return;
     }
     editorView.dispatch({
-      effects: indentCompartment.reconfigure(indentExtensions(indentStyle, indentSize)),
+      effects: indentCompartment.reconfigure(indentExtensions(indentSize)),
     });
-  }, [indentStyle, indentSize]);
+  }, [indentSize]);
 
   const overlayMessage = busyMessage ?? (opening ? t('editor.busyOpening') : null);
   const wasBusyRef = useRef(false);

@@ -1,5 +1,5 @@
-use markdown_ppp::parser::{parse_markdown, MarkdownParserState};
-use markdown_ppp::printer::{config::Config as MdConfig, render_markdown};
+use dprint_plugin_markdown::configuration::{ConfigurationBuilder, TextWrap};
+use dprint_plugin_markdown::format_text as format_markdown_text;
 use similar::{capture_diff_slices, Algorithm, DiffOp};
 use std::path::Path;
 
@@ -35,36 +35,34 @@ pub fn format_kind_for_path(path: &str) -> Option<FormatKind> {
 pub fn format_text(
     kind: FormatKind,
     text: &str,
-    indent_style: &str,
     indent_size: u32,
 ) -> Result<String, String> {
     match kind {
-        FormatKind::Json => format_json(text, indent_style, indent_size),
-        FormatKind::Markdown => format_markdown(text, indent_size),
+        FormatKind::Json => format_json(text, indent_size),
+        FormatKind::Markdown => format_markdown(text),
     }
 }
 
-fn format_json(text: &str, indent_style: &str, indent_size: u32) -> Result<String, String> {
-    let indent = if indent_style == "tab" {
-        "\t".to_string()
-    } else {
-        " ".repeat(indent_size.max(1) as usize)
-    };
-    // 流式 pretty：不建 serde_json::Value 树，大文件少分配
+fn format_json(text: &str, indent_size: u32) -> Result<String, String> {
+    let indent = " ".repeat(indent_size.max(1) as usize);
+    // 流式 pretty：不建整树，大文件更轻
     let mut formatter = jsonxf::Formatter::pretty_printer();
     formatter.indent = indent;
     formatter.trailing_output = String::from("\n");
     formatter.format(text)
 }
 
-fn format_markdown(text: &str, indent_size: u32) -> Result<String, String> {
-    let state = MarkdownParserState::new();
-    let document = parse_markdown(state, text).map_err(|error| error.to_string())?;
-    let width = 100u32.saturating_add(indent_size.saturating_mul(4));
-    let config = MdConfig::default()
-        .with_width(width as usize)
-        .with_spaces_before_list_item(0);
-    Ok(render_markdown(&document, config))
+fn format_markdown(text: &str) -> Result<String, String> {
+    let config = ConfigurationBuilder::new()
+        .line_width(80)
+        .text_wrap(TextWrap::Maintain)
+        .code_block_skip_format(true)
+        .build();
+    match format_markdown_text(text, &config, |_, _, _| Ok(None)) {
+        Ok(Some(formatted)) => Ok(formatted),
+        Ok(None) => Ok(text.to_string()),
+        Err(error) => Err(error.to_string()),
+    }
 }
 
 /// 按行切开（保留行尾 `\n`），供行级 Myers 使用。
@@ -157,10 +155,9 @@ pub fn diff_to_changes(old_text: &str, new_text: &str) -> Vec<TextChange> {
 pub fn format_and_diff(
     kind: FormatKind,
     text: &str,
-    indent_style: &str,
     indent_size: u32,
 ) -> Result<(String, Vec<TextChange>), String> {
-    let formatted = format_text(kind, text, indent_style, indent_size)?;
+    let formatted = format_text(kind, text, indent_size)?;
     let changes = diff_to_changes(text, &formatted);
     Ok((formatted, changes))
 }
@@ -171,14 +168,14 @@ mod tests {
 
     #[test]
     fn formats_json_with_indent() {
-        let out = format_json("{\"a\":1}", "space", 2).unwrap();
+        let out = format_json("{\"a\":1}", 2).unwrap();
         assert_eq!(out, "{\n  \"a\": 1\n}\n");
     }
 
     #[test]
-    fn formats_json_with_tab_indent() {
-        let out = format_json("{\"a\":1}", "tab", 2).unwrap();
-        assert_eq!(out, "{\n\t\"a\": 1\n}\n");
+    fn formats_json_with_four_space_indent() {
+        let out = format_json("{\"a\":1}", 4).unwrap();
+        assert_eq!(out, "{\n    \"a\": 1\n}\n");
     }
 
     #[test]
@@ -242,6 +239,21 @@ mod tests {
         assert_eq!(format_kind_for_path("a.json"), Some(FormatKind::Json));
         assert_eq!(format_kind_for_path("a.MD"), Some(FormatKind::Markdown));
         assert_eq!(format_kind_for_path("a.yaml"), None);
+    }
+
+    #[test]
+    fn formats_markdown_trims_heading_space() {
+        let out = format_markdown("#   Hello  \n").unwrap();
+        assert!(out.starts_with("# Hello"));
+    }
+
+    #[test]
+    fn formats_markdown_nested_list_common_mark_indent() {
+        let out = format_markdown("- a\n    - b\n").unwrap();
+        assert!(
+            out.contains("\n  - b"),
+            "expected CommonMark 2-space nest, got:\n{out}"
+        );
     }
 }
 
