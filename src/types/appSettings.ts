@@ -16,6 +16,8 @@ export type AppSettings = {
   formatOnSave: boolean;
   /** 窗口失焦时自动保存已落盘脏标签；默认开；未命名与超大文档跳过 */
   saveOnBlur: boolean;
+  /** 未命名文件类型弹框词表；默认见 `default_settings.json`；加载不做逐项校验 */
+  untitledExtensions: string[];
   /** 界面语言；Rust 加载时缺字段与默认合并后写回；缺文件 / 坏 JSON 整份默认 */
   locale: AppLocalePreference;
 };

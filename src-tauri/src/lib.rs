@@ -12,7 +12,7 @@ use commands::format::format_document_text;
 use commands::fs::{classify_drop_paths, read_text_file, write_text_file};
 use commands::launch::take_pending_open_path;
 use commands::session::{load_editor_session, save_editor_session};
-use commands::settings::{load_app_settings, save_app_settings};
+use commands::settings::{default_app_settings, load_app_settings, save_app_settings};
 use file_watch::{sync_watched_files, FileWatchState};
 use open_file::{PendingOpenPath, open_path_in_running_app, paths_from_args};
 #[cfg(any(windows, target_os = "linux"))]
@@ -89,6 +89,7 @@ pub fn run() {
             save_editor_session,
             load_app_settings,
             save_app_settings,
+            default_app_settings,
             get_native_startup_timing,
             format_document_text,
         ])

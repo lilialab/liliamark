@@ -2,10 +2,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { toast } from 'sonner';
 import i18n from '../../i18n';
 import { classifyDropPaths, focusCurrentWindow, onDragDrop } from '../../lib/tauri/fs';
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
+import { errorMessage } from '../../utils/errorMessage';
 
 /** 拖入文件打开；返回是否显示「松开以打开」遮罩 */
 export function useFileDragOpen(loadFile: (path: string) => Promise<void>): boolean {

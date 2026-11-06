@@ -13,6 +13,7 @@ import {
   type IndentSize,
 } from '../../types/appSettings';
 import { cn } from '../../utils/cn';
+import { errorMessage } from '../../utils/errorMessage';
 
 type SettingsOverlayProps = {
   open: boolean;
@@ -24,10 +25,6 @@ const fieldClass = cn(
   'font-mono text-sm text-(--app-fg) outline-none',
   'focus:border-(--app-link)',
 );
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
 
 export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
   const { t } = useTranslation();
@@ -91,6 +88,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
       return;
     }
     const settings: AppSettings = {
+      ...stored,
       fontFamily,
       fontSize: parsedSize,
       indentSize,
@@ -103,7 +101,7 @@ export function SettingsOverlay({ open, onClose }: SettingsOverlayProps) {
       await commit(settings);
       onClose();
     } catch (error) {
-      toast.error(t('toast.saveFailedWithReason', { reason: errorMessage(error) }));
+      toast.error(t('toast.saveFailed'), { description: errorMessage(error) });
     } finally {
       setSaving(false);
     }

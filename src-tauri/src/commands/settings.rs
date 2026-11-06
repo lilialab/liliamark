@@ -18,20 +18,16 @@ pub struct AppSettings {
     pub format_on_save: bool,
     /// 窗口失焦时自动保存已落盘脏标签；超大文档与未命名跳过
     pub save_on_blur: bool,
+    /// 未命名文件类型弹框词表（默认见 `default_settings.json`；加载不做逐项校验）
+    pub untitled_extensions: Vec<String>,
     /// 界面语言：system / zh / en
     pub locale: String,
 }
 
 impl Default for AppSettings {
     fn default() -> Self {
-        Self {
-            font_family: "Consolas, 'Courier New', monospace".into(),
-            font_size: 16,
-            indent_size: 2,
-            format_on_save: false,
-            save_on_blur: true,
-            locale: "system".into(),
-        }
+        serde_json::from_str(include_str!("default_settings.json"))
+            .expect("default_settings.json must deserialize to AppSettings")
     }
 }
 
@@ -81,6 +77,12 @@ pub(crate) fn save_app_settings(app: AppHandle, settings: AppSettings) -> Result
     write_settings_file(&settings_path(&app)?, &settings)
 }
 
+/// 返回内置默认设置（`default_settings.json`），不读写磁盘。
+#[tauri::command]
+pub(crate) fn default_app_settings() -> AppSettings {
+    AppSettings::default()
+}
+
 #[cfg(test)]
 mod tests {
     use super::{parse_settings_json, AppSettings};
@@ -96,6 +98,7 @@ mod tests {
                 indent_size: 4,
                 format_on_save: true,
                 save_on_blur: true,
+                untitled_extensions: AppSettings::default().untitled_extensions,
                 locale: "zh".into(),
             })
         );
@@ -112,6 +115,7 @@ mod tests {
                 indent_size: 2,
                 format_on_save: false,
                 save_on_blur: true,
+                untitled_extensions: AppSettings::default().untitled_extensions,
                 locale: "zh".into(),
             })
         );
@@ -120,8 +124,19 @@ mod tests {
         assert_eq!(partial.font_size, 20);
         assert_eq!(partial.indent_size, AppSettings::default().indent_size);
         assert_eq!(partial.font_family, AppSettings::default().font_family);
+        assert_eq!(
+            partial.untitled_extensions,
+            AppSettings::default().untitled_extensions
+        );
         assert!(!partial.format_on_save);
         assert!(partial.save_on_blur);
+    }
+
+    #[test]
+    fn keeps_custom_untitled_extensions() {
+        let json = r#"{"untitledExtensions":["rs","toml"]}"#;
+        let parsed = parse_settings_json(json).expect("merge");
+        assert_eq!(parsed.untitled_extensions, vec!["rs".to_string(), "toml".to_string()]);
     }
 
     #[test]
@@ -141,5 +156,6 @@ mod tests {
         assert!(!defaults.format_on_save);
         assert!(defaults.save_on_blur);
         assert!(!defaults.font_family.is_empty());
+        assert!(defaults.untitled_extensions.iter().any(|ext| ext == "md"));
     }
 }

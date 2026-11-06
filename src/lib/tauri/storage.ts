@@ -21,3 +21,8 @@ export async function loadAppSettings(): Promise<AppSettings> {
 export async function saveAppSettings(settings: AppSettings): Promise<void> {
   await invoke('save_app_settings', { settings });
 }
+
+/** 内置默认设置（不读写磁盘） */
+export async function defaultAppSettings(): Promise<AppSettings> {
+  return invoke<AppSettings>('default_app_settings');
+}

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.2.4] — 2026-11-06
+
+### Changed
+
+- 未命名文件类型：去掉右上角浮层；底栏语言可点打开弹框（筛选 / 虚线胶囊添加 / hover 删除 / 恢复默认词表）
+- 扩展名词表写入 `settings.json`（`untitledExtensions`）；默认稿 `default_settings.json`，仅保留 CodeMirror 能高亮的常用后缀
+- 抽取共用 `errorMessage`；保存失败 toast 统一为标题 + `description`
+
+### Notes
+
+- 版本号同步为 `0.2.4`（`package.json` / Tauri / Cargo）
+
 ## [0.2.3] — 2026-11-05
 
 ### Added

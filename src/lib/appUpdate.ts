@@ -1,4 +1,5 @@
 import { getVersion } from '@tauri-apps/api/app';
+import { errorMessage } from '../utils/errorMessage';
 import { isNewerSemver } from '../utils/semver';
 
 export const GITHUB_REPO = 'lilialab/liliamark';
@@ -41,7 +42,7 @@ export async function checkAppUpdate(): Promise<AppUpdateResult> {
   } catch (error) {
     return {
       status: 'unavailable',
-      reason: error instanceof Error ? error.message : String(error),
+      reason: errorMessage(error),
     };
   }
 
@@ -55,7 +56,7 @@ export async function checkAppUpdate(): Promise<AppUpdateResult> {
   } catch (error) {
     return {
       status: 'unavailable',
-      reason: error instanceof Error ? error.message : String(error),
+      reason: errorMessage(error),
     };
   }
 

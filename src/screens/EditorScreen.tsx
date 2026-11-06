@@ -32,6 +32,7 @@ import {
   withoutDiskChange,
   withSaved,
 } from '../utils/editorTab';
+import { errorMessage } from '../utils/errorMessage';
 import { fileName, sameFilePath } from '../utils/path';
 import { markStartupUiReady } from '../utils/startupTiming';
 import { DEFAULT_UNTITLED_EXT, tabLanguagePath } from '../utils/untitled';
@@ -45,7 +46,6 @@ import { PreviewOverlay } from './components/PreviewOverlay';
 import { SettingsOverlay } from './components/SettingsOverlay';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { StartupTimingOverlay } from './components/StartupTimingOverlay';
-import { UntitledExtPicker } from './components/UntitledExtPicker';
 import { modifierKeyLabel } from './help/editorHotkeyHints';
 import { useAppUpdateCheck } from './hooks/useAppUpdateCheck';
 import { useBlockBrowserShortcuts } from './hooks/useBlockBrowserShortcuts';
@@ -58,10 +58,6 @@ import { usePersistEditorSession } from './hooks/usePersistEditorSession';
 import { useRestoreEditorSession } from './hooks/useRestoreEditorSession';
 import { useSaveOnBlur } from './hooks/useSaveOnBlur';
 import { useUnsavedCloseGuard } from './hooks/useUnsavedCloseGuard';
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
 
 export function EditorScreen() {
   /* -------------------------------------------------------------------------- */
@@ -794,14 +790,6 @@ export function EditorScreen() {
             </div>
           );
         })}
-        {activeTab?.path === null && (
-          <UntitledExtPicker
-            ext={activeTab.untitledExt}
-            onChange={(ext) => {
-              handleUntitledExtChange(activeTab.id, ext);
-            }}
-          />
-        )}
         {activeTab !== null && (
           <PreviewOverlay
             open={previewOpen}
@@ -818,6 +806,11 @@ export function EditorScreen() {
           languageName={languageDisplayName(tabLanguagePath(activeTab))}
           indentSize={indentSize}
           caret={caretStatus}
+          path={activeTab.path}
+          untitledExt={activeTab.untitledExt}
+          onUntitledExtChange={(ext) => {
+            handleUntitledExtChange(activeTab.id, ext);
+          }}
         />
       )}
 

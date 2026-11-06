@@ -1,24 +1,4 @@
-/** 未命名后缀 Tab 补全词表（md/html + 主流配置；仍可输入表外后缀） */
-export const UNTITLED_EXTENSIONS = [
-  'md',
-  'html',
-  'json',
-  'jsonc',
-  'yaml',
-  'yml',
-  'toml',
-  'ini',
-  'conf',
-  'cfg',
-  'env',
-  'properties',
-  'xml',
-  'gitignore',
-  'editorconfig',
-  'npmrc',
-] as const;
-
-/** 新建未命名默认后缀（不必出现在补全表里） */
+/** 新建未命名默认后缀 */
 export const DEFAULT_UNTITLED_EXT = 'md';
 
 /** 推导语言 / 预览用路径时所需的最小 tab 字段 */
@@ -47,45 +27,16 @@ export function parseUntitledExt(value: string): string {
   return normalizeUntitledExt(value) ?? DEFAULT_UNTITLED_EXT;
 }
 
-function untitledExtQuery(raw: string): string {
-  return raw.trim().replace(/^\./, '').toLowerCase();
-}
-
-/** 幽灵 / Tab 建议：当前前缀下的第一个候选；无则 null */
-export function suggestUntitledExt(
+/** 弹框筛选：空查询返回全部；否则按前缀匹配（词表由调用方传入，通常来自 settings） */
+export function filterUntitledExtensions(
   raw: string,
-  extensions: readonly string[] = UNTITLED_EXTENSIONS,
-): string | null {
-  const query = untitledExtQuery(raw);
+  extensions: readonly string[],
+): string[] {
+  const query = raw.trim().replace(/^\./, '').toLowerCase();
   if (!query) {
-    return null;
+    return [...extensions];
   }
-  return extensions.find((ext) => ext.startsWith(query)) ?? null;
-}
-
-/**
- * Tab 补全：有未采纳建议则采纳；否则在同前缀候选间循环；无匹配原样返回。
- */
-export function completeUntitledExt(
-  raw: string,
-  extensions: readonly string[] = UNTITLED_EXTENSIONS,
-): string {
-  const query = untitledExtQuery(raw);
-  const suggestion = suggestUntitledExt(raw, extensions);
-  if (suggestion !== null && suggestion !== query) {
-    return suggestion;
-  }
-
-  const matches = extensions.filter((ext) => ext.startsWith(query));
-  const first = matches[0];
-  if (first === undefined) {
-    return raw;
-  }
-  const index = matches.indexOf(query);
-  if (index >= 0) {
-    return matches[(index + 1) % matches.length] ?? first;
-  }
-  return first;
+  return extensions.filter((ext) => ext.startsWith(query));
 }
 
 /** 供语言 / 预览判断用的伪路径或真实路径（存盘仍用 tab.path） */
