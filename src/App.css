@@ -14,30 +14,12 @@
     @apply antialiased;
   }
 
-  /* Catppuccin 滚动条：仅用 ::-webkit-scrollbar*（不用 scrollbar-width，否则 Win 上箭头去不掉） */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  ::-webkit-scrollbar-button {
-    display: none;
-  }
-
-  ::-webkit-scrollbar-track,
-  ::-webkit-scrollbar-corner {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: var(--ctp-surface2);
-    border-radius: 6px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--ctp-overlay0);
+  /*  滚动条：标准 scrollbar-width / scrollbar-color。 */
+  * {
+    --scrollbar-thumb: var(--ctp-surface2);
+    --scrollbar-track: transparent;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 }
 

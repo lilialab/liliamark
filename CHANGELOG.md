@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.2.5] — 2026-11-07
+
+### Added
+
+- 未命名空文档首次粘贴：高置信嗅探 JSON / HTML / XML，自动改后缀
+- 未命名后缀变更时底栏语言标签 mauve 短闪（同 tab 内变更才触发）
+
+### Changed
+
+- 滚动条改用标准 `scrollbar-width: thin` + `scrollbar-color`（不再用 webkit border 伪装粗细）
+- 模态框取消点击遮罩关闭；快捷键页去掉「暂不支持修改」提示
+
+### Notes
+
+- 版本号同步为 `0.2.5`（`package.json` / Tauri / Cargo）
+
 ## [0.2.4] — 2026-11-06
 
 ### Changed
