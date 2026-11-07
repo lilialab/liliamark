@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/cn';
 import type { EditorCaretStatus } from '../../utils/editorStatus';
 import { UntitledExtModal } from './UntitledExtModal';
+import './EditorStatusBar.css';
 
 type EditorStatusBarProps = {
   indentSize: number;
@@ -16,10 +17,11 @@ type EditorStatusBarProps = {
 
 type LanguageLabelProps = {
   label: string;
+  isTypeFlashing: boolean;
   onClick?: () => void;
 };
 
-function LanguageLabel({ label, onClick }: LanguageLabelProps) {
+function LanguageLabel({ label, isTypeFlashing, onClick }: LanguageLabelProps) {
   const { t } = useTranslation();
 
   if (!onClick) {
@@ -32,6 +34,7 @@ function LanguageLabel({ label, onClick }: LanguageLabelProps) {
       className={cn(
         'min-w-0 cursor-pointer truncate rounded-sm px-0.5 -mx-0.5',
         'hover:bg-(--app-surface-hover) hover:text-(--app-fg)',
+        isTypeFlashing && 'editor-status-type-flash',
       )}
       aria-label={t('status.changeFileType')}
       onClick={onClick}
@@ -43,6 +46,7 @@ function LanguageLabel({ label, onClick }: LanguageLabelProps) {
 
 /**
  * 编辑器底栏：语言（未命名可点改后缀）/ 缩进 / 选区 / 字符数 / 行数 / 光标位置。
+ * 须由上层以 key={tabId} 挂载，切 tab 重挂后不会把旧后缀变化当成一次闪动。
  */
 export function EditorStatusBar({
   languageName,
@@ -54,6 +58,8 @@ export function EditorStatusBar({
 }: EditorStatusBarProps) {
   const { t } = useTranslation();
   const [extModalOpen, setExtModalOpen] = useState(false);
+  const [isTypeFlashing, setIsTypeFlashing] = useState(false);
+  const [prevUntitledExt, setPrevUntitledExt] = useState(untitledExt);
   const canChangeExt = path === null;
 
   useEffect(() => {
@@ -61,6 +67,22 @@ export function EditorStatusBar({
       setExtModalOpen(false);
     }
   }, [canChangeExt]);
+
+  // 同实例内后缀变了才闪；首挂 prev===value 不闪；切 tab 靠外层 key={tabId} 重挂
+  useEffect(() => {
+    if (prevUntitledExt === untitledExt) {
+      return;
+    }
+    setPrevUntitledExt(untitledExt);
+    setIsTypeFlashing(true);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const id = window.setTimeout(() => {
+      setIsTypeFlashing(false);
+    }, reduced ? 400 : 750);
+    return () => {
+      window.clearTimeout(id);
+    };
+  }, [untitledExt, prevUntitledExt]);
 
   const languageLabel = languageName === 'Plain Text'
     ? t('status.plainText')
@@ -78,6 +100,7 @@ export function EditorStatusBar({
         <div className={cn('flex min-w-0 items-center gap-3')}>
           <LanguageLabel
             label={languageLabel}
+            isTypeFlashing={isTypeFlashing}
             onClick={canChangeExt
               ? () => {
                 setExtModalOpen(true);

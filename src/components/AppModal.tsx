@@ -21,8 +21,8 @@ export type AppModalProps = {
 };
 
 /**
- * 通用模态框：`createPortal` 到 `document.body`；遮罩 / Esc / 点遮罩关闭；
- * 顶栏标题 + 右上角 ×；中间可滚动；可选底栏。
+ * 通用模态框：`createPortal` 到 `document.body`；Esc / 右上角 × 关闭；
+ * 顶栏标题；中间可滚动；可选底栏。
  */
 export function AppModal({
   open,
@@ -74,7 +74,6 @@ export function AppModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      onClick={onClose}
     >
       <div
         className={cn(
@@ -82,9 +81,6 @@ export function AppModal({
           'border border-(--app-border) bg-(--app-bg-raised) shadow-lg',
           panelClassName ?? 'max-w-lg',
         )}
-        onClick={(event) => {
-          event.stopPropagation();
-        }}
       >
         <div
           className={cn(

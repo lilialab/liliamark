@@ -112,7 +112,6 @@
   "shortcuts": {
     "aria": "快捷键",
     "title": "快捷键",
-    "hint": "当前版本固定绑定，暂不支持修改。",
     "close": "关闭"
   },
   "cheatSheet": {

@@ -34,8 +34,14 @@ import {
 } from '../utils/editorTab';
 import { errorMessage } from '../utils/errorMessage';
 import { fileName, sameFilePath } from '../utils/path';
+import { sniffUntitledExt } from '../utils/sniffUntitledExt';
 import { markStartupUiReady } from '../utils/startupTiming';
-import { DEFAULT_UNTITLED_EXT, tabLanguagePath } from '../utils/untitled';
+import {
+  DEFAULT_UNTITLED_EXT,
+  isDefaultUntitled,
+  isUntitled,
+  tabLanguagePath,
+} from '../utils/untitled';
 import { AppMenu, type AppMenuEntry } from './components/AppMenu';
 import { DiskChangeBanner } from './components/DiskChangeBanner';
 import { EditorStatusBar } from './components/EditorStatusBar';
@@ -364,8 +370,31 @@ export function EditorScreen() {
   }
 
   function handleUntitledExtChange(tabId: string, ext: string) {
+    const tab = tabsRef.current.find((item) => item.id === tabId);
+    if (!isUntitled(tab) || tab.untitledExt === ext) {
+      return;
+    }
     setTabs((prev) =>
-      updateTab(prev, tabId, (tab) => tab.path === null ? { ...tab, untitledExt: ext } : tab)
+      updateTab(prev, tabId, (item) => isUntitled(item) ? { ...item, untitledExt: ext } : item)
+    );
+  }
+
+  /** 未命名 + 默认 md + 空文档粘贴：嗅探成功才改后缀 */
+  function handleEmptyPaste(tabId: string, text: string) {
+    const ext = sniffUntitledExt(text);
+    if (!ext || ext === DEFAULT_UNTITLED_EXT) {
+      return;
+    }
+    const tab = tabsRef.current.find((item) => item.id === tabId);
+    if (!isDefaultUntitled(tab)) {
+      return;
+    }
+    setTabs((prev) =>
+      updateTab(
+        prev,
+        tabId,
+        (item) => isDefaultUntitled(item) ? { ...item, untitledExt: ext } : item,
+      )
     );
   }
 
@@ -786,6 +815,7 @@ export function EditorScreen() {
                 onDestroy={handleEditorDestroy}
                 onLoadError={handleLoadError}
                 onPathResolved={handlePathResolved}
+                onEmptyPaste={handleEmptyPaste}
               />
             </div>
           );
@@ -803,6 +833,7 @@ export function EditorScreen() {
 
       {activeTab && caretStatus && (
         <EditorStatusBar
+          key={activeTab.id}
           languageName={languageDisplayName(tabLanguagePath(activeTab))}
           indentSize={indentSize}
           caret={caretStatus}

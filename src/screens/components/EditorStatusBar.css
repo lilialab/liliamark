@@ -1,0 +1,24 @@
+@keyframes editor-status-type-flash {
+  0%,
+  18% {
+    background-color: color-mix(in srgb, var(--ctp-mauve) 32%, transparent);
+    color: var(--ctp-mauve);
+  }
+
+  100% {
+    background-color: transparent;
+    color: var(--app-muted);
+  }
+}
+
+.editor-status-type-flash {
+  animation: editor-status-type-flash 0.75s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-status-type-flash {
+    animation: none;
+    background-color: color-mix(in srgb, var(--ctp-mauve) 32%, transparent);
+    color: var(--ctp-mauve);
+  }
+}

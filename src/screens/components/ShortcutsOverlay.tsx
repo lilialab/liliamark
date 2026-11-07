@@ -21,8 +21,6 @@ export function ShortcutsOverlay({ open, onClose }: ShortcutsOverlayProps) {
       panelClassName={cn('max-w-xl')}
       onClose={onClose}
     >
-      <p className={cn('mb-4 text-xs text-(--app-muted)')}>{t('shortcuts.hint')}</p>
-
       <div className={cn('space-y-4')}>
         {sections.map((section) => (
           <section key={section.title}>

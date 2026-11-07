@@ -7,6 +7,20 @@ export type TabLanguageRef = {
   untitledExt: string;
 };
 
+/** 是否未命名（尚未落盘） */
+export function isUntitled(
+  tab: TabLanguageRef | null | undefined,
+): tab is TabLanguageRef & { path: null } {
+  return tab?.path === null;
+}
+
+/** 未命名且后缀仍为默认 */
+export function isDefaultUntitled(
+  tab: TabLanguageRef | null | undefined,
+): tab is TabLanguageRef & { path: null } {
+  return isUntitled(tab) && tab.untitledExt === DEFAULT_UNTITLED_EXT;
+}
+
 /**
  * 规范化后缀：去点、小写；允许列表外。
  * 空串或含非法字符时返回 null（由 UI 回退上次合法值）。

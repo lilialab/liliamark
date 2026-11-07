@@ -112,7 +112,6 @@
   "shortcuts": {
     "aria": "Keyboard shortcuts",
     "title": "Keyboard shortcuts",
-    "hint": "Bindings are fixed in this version and cannot be customized.",
     "close": "Close"
   },
   "cheatSheet": {

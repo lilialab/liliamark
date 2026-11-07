@@ -32,6 +32,8 @@ type CodeEditorProps = {
   onLoadError: (tabId: string, error: unknown) => void;
   /** 读盘返回的路径与 prop 不一致时（规范化等） */
   onPathResolved: (tabId: string, path: string) => void;
+  /** 文档为空时粘贴纯文本（未命名嗅探用；默认粘贴仍由 CodeMirror 处理） */
+  onEmptyPaste?: (tabId: string, text: string) => void;
   className?: string;
 };
 
@@ -46,6 +48,7 @@ export function CodeEditor({
   onDestroy,
   onLoadError,
   onPathResolved,
+  onEmptyPaste,
   className,
 }: CodeEditorProps) {
   const { t } = useTranslation();
@@ -75,6 +78,9 @@ export function CodeEditor({
   });
   const notifyPathResolved = useEffectEvent((resolvedPath: string) => {
     onPathResolved(tabId, resolvedPath);
+  });
+  const notifyEmptyPaste = useEffectEvent((text: string) => {
+    onEmptyPaste?.(tabId, text);
   });
 
   const hydrateFromDisk = useEffectEvent(async (editorView: EditorView, filePath: string) => {
@@ -132,6 +138,18 @@ export function CodeEditor({
           if (update.docChanged || update.selectionSet) {
             reportCaretStatus(readEditorCaretStatus(update.state));
           }
+        }),
+        EditorView.domEventHandlers({
+          paste(event, view) {
+            if (view.state.doc.length !== 0) {
+              return false;
+            }
+            const text = event.clipboardData?.getData('text/plain') ?? '';
+            if (text.length > 0) {
+              notifyEmptyPaste(text);
+            }
+            return false;
+          },
         }),
       ],
       parent: containerRef.current,
