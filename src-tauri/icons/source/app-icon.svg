@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Win / Linux: full-bleed -->
   <rect width="1024" height="1024" rx="240" ry="240" fill="#24273a"/>
   <g
     transform="translate(512 512) scale(28) translate(-12 -12)"
