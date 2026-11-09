@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
+use notify_debouncer_full::notify::event::ModifyKind;
 use notify_debouncer_full::notify::{EventKind, RecommendedWatcher, RecursiveMode};
 use notify_debouncer_full::{new_debouncer, DebounceEventResult, Debouncer, RecommendedCache};
 use serde::Serialize;
@@ -14,7 +15,7 @@ const DEBOUNCE: Duration = Duration::from_millis(200);
 const EVENT_NAME: &str = "disk-file-changed";
 
 /// 发给前端的变更类型。序列化后是 `"modify"` 或 `"remove"`。
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub(crate) enum DiskChangeKind {
     Modify,
@@ -112,15 +113,18 @@ fn set_contains_path(set: &HashSet<PathBuf>, path: &Path) -> bool {
     set.iter().any(|entry| paths_match(entry, path))
 }
 
-/// 操作系统事件收成「内容变了」或「文件没了」。其它事件（例如只读打开）忽略。
+/// 操作系统事件收成「正文变了」或「文件没了」。
+/// 忽略元数据（xattr / Finder / Spotlight 等）与纯 rename。
 fn classify_event(kind: EventKind) -> Option<DiskChangeKind> {
-    if kind.is_remove() {
-        return Some(DiskChangeKind::Remove);
+    match kind {
+        EventKind::Remove(_) => Some(DiskChangeKind::Remove),
+        // 原子替换：删旧建新 / 直接落在监听路径上
+        EventKind::Create(_) => Some(DiskChangeKind::Modify),
+        EventKind::Modify(ModifyKind::Data(_)) => Some(DiskChangeKind::Modify),
+        // Windows：内容写入只报到 Modify(Any)
+        EventKind::Modify(ModifyKind::Any) => Some(DiskChangeKind::Modify),
+        _ => None,
     }
-    if kind.is_modify() || matches!(kind, EventKind::Create(_) | EventKind::Any) {
-        return Some(DiskChangeKind::Modify);
-    }
-    None
 }
 
 /// 事件路径若对应某个已打开文件，返回那条路径。
@@ -273,4 +277,45 @@ pub(crate) fn sync_watched_files(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use notify_debouncer_full::notify::event::{
+        CreateKind, DataChange, MetadataKind, RemoveKind, RenameMode,
+    };
+
+    #[test]
+    fn classify_keeps_content_and_remove() {
+        assert_eq!(
+            classify_event(EventKind::Modify(ModifyKind::Data(DataChange::Content))),
+            Some(DiskChangeKind::Modify)
+        );
+        assert_eq!(
+            classify_event(EventKind::Modify(ModifyKind::Any)),
+            Some(DiskChangeKind::Modify)
+        );
+        assert_eq!(
+            classify_event(EventKind::Create(CreateKind::File)),
+            Some(DiskChangeKind::Modify)
+        );
+        assert_eq!(
+            classify_event(EventKind::Remove(RemoveKind::File)),
+            Some(DiskChangeKind::Remove)
+        );
+    }
+
+    #[test]
+    fn classify_ignores_metadata_and_rename() {
+        assert_eq!(
+            classify_event(EventKind::Modify(ModifyKind::Metadata(MetadataKind::Extended))),
+            None
+        );
+        assert_eq!(
+            classify_event(EventKind::Modify(ModifyKind::Name(RenameMode::Any))),
+            None
+        );
+        assert_eq!(classify_event(EventKind::Any), None);
+    }
 }
