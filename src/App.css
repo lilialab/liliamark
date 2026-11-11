@@ -14,12 +14,37 @@
     @apply antialiased;
   }
 
-  /*  滚动条：标准 scrollbar-width / scrollbar-color。 */
+  /*
+   * 滚动条：只用 ::-webkit-scrollbar*（Tauri WebView 均支持）。
+   * 不设 scrollbar-width: thin —— Mac 上会逼成系统 overlay，悬停变白条且不吃主题色。
+   */
   * {
     --scrollbar-thumb: var(--ctp-surface2);
+    --scrollbar-thumb-hover: var(--ctp-overlay0);
     --scrollbar-track: transparent;
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
   }
 }
 

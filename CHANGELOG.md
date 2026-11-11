@@ -2,9 +2,16 @@
 
 ## [Unreleased]
 
+## [0.2.6] — 2026-11-11
+
 ### Fixed
 
 - 磁盘变更提示：只认正文写入 / 文件创建或删除，忽略元数据与纯 rename（减少误报「磁盘上的文件已更新」）
+- 滚动条改回 `::-webkit-scrollbar*` 主题色（含悬停，宽 4px）；去掉 `scrollbar-width: thin`，避免 macOS overlay 悬停白条
+
+### Notes
+
+- 版本号同步为 `0.2.6`（`package.json` / Tauri / Cargo）
 
 ## [0.2.5] — 2026-11-07
 
